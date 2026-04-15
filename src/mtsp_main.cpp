@@ -1,17 +1,17 @@
 #include <chrono>
 #include <iostream>
-#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "../include/json.hpp"
-#include <factory.h>
-#include <solver.h>
+#include <mtsp_factory.h>
+#include <mtsp_solver.h>
+#include <mtsp_utils.h>
 
 inline std::vector<std::pair<std::string, std::unordered_map<std::string, std::string>>>
-ParseArguments(int argc, char** argv) {
+ParseMtspArguments(int argc, char** argv) {
     std::vector<std::pair<std::string, std::unordered_map<std::string, std::string>>> steps;
     std::unordered_map<std::string, std::string> args;
     std::string solver_name;
@@ -42,36 +42,23 @@ ParseArguments(int argc, char** argv) {
     return steps;
 }
 
-inline double CalculateRouteLength(const std::vector<int>& route) {
-    const tsp::Instance& inst = tsp::Instance::GetInstance();
-    double len = 0.0;
-    for (size_t i = 0; i + 1 < route.size(); ++i) {
-        len += inst.Distance(route[i], route[i + 1]);
-    }
-    return len;
-}
-
 int main(int argc, char** argv) {
-    auto steps = ParseArguments(argc, argv);
+    auto steps = ParseMtspArguments(argc, argv);
 
-    std::vector<std::unique_ptr<tsp::Solver>> solvers;
+    std::vector<std::unique_ptr<mtsp::Solver>> solvers;
     std::vector<std::string> solver_names;
     for (const auto& [name, args] : steps) {
-        solvers.push_back(tsp::SolverFactory::Create(name));
+        solvers.push_back(mtsp::SolverFactory::Create(name));
         solvers.back()->Configure(args);
         solver_names.push_back(name);
     }
 
-    const tsp::Instance& inst = tsp::Instance::GetInstance();
-    std::vector<int> solution(inst.GetN() + 1);
-    std::iota(solution.begin(), solution.end(), 0);
-    solution.back() = 0;
-
+    mtsp::RouteSet routes;
     nlohmann::json steps_json = nlohmann::json::array();
     auto total_start = std::chrono::high_resolution_clock::now();
     for (size_t idx = 0; idx < solvers.size(); ++idx) {
         auto step_start = std::chrono::high_resolution_clock::now();
-        solvers[idx]->Solve(solution);
+        solvers[idx]->Solve(routes);
         auto step_stop = std::chrono::high_resolution_clock::now();
 
         double step_time = static_cast<double>(
@@ -80,7 +67,8 @@ int main(int argc, char** argv) {
         nlohmann::json step_json;
         step_json["name"] = solver_names[idx];
         step_json["time"] = step_time;
-        step_json["len"] = CalculateRouteLength(solution);
+        step_json["objective"] = mtsp::ObjectiveMinsum(routes);
+        step_json["valid"] = mtsp::ValidateRoutes(routes);
         steps_json.push_back(step_json);
     }
     auto total_stop = std::chrono::high_resolution_clock::now();
@@ -90,9 +78,10 @@ int main(int argc, char** argv) {
                        1e6;
 
     nlohmann::json output;
-    output["route"] = solution;
+    output["routes"] = routes;
     output["time"] = real_time;
-    output["len"] = CalculateRouteLength(solution);
+    output["objective"] = mtsp::ObjectiveMinsum(routes);
+    output["valid"] = mtsp::ValidateRoutes(routes);
     output["steps"] = steps_json;
     std::cout << output.dump();
     return 0;

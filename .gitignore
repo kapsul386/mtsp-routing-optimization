@@ -39,3 +39,13 @@
 
 # debug information files
 *.dwo
+
+# Build artifacts
+build/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE
+.idea/

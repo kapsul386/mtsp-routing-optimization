@@ -1,0 +1,33 @@
+{
+  "instance_dir": "data/mtsp/generated",
+  "instance_glob": "*.txt",
+  "results_csv": "data/results/mtsp_results.csv",
+  "summary_csv": "data/results/mtsp_summary.csv",
+  "report_md": "data/results/mtsp_report.md",
+  "solvers": [
+    {
+      "name": "rand+nn",
+      "args": ["--step", "rand+nn", "--seed", "42"]
+    },
+    {
+      "name": "2opt+greed",
+      "args": ["--step", "2opt+greed"]
+    },
+    {
+      "name": "grasp",
+      "args": ["--step", "grasp", "--iters", "50", "--rcl", "3", "--seed", "42"]
+    },
+    {
+      "name": "lkh-wrapper",
+      "args": ["--step", "lkh-wrapper", "--rounds", "24", "--seed", "42"]
+    }
+  ],
+  "generation": {
+    "node_counts": [20, 50, 100, 200],
+    "salesmen": [2, 3, 5],
+    "repeats": 5,
+    "base_seed": 20260404,
+    "width": 100.0,
+    "height": 100.0
+  }
+}

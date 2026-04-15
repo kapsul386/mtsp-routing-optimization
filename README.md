@@ -1,31 +1,99 @@
 # mtsp-routing-optimization
-Учебный проект посвящён исследованию и реализации эффективных эвристических методов оптимизации маршрутов в задаче множественного коммивояжёра (mTSP). Основная цель — анализ и сравнение различных подходов к решению mTSP с точки зрения качества получаемых маршрутов и масштабируемости на задачах большой размерности.
 
-# Optimization of Routing Algorithms for mTSP
+Учебно-исследовательский проект по задаче множественного коммивояжера (`mTSP`). Репозиторий собирает в одном месте кодовую базу, материалы по контрольным точкам и экспериментальный контур для сравнения эвристических алгоритмов маршрутизации.
 
-This project explores heuristic optimization methods for the Multiple Traveling Salesman Problem (mTSP), with a focus on Lin–Kernighan–Helsgaun (LKH) algorithm adaptation and scalability analysis.
+## Цель
 
-##  Goal
-To analyze and implement scalable heuristic algorithms for mTSP and evaluate their performance on large-scale instances.
+Исследовать, какие эвристические подходы дают лучшее качество решения `mTSP` по критерию `MINSUM` при фиксированном ограничении на время вычислений.
 
-##  Project Structure
-- `src/` – source code and LKH integration
-- `data/` – problem instances (TSPLIB + synthetic)
-- `docs/` – research documentation (reports, plans)
-- `experiments/` – experiment configs and results
+## Рабочая гипотеза
 
-##  Methods
-- Greedy heuristics
-- 2-opt, k-opt
-- LKH algorithm (external C library)
-- Experimental comparison on TSPLIB-derived datasets
+При ограничении времени до 60 секунд более сильные эвристики, сочетающие построение начального решения и локальное улучшение, будут давать лучшее значение `MINSUM`, чем простые базовые стратегии вроде `random + nearest neighbor` и `greedy + 2-opt`. Ожидается, что это преимущество сохранится при росте размерности задачи и числа коммивояжеров.
 
-##  Requirements
-- C++ compiler
-- CMake
-- Python (for plotting results)
+## Что уже есть
 
-## Run
+- `src/algorithms/tsp/` содержит базовые TSP-эвристики и перенесенный общий каркас солверов.
+- `src/algorithms/mtsp/` содержит текущие прототипы `mTSP`-алгоритмов, которые дальше нужно привести к общему интерфейсу запуска.
+- `docs/KT/` хранит описание проекта и материалы контрольной точки.
+- `experiments/` предназначен для конфигураций запусков и журнала результатов.
+- `data/` зарезервирован под TSPLIB-инстансы, синтетику и итоговые результаты.
+
+## Ближайший план
+
+1. Унифицировать формат входа и выхода для `mTSP`-алгоритмов.
+2. Подготовить набор инстансов для сравнения baseline-методов.
+3. Добавить воспроизводимый сценарий экспериментов.
+4. Подключить и оценить `LKH-based` подход отдельно от baseline-эвристик.
+
+## Сборка
+
 ```bash
-cd experiments
-bash run.sh
+cmake -S . -B build
+cmake --build build
+```
+
+## Запуск TSP-каркаса
+
+Сейчас в репозиторий перенесен базовый runner из старого `tsp-cpp`, который полезен как архитектурная основа и для сравнения простых TSP-эвристик:
+
+```bash
+python run.py --task path/to/task.txt --coords path/to/coords.npz --step nearest --start 0
+```
+
+Следующий этап развития репозитория: адаптировать этот каркас под единый запуск `mTSP`-эвристик и сравнительные эксперименты по курсовому проекту.
+
+## Запуск mTSP-каркаса
+
+Для `mTSP` теперь есть отдельный runner с единым JSON-входом и общими baseline-солверами:
+
+```bash
+python run_mtsp.py --input path/to/instance.txt --step rand+nn
+python run_mtsp.py --input path/to/instance.txt --step 2opt+greed
+python run_mtsp.py --input path/to/instance.txt --step grasp --iters 50 --rcl 3
+```
+
+Формат входного файла:
+
+```text
+n m
+x0 y0
+x1 y1
+...
+```
+
+Где вершина `0` считается депо.
+
+## Экспериментальный пайплайн
+
+Для первого воспроизводимого контура добавлены:
+
+- [experiments/generate_mtsp_instances.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/generate_mtsp_instances.py) для генерации синтетических инстансов;
+- [experiments/run_benchmarks.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/run_benchmarks.py) для пакетного прогона солверов;
+- [experiments/config.json](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/config.json) с машинно-читаемой конфигурацией эксперимента.
+
+Базовый запуск:
+
+```bash
+python experiments/generate_mtsp_instances.py
+python experiments/run_benchmarks.py
+```
+
+После запуска появляются:
+
+- [data/results/mtsp_results.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/mtsp_results.csv) со всеми сырыми прогонами;
+- [data/results/mtsp_summary.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/mtsp_summary.csv) со средними значениями по каждому набору параметров.
+
+## Экспериментальный пайплайн TSP
+
+Для TSP добавлен отдельный контур:
+
+- [experiments/tsp_config.json](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/tsp_config.json)
+- [experiments/generate_tsp_benchmarks.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/generate_tsp_benchmarks.py)
+- [experiments/run_tsp_benchmarks.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/run_tsp_benchmarks.py)
+- [experiments/build_tsp_report.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/build_tsp_report.py)
+
+Он сравнивает `nearest`, `vns`, `genetic`, `memetic` и `lkh` на синтетических TSP-инстансах и сохраняет:
+
+- [data/results/tsp_results.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/tsp_results.csv)
+- [data/results/tsp_summary.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/tsp_summary.csv)
+- [data/results/tsp_report.md](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/tsp_report.md)
