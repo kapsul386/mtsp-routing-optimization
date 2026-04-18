@@ -54,19 +54,34 @@ def compile_project(build_dir="build"):
 
     config_cmd = ["cmake", "-S", ".", "-B", build_dir, "-DCMAKE_BUILD_TYPE=Release"]
 
-    result = subprocess.run(config_cmd, capture_output=True, text=True)
+    result = subprocess.run(
+        config_cmd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace"
+    )
 
     if result.returncode != 0:
         if os.path.exists('build'):
             shutil.rmtree('build')
-        result = subprocess.run(config_cmd + ["-G", "MinGW Makefiles"], capture_output=True, text=True)
+        result = subprocess.run(
+            config_cmd + ["-G", "MinGW Makefiles"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace"
+        )
 
     if result.returncode != 0:
         raise RuntimeError(f"CMake failed: {result.stderr}")
 
     result = subprocess.run(
         ["cmake", "--build", build_dir, "--config", "Release"],
-        capture_output=True, text=True
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace"
     )
 
     if result.returncode != 0:

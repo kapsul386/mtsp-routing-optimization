@@ -1,0 +1,16 @@
+{
+  "source_results_csv": "data/results/lkh_versions_results.csv",
+  "reference_results_source_csv": "data/results/mtsp_reference_results.csv",
+  "reference_results_csv": "data/results/mtsp_reference_results.csv",
+  "comparison_csv": "data/results/lkh_versions_reference_comparison.csv",
+  "summary_csv": "data/results/lkh_versions_reference_summary.csv",
+  "report_md": "data/results/lkh_versions_reference_report.md",
+  "reference": {
+    "name": "ortools-gls",
+    "time_limit_seconds": 5,
+    "distance_scale": 1000,
+    "first_solution_strategy": "PARALLEL_CHEAPEST_INSERTION",
+    "local_search_metaheuristic": "GUIDED_LOCAL_SEARCH",
+    "log_search": false
+  }
+}

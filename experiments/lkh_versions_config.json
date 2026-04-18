@@ -1,0 +1,14 @@
+{
+  "instance_dir": "data/mtsp/generated",
+  "instance_glob": "*.txt",
+  "results_csv": "data/results/lkh_versions_results.csv",
+  "summary_csv": "data/results/lkh_versions_summary.csv",
+  "report_md": "data/results/lkh_versions_report.md",
+  "reference_summary_csv": "data/results/lkh_versions_reference_summary.csv",
+  "solvers": [
+    {
+      "name": "lkh-wrapper-v1",
+      "args": ["--step", "lkh-wrapper-v1", "--rounds", "24", "--seed", "42"]
+    }
+  ]
+}

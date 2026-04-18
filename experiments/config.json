@@ -4,6 +4,7 @@
   "results_csv": "data/results/mtsp_results.csv",
   "summary_csv": "data/results/mtsp_summary.csv",
   "report_md": "data/results/mtsp_report.md",
+  "reference_summary_csv": "data/results/mtsp_reference_summary.csv",
   "solvers": [
     {
       "name": "rand+nn",
@@ -25,7 +26,7 @@
   "generation": {
     "node_counts": [20, 50, 100, 200],
     "salesmen": [2, 3, 5],
-    "repeats": 5,
+    "repeats": 10,
     "base_seed": 20260404,
     "width": 100.0,
     "height": 100.0
