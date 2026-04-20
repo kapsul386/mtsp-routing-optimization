@@ -35,8 +35,20 @@ Instance::Instance() : n_(0), m_(0) {
     const auto input = nlohmann::json::parse(ReadAllStdin());
     n_ = input.at("n").get<int>();
     m_ = input.at("m").get<int>();
+    if (n_ <= 0) {
+        throw std::runtime_error("mTSP instance must contain a positive number of nodes.");
+    }
+    if (m_ <= 0) {
+        throw std::runtime_error("mTSP instance must contain a positive number of salesmen.");
+    }
+    if (!input.contains("coords") || !input.at("coords").is_array() || input.at("coords").size() != static_cast<size_t>(n_)) {
+        throw std::runtime_error("mTSP input coords must be an array of size n.");
+    }
     coords_.reserve(n_);
     for (const auto& point : input.at("coords")) {
+        if (!point.is_array() || point.size() != 2) {
+            throw std::runtime_error("Each mTSP coordinate must contain exactly two values.");
+        }
         coords_.emplace_back(point.at(0).get<double>(), point.at(1).get<double>());
     }
 

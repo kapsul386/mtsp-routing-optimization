@@ -29,6 +29,10 @@ def display_value(value: str) -> str:
     return value if value != "" else "n/a"
 
 
+def is_true(value: object) -> bool:
+    return str(value).lower() == "true"
+
+
 def build_markdown(summary_rows: list[dict], comparison_rows: list[dict]) -> str:
     grouped_by_size: dict[tuple[str, str], list[dict]] = defaultdict(list)
     for row in summary_rows:
@@ -57,14 +61,15 @@ def build_markdown(summary_rows: list[dict], comparison_rows: list[dict]) -> str
         )
         lines.append(f"### n={node_count}, m={salesman_count}")
         lines.append("")
-        lines.append("| Solver | Runs | Our | OR-Tools | Gap | Gap % | Time (our/ref) |")
-        lines.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: |")
+        lines.append("| Solver | Runs | Our | OR-Tools | Gap | Gap % | Time (our/ref) | Valid Runs |")
+        lines.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
         for row in rows:
             lines.append(
                 f"| {row['solver']} | {display_value(row['runs'])} | {display_value(row['avg_objective'])} | "
                 f"{display_value(row['avg_reference_objective'])} | {display_value(row['avg_objective_gap'])} | "
                 f"{display_value(row['avg_relative_gap_percent'])} | "
-                f"{display_value(row['avg_time_seconds'])} / {display_value(row['avg_reference_time_seconds'])} |"
+                f"{display_value(row['avg_time_seconds'])} / {display_value(row['avg_reference_time_seconds'])} | "
+                f"{display_value(row['valid_runs'])} |"
             )
         lines.append("")
 
@@ -90,20 +95,18 @@ def build_markdown(summary_rows: list[dict], comparison_rows: list[dict]) -> str
 
     overall_grouped: dict[str, list[dict]] = defaultdict(list)
     for row in comparison_rows:
-        overall_grouped[row["solver"]].append(row)
+        if is_true(row["valid"]) and is_true(row["reference_valid"]) and row["objective_gap"] != "":
+            overall_grouped[row["solver"]].append(row)
 
     if overall_grouped:
-        lines.append("Средние значения по всем прогонам:")
+        lines.append("Средние значения по всем сопоставимым валидным прогонам:")
         lines.append("")
         solver_means = []
         for solver, rows in overall_grouped.items():
-            gap_rows = [row for row in rows if row["objective_gap"] != ""]
-            if not gap_rows:
-                continue
-            avg_gap = sum(float(row["objective_gap"]) for row in gap_rows) / len(gap_rows)
-            avg_gap_percent = sum(float(row["relative_gap_percent"]) for row in gap_rows) / len(gap_rows)
-            avg_our = sum(float(row["objective"]) for row in gap_rows) / len(gap_rows)
-            avg_ref = sum(float(row["reference_objective"]) for row in gap_rows) / len(gap_rows)
+            avg_gap = sum(float(row["objective_gap"]) for row in rows) / len(rows)
+            avg_gap_percent = sum(float(row["relative_gap_percent"]) for row in rows) / len(rows)
+            avg_our = sum(float(row["objective"]) for row in rows) / len(rows)
+            avg_ref = sum(float(row["reference_objective"]) for row in rows) / len(rows)
             avg_time = sum(float(row["time_seconds"]) for row in rows) / len(rows)
             avg_ref_time = sum(float(row["reference_time_seconds"]) for row in rows) / len(rows)
             solver_means.append((solver, avg_gap, avg_gap_percent, avg_our, avg_ref, avg_time, avg_ref_time))

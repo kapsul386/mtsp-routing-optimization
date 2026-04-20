@@ -15,6 +15,34 @@ if str(ROOT) not in sys.path:
 from python.cpp_updater import get_executable_path, recompiles_if_necessary
 
 
+def resolve_path(path_str: str) -> Path:
+    path = Path(path_str)
+    return path if path.is_absolute() else ROOT / path
+
+
+def normalize_display_path(path: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(ROOT.resolve()))
+    except ValueError:
+        return str(resolved)
+
+
+def extract_solver_name(solver_cfg: dict) -> str:
+    if solver_cfg.get("name"):
+        return str(solver_cfg["name"])
+
+    args = solver_cfg.get("args", [])
+    for idx, token in enumerate(args):
+        if token == "--step" and idx + 1 < len(args):
+            return str(args[idx + 1])
+    raise ValueError(f"Could not determine solver name from config: {solver_cfg}")
+
+
+def is_true(value: object) -> bool:
+    return str(value).lower() == "true"
+
+
 def read_instance(path: Path) -> tuple[int, int, list[tuple[float, float]]]:
     lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     node_count, salesman_count = map(int, lines[0].split())
@@ -24,26 +52,33 @@ def read_instance(path: Path) -> tuple[int, int, list[tuple[float, float]]]:
     return node_count, salesman_count, coords
 
 
-def run_solver(executable: Path, instance_path: Path, solver_args: list[str]) -> dict:
+def run_solver(executable: Path, instance_path: Path, solver_name: str, solver_args: list[str]) -> dict:
     node_count, salesman_count, coords = read_instance(instance_path)
     payload = json.dumps({"n": node_count, "m": salesman_count, "coords": coords})
-    process = subprocess.run([str(executable)] + solver_args, input=payload, text=True, capture_output=True)
+    process = subprocess.run(
+        [str(executable)] + solver_args,
+        input=payload,
+        text=True,
+        capture_output=True,
+        encoding="utf-8",
+        errors="replace",
+    )
     if process.returncode != 0:
         raise RuntimeError(f"{instance_path} | {' '.join(solver_args)}\n{process.stderr}")
 
     output = json.loads(process.stdout)
     return {
         "instance": instance_path.name,
-        "path": str(instance_path),
+        "path": normalize_display_path(instance_path),
         "node_count": node_count,
         "salesman_count": salesman_count,
-        "solver": solver_args[1] if len(solver_args) >= 2 else "unknown",
+        "solver": solver_name,
         "objective": float(output["objective"]),
         "time_seconds": float(output["time"]),
         "step_time_seconds": float(output["steps"][-1]["time"]) if output.get("steps") else float(output["time"]),
         "valid": bool(output["valid"]),
         "steps": json.dumps(output.get("steps", []), ensure_ascii=False),
-        "routes": json.dumps(output["routes"], ensure_ascii=False)
+        "routes": json.dumps(output["routes"], ensure_ascii=False),
     }
 
 
@@ -62,19 +97,20 @@ def aggregate(rows: list[dict]) -> list[dict]:
 
     summary = []
     for (node_count, salesman_count, solver), items in sorted(grouped.items()):
-        avg_objective = sum(item["objective"] for item in items) / len(items)
-        avg_time = sum(item["time_seconds"] for item in items) / len(items)
-        valid_runs = sum(1 for item in items if item["valid"])
+        valid_items = [item for item in items if item["valid"]]
+        avg_objective = round(sum(item["objective"] for item in valid_items) / len(valid_items), 6) if valid_items else ""
+        avg_time = round(sum(item["time_seconds"] for item in items) / len(items), 6)
+        avg_step_time = round(sum(item["step_time_seconds"] for item in items) / len(items), 6)
         summary.append(
             {
                 "node_count": node_count,
                 "salesman_count": salesman_count,
                 "solver": solver,
                 "runs": len(items),
-                "avg_objective": round(avg_objective, 6),
-                "avg_time_seconds": round(avg_time, 6),
-                "avg_step_time_seconds": round(sum(item["step_time_seconds"] for item in items) / len(items), 6),
-                "valid_runs": valid_runs
+                "avg_objective": avg_objective,
+                "avg_time_seconds": avg_time,
+                "avg_step_time_seconds": avg_step_time,
+                "valid_runs": len(valid_items),
             }
         )
     return summary
@@ -85,10 +121,10 @@ def main() -> None:
     parser.add_argument("--config", default="experiments/config.json", help="Path to experiment config JSON.")
     args = parser.parse_args()
 
-    config_path = Path(args.config)
+    config_path = resolve_path(args.config)
     config = json.loads(config_path.read_text(encoding="utf-8"))
 
-    instance_dir = Path(config["instance_dir"])
+    instance_dir = resolve_path(config["instance_dir"])
     instances = sorted(instance_dir.glob(config["instance_glob"]))
     if not instances:
         raise RuntimeError(f"No instances matched in {instance_dir}")
@@ -99,26 +135,26 @@ def main() -> None:
     rows = []
     for instance_path in instances:
         for solver in config["solvers"]:
-            rows.append(run_solver(executable, instance_path, solver["args"]))
+            rows.append(run_solver(executable, instance_path, extract_solver_name(solver), solver["args"]))
 
-    results_csv = Path(config["results_csv"])
-    summary_csv = Path(config["summary_csv"])
+    results_csv = resolve_path(config["results_csv"])
+    summary_csv = resolve_path(config["summary_csv"])
 
     write_csv(
         results_csv,
         rows,
         [
             "instance", "path", "node_count", "salesman_count", "solver", "objective",
-            "time_seconds", "step_time_seconds", "valid", "steps", "routes"
-        ]
+            "time_seconds", "step_time_seconds", "valid", "steps", "routes",
+        ],
     )
     write_csv(
         summary_csv,
         aggregate(rows),
         [
             "node_count", "salesman_count", "solver", "runs", "avg_objective",
-            "avg_time_seconds", "avg_step_time_seconds", "valid_runs"
-        ]
+            "avg_time_seconds", "avg_step_time_seconds", "valid_runs",
+        ],
     )
 
 

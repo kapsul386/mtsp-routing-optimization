@@ -13,8 +13,9 @@
 ## Что уже есть
 
 - `src/algorithms/tsp/` содержит базовые TSP-эвристики и перенесенный общий каркас солверов.
-- `src/algorithms/mtsp/` содержит текущие прототипы `mTSP`-алгоритмов, которые дальше нужно привести к общему интерфейсу запуска.
+- `src/algorithms/mtsp/` содержит ранние прототипы `mTSP`-алгоритмов; актуальные рабочие реализации лежат в корне `src/` и запускаются через общий runner.
 - `docs/KT/` хранит описание проекта и материалы контрольной точки.
+- `docs/appendices/` содержит оформленные приложения к курсовой работе.
 - `experiments/` предназначен для конфигураций запусков и журнала результатов.
 - `data/` зарезервирован под TSPLIB-инстансы, синтетику и итоговые результаты.
 
@@ -23,7 +24,7 @@
 1. Унифицировать формат входа и выхода для `mTSP`-алгоритмов.
 2. Подготовить набор инстансов для сравнения baseline-методов.
 3. Добавить воспроизводимый сценарий экспериментов.
-4. Подключить и оценить `LKH-based` подход отдельно от baseline-эвристик.
+4. Довести исследование до связки `synthetic benchmark -> reference baseline -> математическое приложение к курсовой`.
 
 ## Сборка
 
@@ -50,6 +51,7 @@ python run.py --task path/to/task.txt --coords path/to/coords.npz --step nearest
 python run_mtsp.py --input path/to/instance.txt --step rand+nn
 python run_mtsp.py --input path/to/instance.txt --step 2opt+greed
 python run_mtsp.py --input path/to/instance.txt --step grasp --iters 50 --rcl 3
+python run_mtsp.py --input path/to/instance.txt --step lkh-wrapper-v2 --rounds 24 --seed 42 --candidate-count 12 --lookahead-weight 0.35 --depot-weight 0.12
 ```
 
 Формат входного файла:
@@ -71,6 +73,8 @@ x1 y1
 - [experiments/run_benchmarks.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/run_benchmarks.py) для пакетного прогона солверов;
 - [experiments/config.json](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/config.json) с машинно-читаемой конфигурацией эксперимента.
 
+Текущий основной `mTSP`-benchmark сравнивает `rand+nn`, `2opt+greed`, `grasp` и `lkh-wrapper-v2`.
+
 Базовый запуск:
 
 ```bash
@@ -82,6 +86,9 @@ python experiments/run_benchmarks.py
 
 - [data/results/mtsp_results.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/mtsp_results.csv) со всеми сырыми прогонами;
 - [data/results/mtsp_summary.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/mtsp_summary.csv) со средними значениями по каждому набору параметров.
+
+Отдельное математическое приложение под реализованные алгоритмы лежит в файле
+[docs/appendices/mtsp_math_appendix.tex](C:/Users/ddkup/курчас/mtsp-routing-optimization/docs/appendices/mtsp_math_appendix.tex).
 
 ## Экспериментальный пайплайн TSP
 

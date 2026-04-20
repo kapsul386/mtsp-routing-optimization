@@ -9,6 +9,17 @@
     {
       "name": "lkh-wrapper-v1",
       "args": ["--step", "lkh-wrapper-v1", "--rounds", "24", "--seed", "42"]
+    },
+    {
+      "name": "lkh-wrapper-v2",
+      "args": [
+        "--step", "lkh-wrapper-v2",
+        "--rounds", "24",
+        "--seed", "42",
+        "--candidate-count", "12",
+        "--lookahead-weight", "0.35",
+        "--depot-weight", "0.12"
+      ]
     }
   ]
 }

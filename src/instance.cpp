@@ -55,7 +55,16 @@ inline std::vector<std::vector<double>> ParseCalculateDistances(const nlohmann::
 
 Instance::Instance() {
     auto input = nlohmann::json::parse(ReadAllStdin());
-    n = input["n"];
+    n = input.at("n").get<int>();
+    if (n <= 0) {
+        throw std::runtime_error("TSP instance must contain a positive number of nodes.");
+    }
+    if (!input.contains("latlon") || !input.at("latlon").is_array() || input.at("latlon").size() != 2) {
+        throw std::runtime_error("TSP input must contain latlon with two coordinate rows.");
+    }
+    if (input.at("latlon")[0].size() != static_cast<size_t>(n) || input.at("latlon")[1].size() != static_cast<size_t>(n)) {
+        throw std::runtime_error("TSP input latlon size does not match n.");
+    }
     mat = ParseCalculateDistances(input);
 }
 

@@ -4,20 +4,31 @@ import argparse
 import json
 import logging
 import subprocess
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
 
+
+ROOT = Path(__file__).resolve().parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from python.cpp_updater import get_executable_path, recompiles_if_necessary
 from python.validate import validate_tour
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args() -> tuple[argparse.Namespace, list[str]]:
     parser = argparse.ArgumentParser(description="Run baseline TSP solvers from the migrated framework.")
     parser.add_argument("--task", type=str, required=True, help="Path to task txt (line1: n_nodes, line2: ids).")
     parser.add_argument("--coords", type=str, default="World_TSP.npz", help="Path to NPZ with [idx, lat, lon].")
     return parser.parse_known_args()
+
+
+def resolve_user_path(path_str: str) -> Path:
+    path = Path(path_str).expanduser()
+    return path if path.is_absolute() else (Path.cwd() / path).resolve()
 
 
 def read_task(task_path: Path) -> Tuple[int, List[int]]:
@@ -48,8 +59,8 @@ def main() -> None:
     args, cpp_args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    task_path = Path(args.task)
-    coords_npz = Path(args.coords)
+    task_path = resolve_user_path(args.task)
+    coords_npz = resolve_user_path(args.coords)
 
     n_nodes, ids = read_task(task_path)
     id_to_coord = load_coords(coords_npz)
@@ -59,9 +70,16 @@ def main() -> None:
     executable = get_executable_path("tsp")
     recompiles_if_necessary(exe_path=executable)
 
-    process = subprocess.run([str(executable)] + cpp_args, input=payload, text=True, capture_output=True)
+    process = subprocess.run(
+        [str(executable)] + cpp_args,
+        input=payload,
+        text=True,
+        capture_output=True,
+        encoding="utf-8",
+        errors="replace",
+    )
     if process.returncode != 0:
-        raise RuntimeError(process.stderr)
+        raise RuntimeError(process.stderr.strip() or "TSP executable failed")
 
     output = json.loads(process.stdout)
     route_pos = output["route"]

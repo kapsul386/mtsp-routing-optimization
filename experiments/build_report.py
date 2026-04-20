@@ -7,6 +7,14 @@ from collections import defaultdict
 from pathlib import Path
 
 
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def resolve_path(path_str: str) -> Path:
+    path = Path(path_str)
+    return path if path.is_absolute() else ROOT / path
+
+
 def load_csv(path: Path) -> list[dict]:
     with path.open("r", encoding="utf-8", newline="") as fh:
         return list(csv.DictReader(fh))
@@ -18,14 +26,24 @@ def maybe_load_csv(path: Path | None) -> list[dict]:
     return load_csv(path)
 
 
-def to_float(row: dict, key: str) -> float:
-    return float(row[key])
+def maybe_float(value: str) -> float | None:
+    if value == "":
+        return None
+    return float(value)
+
+
+def display_value(value: str) -> str:
+    return value if value != "" else "n/a"
 
 
 def format_time_pair(our_time: str, reference_time: str | None) -> str:
     if reference_time in (None, ""):
         return our_time
     return f"{our_time} / {reference_time}"
+
+
+def is_true(value: object) -> bool:
+    return str(value).lower() == "true"
 
 
 def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_rows: list[dict]) -> str:
@@ -47,7 +65,15 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
     lines.append("")
 
     for (node_count, salesman_count), rows in sorted(grouped_by_size.items(), key=lambda item: (int(item[0][0]), int(item[0][1]))):
-        rows = sorted(rows, key=lambda row: to_float(row, "avg_objective"))
+        def score(row: dict) -> float:
+            reference_row = reference_by_key.get((row["node_count"], row["salesman_count"], row["solver"]))
+            gap = maybe_float(reference_row["avg_objective_gap"]) if reference_row is not None else None
+            if gap is not None:
+                return gap
+            objective = maybe_float(row["avg_objective"])
+            return objective if objective is not None else float("inf")
+
+        rows = sorted(rows, key=score)
         lines.append(f"### n={node_count}, m={salesman_count}")
         lines.append("")
 
@@ -66,15 +92,16 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
             reference_row = reference_by_key.get((row["node_count"], row["salesman_count"], row["solver"]))
             if reference_row is None:
                 lines.append(
-                    f"| {row['solver']} | {row['runs']} | {row['avg_objective']} | {row['avg_time_seconds']} | {row['valid_runs']} |"
+                    f"| {row['solver']} | {display_value(row['runs'])} | {display_value(row['avg_objective'])} | "
+                    f"{display_value(row['avg_time_seconds'])} | {display_value(row['valid_runs'])} |"
                 )
                 continue
 
             lines.append(
-                f"| {row['solver']} | {row['runs']} | {row['avg_objective']} | "
-                f"{reference_row['avg_reference_objective']} | {reference_row['avg_objective_gap']} | "
-                f"{format_time_pair(row['avg_time_seconds'], reference_row.get('avg_reference_time_seconds'))} | "
-                f"{row['valid_runs']} |"
+                f"| {row['solver']} | {display_value(row['runs'])} | {display_value(row['avg_objective'])} | "
+                f"{display_value(reference_row['avg_reference_objective'])} | {display_value(reference_row['avg_objective_gap'])} | "
+                f"{format_time_pair(display_value(row['avg_time_seconds']), reference_row.get('avg_reference_time_seconds'))} | "
+                f"{display_value(row['valid_runs'])} |"
             )
         lines.append("")
 
@@ -83,13 +110,14 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
 
     best_counts: dict[str, int] = defaultdict(int)
     for rows in grouped_by_size.values():
-        def score(row: dict) -> float:
-            reference_row = reference_by_key.get((row["node_count"], row["salesman_count"], row["solver"]))
-            if reference_row is not None and reference_row["avg_objective_gap"] != "":
-                return float(reference_row["avg_objective_gap"])
-            return to_float(row, "avg_objective")
-
-        best = min(rows, key=score)
+        best = min(rows, key=lambda row: (
+            maybe_float(
+                reference_by_key.get((row["node_count"], row["salesman_count"], row["solver"]), {}).get("avg_objective_gap", "")
+            )
+            if reference_by_key.get((row["node_count"], row["salesman_count"], row["solver"])) is not None and
+            maybe_float(reference_by_key[(row["node_count"], row["salesman_count"], row["solver"])]["avg_objective_gap"]) is not None
+            else (maybe_float(row["avg_objective"]) if maybe_float(row["avg_objective"]) is not None else float("inf"))
+        ))
         best_counts[best["solver"]] += 1
 
     if best_counts:
@@ -103,7 +131,8 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
 
     raw_grouped: dict[str, list[dict]] = defaultdict(list)
     for row in raw_rows:
-        raw_grouped[row["solver"]].append(row)
+        if is_true(row["valid"]):
+            raw_grouped[row["solver"]].append(row)
 
     solver_means = []
     for solver, rows in raw_grouped.items():
@@ -111,7 +140,7 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
         avg_time = sum(float(row["time_seconds"]) for row in rows) / len(rows)
         solver_reference_rows = [
             reference_row for reference_row in reference_rows
-            if reference_row["solver"] == solver and reference_row["avg_objective_gap"] != ""
+            if reference_row["solver"] == solver and maybe_float(reference_row["avg_objective_gap"]) is not None
         ]
         if solver_reference_rows:
             avg_reference = sum(float(row["avg_reference_objective"]) for row in solver_reference_rows) / len(solver_reference_rows)
@@ -129,7 +158,7 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
     solver_means.sort(key=lambda item: item[3] if item[3] is not None else item[1])
 
     if solver_means:
-        lines.append("Средние значения по всем прогонам:")
+        lines.append("Средние значения по всем валидным прогонам:")
         lines.append("")
         for solver, avg_obj, avg_reference, avg_gap, avg_time, avg_reference_time in solver_means:
             if avg_reference is None or avg_gap is None or avg_reference_time is None:
@@ -163,11 +192,11 @@ def main() -> None:
     parser.add_argument("--config", default="experiments/config.json", help="Path to experiment config JSON.")
     args = parser.parse_args()
 
-    config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-    results_csv = Path(config["results_csv"])
-    summary_csv = Path(config["summary_csv"])
-    report_md = Path(config["report_md"])
-    reference_summary_csv = Path(config["reference_summary_csv"]) if "reference_summary_csv" in config else None
+    config = json.loads(resolve_path(args.config).read_text(encoding="utf-8"))
+    results_csv = resolve_path(config["results_csv"])
+    summary_csv = resolve_path(config["summary_csv"])
+    report_md = resolve_path(config["report_md"])
+    reference_summary_csv = resolve_path(config["reference_summary_csv"]) if "reference_summary_csv" in config else None
 
     raw_rows = load_csv(results_csv)
     summary_rows = load_csv(summary_csv)

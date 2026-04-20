@@ -7,6 +7,14 @@ from collections import defaultdict
 from pathlib import Path
 
 
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def resolve_path(path_str: str) -> Path:
+    path = Path(path_str)
+    return path if path.is_absolute() else ROOT / path
+
+
 def load_csv(path: Path) -> list[dict]:
     with path.open("r", encoding="utf-8", newline="") as fh:
         return list(csv.DictReader(fh))
@@ -61,7 +69,7 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict]) -> str:
             (
                 solver,
                 sum(float(row["length"]) for row in rows) / len(rows),
-                sum(float(row["time_seconds"]) for row in rows) / len(rows)
+                sum(float(row["time_seconds"]) for row in rows) / len(rows),
             )
         )
     solver_means.sort(key=lambda item: item[1])
@@ -81,10 +89,10 @@ def main() -> None:
     parser.add_argument("--config", default="experiments/tsp_config.json", help="Path to TSP benchmark config.")
     args = parser.parse_args()
 
-    config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-    summary_rows = load_csv(Path(config["summary_csv"]))
-    raw_rows = load_csv(Path(config["results_csv"]))
-    Path(config["report_md"]).write_text(build_markdown(summary_rows, raw_rows), encoding="utf-8")
+    config = json.loads(resolve_path(args.config).read_text(encoding="utf-8"))
+    summary_rows = load_csv(resolve_path(config["summary_csv"]))
+    raw_rows = load_csv(resolve_path(config["results_csv"]))
+    resolve_path(config["report_md"]).write_text(build_markdown(summary_rows, raw_rows), encoding="utf-8")
 
 
 if __name__ == "__main__":

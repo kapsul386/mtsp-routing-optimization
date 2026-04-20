@@ -29,6 +29,18 @@ def resolve_path(path_str: str) -> Path:
     return path if path.is_absolute() else ROOT / path
 
 
+def normalize_display_path(path: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(ROOT.resolve()))
+    except ValueError:
+        return str(resolved)
+
+
+def is_true(value: object) -> bool:
+    return str(value).lower() == "true"
+
+
 def read_instance(path: Path) -> tuple[int, int, list[tuple[float, float]]]:
     lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     node_count, salesman_count = map(int, lines[0].split())
@@ -119,7 +131,7 @@ def solve_instance_with_ortools(instance_path: Path, reference_cfg: dict) -> dic
     if assignment is None:
         return {
             "instance": instance_path.name,
-            "path": str(instance_path),
+            "path": normalize_display_path(instance_path),
             "node_count": node_count,
             "salesman_count": salesman_count,
             "solver": reference_cfg.get("name", "ortools-gls"),
@@ -146,7 +158,7 @@ def solve_instance_with_ortools(instance_path: Path, reference_cfg: dict) -> dic
 
     return {
         "instance": instance_path.name,
-        "path": str(instance_path),
+        "path": normalize_display_path(instance_path),
         "node_count": node_count,
         "salesman_count": salesman_count,
         "solver": reference_cfg.get("name", "ortools-gls"),
@@ -159,17 +171,24 @@ def solve_instance_with_ortools(instance_path: Path, reference_cfg: dict) -> dic
 
 
 def build_reference_rows(source_rows: list[dict], reference_cfg: dict, existing_rows: list[dict]) -> list[dict]:
-    existing_by_path = {row["path"]: row for row in existing_rows}
+    normalized_existing_rows = []
+    for row in existing_rows:
+        normalized = dict(row)
+        normalized["path"] = normalize_display_path(resolve_path(row["path"]))
+        normalized_existing_rows.append(normalized)
+
+    existing_by_path = {row["path"]: row for row in normalized_existing_rows}
     instances: dict[str, dict] = {}
     for row in source_rows:
         resolved_path = resolve_path(row["path"])
-        instances[str(resolved_path)] = {
+        display_path = normalize_display_path(resolved_path)
+        instances[display_path] = {
             "absolute_path": resolved_path,
-            "display_path": row["path"],
+            "display_path": display_path,
         }
 
     merged_by_path = dict(existing_by_path)
-    for item in sorted(instances.values(), key=lambda value: str(value["absolute_path"])):
+    for item in sorted(instances.values(), key=lambda value: value["display_path"]):
         if item["display_path"] in merged_by_path:
             continue
         solved = solve_instance_with_ortools(item["absolute_path"], reference_cfg)
@@ -183,12 +202,16 @@ def build_comparison_rows(source_rows: list[dict], reference_rows: list[dict]) -
     rows = []
 
     for row in source_rows:
-        reference_row = reference_by_path[row["path"]]
-        solver_objective = float(row["objective"])
-        if reference_row["objective"] == "":
+        display_path = normalize_display_path(resolve_path(row["path"]))
+        reference_row = reference_by_path[display_path]
+        solver_valid = is_true(row["valid"])
+        reference_valid = is_true(reference_row["valid"])
+
+        if not solver_valid or not reference_valid or reference_row["objective"] == "":
             gap = ""
             gap_percent = ""
         else:
+            solver_objective = float(row["objective"])
             reference_objective = float(reference_row["objective"])
             gap = round(solver_objective - reference_objective, 6)
             gap_percent = round((gap / reference_objective) * 100.0, 6) if reference_objective else 0.0
@@ -196,7 +219,7 @@ def build_comparison_rows(source_rows: list[dict], reference_rows: list[dict]) -
         rows.append(
             {
                 "instance": row["instance"],
-                "path": row["path"],
+                "path": display_path,
                 "node_count": row["node_count"],
                 "salesman_count": row["salesman_count"],
                 "solver": row["solver"],
@@ -222,19 +245,24 @@ def aggregate_comparison_rows(rows: list[dict]) -> list[dict]:
 
     summary = []
     for (node_count, salesman_count, solver), items in sorted(grouped.items()):
-        objectives = [float(item["objective"]) for item in items]
+        valid_solver_rows = [item for item in items if is_true(item["valid"])]
+        valid_reference_rows = [item for item in items if is_true(item["reference_valid"]) and item["reference_objective"] != ""]
+        comparable_rows = [item for item in items if item["objective_gap"] != ""]
+
+        objectives = [float(item["objective"]) for item in valid_solver_rows]
         times = [float(item["time_seconds"]) for item in items]
-        reference_objectives = [float(item["reference_objective"]) for item in items if item["reference_objective"] != ""]
+        reference_objectives = [float(item["reference_objective"]) for item in valid_reference_rows]
         reference_times = [float(item["reference_time_seconds"]) for item in items]
-        gaps = [float(item["objective_gap"]) for item in items if item["objective_gap"] != ""]
-        gap_percents = [float(item["relative_gap_percent"]) for item in items if item["relative_gap_percent"] != ""]
+        gaps = [float(item["objective_gap"]) for item in comparable_rows]
+        gap_percents = [float(item["relative_gap_percent"]) for item in comparable_rows]
+
         summary.append(
             {
                 "node_count": node_count,
                 "salesman_count": salesman_count,
                 "solver": solver,
                 "runs": len(items),
-                "avg_objective": round(sum(objectives) / len(objectives), 6),
+                "avg_objective": round(sum(objectives) / len(objectives), 6) if objectives else "",
                 "avg_time_seconds": round(sum(times) / len(times), 6),
                 "reference_solver": items[0]["reference_solver"],
                 "avg_reference_objective": round(sum(reference_objectives) / len(reference_objectives), 6)
@@ -242,11 +270,10 @@ def aggregate_comparison_rows(rows: list[dict]) -> list[dict]:
                 "avg_reference_time_seconds": round(sum(reference_times) / len(reference_times), 6),
                 "avg_objective_gap": round(sum(gaps) / len(gaps), 6) if gaps else "",
                 "avg_relative_gap_percent": round(sum(gap_percents) / len(gap_percents), 6) if gap_percents else "",
-                "valid_runs": sum(1 for item in items if str(item["valid"]).lower() == "true"),
-                "reference_valid_runs": sum(1 for item in items if str(item["reference_valid"]).lower() == "true"),
+                "valid_runs": len(valid_solver_rows),
+                "reference_valid_runs": len(valid_reference_rows),
                 "better_than_reference_runs": sum(
-                    1 for item in items
-                    if item["objective_gap"] != "" and float(item["objective_gap"]) < 0.0
+                    1 for item in comparable_rows if float(item["objective_gap"]) < 0.0
                 ),
             }
         )

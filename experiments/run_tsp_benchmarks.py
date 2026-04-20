@@ -17,6 +17,30 @@ import numpy as np
 from python.cpp_updater import get_executable_path, recompiles_if_necessary
 
 
+def resolve_path(path_str: str) -> Path:
+    path = Path(path_str)
+    return path if path.is_absolute() else ROOT / path
+
+
+def normalize_display_path(path: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(ROOT.resolve()))
+    except ValueError:
+        return str(resolved)
+
+
+def extract_solver_name(solver_cfg: dict) -> str:
+    if solver_cfg.get("name"):
+        return str(solver_cfg["name"])
+
+    args = solver_cfg.get("args", [])
+    for idx, token in enumerate(args):
+        if token == "--step" and idx + 1 < len(args):
+            return str(args[idx + 1])
+    raise ValueError(f"Could not determine solver name from config: {solver_cfg}")
+
+
 def read_task(task_path: Path) -> tuple[int, list[int]]:
     lines = [line.strip() for line in task_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     node_count = int(lines[0])
@@ -31,26 +55,34 @@ def load_coords(coords_npz: Path) -> dict[int, tuple[float, float]]:
     return {int(row[0]): (float(row[1]), float(row[2])) for row in data}
 
 
-def run_solver(executable: Path, coords_map: dict[int, tuple[float, float]], task_path: Path, solver_args: list[str]) -> dict:
+def run_solver(executable: Path, coords_map: dict[int, tuple[float, float]], task_path: Path, solver_name: str,
+               solver_args: list[str]) -> dict:
     node_count, ids = read_task(task_path)
     latlon = np.asarray([coords_map[node_id] for node_id in ids], dtype=np.float64)
     payload = json.dumps({"n": node_count, "latlon": latlon.T.tolist()})
 
-    process = subprocess.run([str(executable)] + solver_args, input=payload, text=True, capture_output=True)
+    process = subprocess.run(
+        [str(executable)] + solver_args,
+        input=payload,
+        text=True,
+        capture_output=True,
+        encoding="utf-8",
+        errors="replace",
+    )
     if process.returncode != 0:
         raise RuntimeError(f"{task_path} | {' '.join(solver_args)}\n{process.stderr}")
 
     output = json.loads(process.stdout)
     return {
         "task": task_path.name,
-        "path": str(task_path),
+        "path": normalize_display_path(task_path),
         "node_count": node_count,
-        "solver": solver_args[1] if len(solver_args) >= 2 else "unknown",
+        "solver": solver_name,
         "length": float(output["len"]),
         "time_seconds": float(output["time"]),
         "step_time_seconds": float(output["steps"][-1]["time"]) if output.get("steps") else float(output["time"]),
         "steps": json.dumps(output.get("steps", []), ensure_ascii=False),
-        "route": json.dumps(output["route"], ensure_ascii=False)
+        "route": json.dumps(output["route"], ensure_ascii=False),
     }
 
 
@@ -76,7 +108,7 @@ def aggregate(rows: list[dict]) -> list[dict]:
                 "runs": len(items),
                 "avg_length": round(sum(item["length"] for item in items) / len(items), 6),
                 "avg_time_seconds": round(sum(item["time_seconds"] for item in items) / len(items), 6),
-                "avg_step_time_seconds": round(sum(item["step_time_seconds"] for item in items) / len(items), 6)
+                "avg_step_time_seconds": round(sum(item["step_time_seconds"] for item in items) / len(items), 6),
             }
         )
     return summary
@@ -87,13 +119,14 @@ def main() -> None:
     parser.add_argument("--config", default="experiments/tsp_config.json", help="Path to TSP benchmark config.")
     args = parser.parse_args()
 
-    config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-    task_dir = Path(config["task_dir"])
+    config_path = resolve_path(args.config)
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    task_dir = resolve_path(config["task_dir"])
     tasks = sorted(task_dir.glob("*.txt"))
     if not tasks:
         raise RuntimeError(f"No tasks found in {task_dir}")
 
-    coords_npz = Path(config["coords_npz"])
+    coords_npz = resolve_path(config["coords_npz"])
     coords_map = load_coords(coords_npz)
 
     executable = get_executable_path("tsp")
@@ -102,17 +135,17 @@ def main() -> None:
     rows = []
     for task_path in tasks:
         for solver in config["solvers"]:
-            rows.append(run_solver(executable, coords_map, task_path, solver["args"]))
+            rows.append(run_solver(executable, coords_map, task_path, extract_solver_name(solver), solver["args"]))
 
     write_csv(
-        Path(config["results_csv"]),
+        resolve_path(config["results_csv"]),
         rows,
-        ["task", "path", "node_count", "solver", "length", "time_seconds", "step_time_seconds", "steps", "route"]
+        ["task", "path", "node_count", "solver", "length", "time_seconds", "step_time_seconds", "steps", "route"],
     )
     write_csv(
-        Path(config["summary_csv"]),
+        resolve_path(config["summary_csv"]),
         aggregate(rows),
-        ["node_count", "solver", "runs", "avg_length", "avg_time_seconds", "avg_step_time_seconds"]
+        ["node_count", "solver", "runs", "avg_length", "avg_time_seconds", "avg_step_time_seconds"],
     )
 
 
