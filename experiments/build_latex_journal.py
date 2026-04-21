@@ -4,6 +4,8 @@ import csv
 from collections import defaultdict
 from pathlib import Path
 
+from mtsp_experiment_utils import ensure_instance_families, instance_family_sort_key
+
 
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS_DIR = ROOT / "data" / "results"
@@ -82,13 +84,13 @@ def overall_solver_rows(rows: list[dict[str, str]]) -> list[dict[str, float | st
 
 
 def best_by_config(rows: list[dict[str, str]]) -> list[dict[str, str]]:
-    grouped: dict[tuple[int, int], list[dict[str, str]]] = defaultdict(list)
+    grouped: dict[tuple[str, int, int], list[dict[str, str]]] = defaultdict(list)
     for row in rows:
-        key = (int(row["node_count"]), int(row["salesman_count"]))
+        key = (str(row["instance_family"]), int(row["node_count"]), int(row["salesman_count"]))
         grouped[key].append(row)
 
     result: list[dict[str, str]] = []
-    for key in sorted(grouped):
+    for key in sorted(grouped, key=lambda item: (instance_family_sort_key(item[0]), item[1], item[2])):
         comparable_rows = [row for row in grouped[key] if maybe_float(row["avg_objective_gap"]) is not None]
         if not comparable_rows:
             comparable_rows = [row for row in grouped[key] if maybe_float(row["avg_objective"]) is not None]
@@ -109,18 +111,22 @@ def best_solver_counts(rows: list[dict[str, str]]) -> list[tuple[str, int]]:
 
 
 def version_side_by_side(rows: list[dict[str, str]]) -> list[dict[str, str]]:
-    grouped: dict[tuple[int, int], dict[str, dict[str, str]]] = defaultdict(dict)
+    grouped: dict[tuple[str, int, int], dict[str, dict[str, str]]] = defaultdict(dict)
     for row in rows:
-        key = (int(row["node_count"]), int(row["salesman_count"]))
+        key = (str(row["instance_family"]), int(row["node_count"]), int(row["salesman_count"]))
         grouped[key][row["solver"]] = row
 
     output: list[dict[str, str]] = []
-    for (node_count, salesman_count) in sorted(grouped):
-        versions = grouped[(node_count, salesman_count)]
+    for (instance_family, node_count, salesman_count) in sorted(
+        grouped,
+        key=lambda item: (instance_family_sort_key(item[0]), item[1], item[2]),
+    ):
+        versions = grouped[(instance_family, node_count, salesman_count)]
         if "lkh-wrapper-v1" not in versions or "lkh-wrapper-v2" not in versions:
             continue
         output.append(
             {
+                "instance_family": instance_family,
                 "node_count": str(node_count),
                 "salesman_count": str(salesman_count),
                 "v1_objective": versions["lkh-wrapper-v1"]["avg_objective"],
@@ -167,23 +173,24 @@ def render_main_comparison(rows: list[dict[str, str]]) -> str:
 def render_best_configs(rows: list[dict[str, str]]) -> str:
     best_rows = best_by_config(rows)
     lines = [
-        r"\subsection{Лучший метод по каждой конфигурации $(n, m)$}",
+        r"\subsection{Лучший метод по каждой конфигурации $(family, n, m)$}",
         r"\begin{center}",
         r"\small",
-        r"\begin{longtable}{rrlrrrr}",
+        r"\begin{longtable}{lrrlrrrr}",
         r"\toprule",
-        r"$n$ & $m$ & Метод & Наше значение & Reference & Gap & Время, с \\",
+        r"Family & $n$ & $m$ & Метод & Наше значение & Reference & Gap & Время, с \\",
         r"\midrule",
         r"\endfirsthead",
         r"\toprule",
-        r"$n$ & $m$ & Метод & Наше значение & Reference & Gap & Время, с \\",
+        r"Family & $n$ & $m$ & Метод & Наше значение & Reference & Gap & Время, с \\",
         r"\midrule",
         r"\endhead",
     ]
     for row in best_rows:
         lines.append(
-            r"%s & %s & \texttt{%s} & %s & %s & %s & %s \\"
+            r"\texttt{%s} & %s & %s & \texttt{%s} & %s & %s & %s & %s \\"
             % (
+                tex_escape(row["instance_family"]),
                 row["node_count"],
                 row["salesman_count"],
                 tex_escape(row["solver"]),
@@ -231,25 +238,26 @@ def render_version_comparison(rows: list[dict[str, str]]) -> str:
             r"\subsection{Покомпонентное сравнение \texttt{v1} и \texttt{v2}}",
             r"\begin{center}",
             r"\small",
-            r"\begin{longtable}{rr|rrr|rrr}",
+            r"\begin{longtable}{lrr|rrr|rrr}",
             r"\toprule",
-            r"$n$ & $m$ & \multicolumn{3}{c|}{\texttt{lkh-wrapper-v1}} & \multicolumn{3}{c}{\texttt{lkh-wrapper-v2}} \\",
-            r"\cmidrule(lr){3-5}\cmidrule(l){6-8}",
-            r" &  & Значение & Gap & Время, с & Значение & Gap & Время, с \\",
+            r"Family & $n$ & $m$ & \multicolumn{3}{c|}{\texttt{lkh-wrapper-v1}} & \multicolumn{3}{c}{\texttt{lkh-wrapper-v2}} \\",
+            r"\cmidrule(lr){4-6}\cmidrule(l){7-9}",
+            r" &  &  & Значение & Gap & Время, с & Значение & Gap & Время, с \\",
             r"\midrule",
             r"\endfirsthead",
             r"\toprule",
-            r"$n$ & $m$ & \multicolumn{3}{c|}{\texttt{lkh-wrapper-v1}} & \multicolumn{3}{c}{\texttt{lkh-wrapper-v2}} \\",
-            r"\cmidrule(lr){3-5}\cmidrule(l){6-8}",
-            r" &  & Значение & Gap & Время, с & Значение & Gap & Время, с \\",
+            r"Family & $n$ & $m$ & \multicolumn{3}{c|}{\texttt{lkh-wrapper-v1}} & \multicolumn{3}{c}{\texttt{lkh-wrapper-v2}} \\",
+            r"\cmidrule(lr){4-6}\cmidrule(l){7-9}",
+            r" &  &  & Значение & Gap & Время, с & Значение & Gap & Время, с \\",
             r"\midrule",
             r"\endhead",
         ]
     )
     for row in side_by_side:
         lines.append(
-            r"%s & %s & %s & %s & %s & %s & %s & %s \\"
+            r"\texttt{%s} & %s & %s & %s & %s & %s & %s & %s & %s \\"
             % (
+                tex_escape(row["instance_family"]),
                 row["node_count"],
                 row["salesman_count"],
                 fmt_metric(float(row["v1_objective"])),
@@ -282,6 +290,7 @@ def render_observations(rows: list[dict[str, str]], version_rows: list[dict[str,
         % (fmt_metric(v2_gap), fmt_metric(v1_gap)),
         r"\item Среднее время версии \texttt{lkh-wrapper-v2} также ниже: %s с против %s с."
         % (fmt_time(v2_time), fmt_time(v1_time)),
+        r"\item Конфигурации теперь считаются раздельно по семействам инстансов, поэтому таблицы не смешивают \texttt{uniform}, \texttt{clustered-*} и \texttt{mixed-outliers}.",
         r"\end{itemize}",
         "",
     ]
@@ -289,8 +298,8 @@ def render_observations(rows: list[dict[str, str]], version_rows: list[dict[str,
 
 
 def main() -> None:
-    mtsp_reference_summary = read_csv(RESULTS_DIR / "mtsp_reference_summary.csv")
-    lkh_versions_reference_summary = read_csv(RESULTS_DIR / "lkh_versions_reference_summary.csv")
+    mtsp_reference_summary = ensure_instance_families(read_csv(RESULTS_DIR / "mtsp_reference_summary.csv"))
+    lkh_versions_reference_summary = ensure_instance_families(read_csv(RESULTS_DIR / "lkh_versions_reference_summary.csv"))
 
     sections = [
         "% Auto-generated by experiments/build_latex_journal.py. Do not edit manually.",

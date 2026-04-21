@@ -8,6 +8,8 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
+from mtsp_experiment_utils import ensure_instance_family, instance_family_sort_key
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -129,7 +131,8 @@ def solve_instance_with_ortools(instance_path: Path, reference_cfg: dict) -> dic
     assignment = routing.SolveWithParameters(search_parameters)
     elapsed = time.perf_counter() - started_at
     if assignment is None:
-        return {
+        return ensure_instance_family(
+            {
             "instance": instance_path.name,
             "path": normalize_display_path(instance_path),
             "node_count": node_count,
@@ -140,7 +143,8 @@ def solve_instance_with_ortools(instance_path: Path, reference_cfg: dict) -> dic
             "valid": False,
             "routes": "[]",
             "status": "no_solution",
-        }
+            }
+        )
 
     routes: list[list[int]] = []
     for vehicle_id in range(salesman_count):
@@ -156,7 +160,8 @@ def solve_instance_with_ortools(instance_path: Path, reference_cfg: dict) -> dic
     objective = sum(route_length(coords, route) for route in routes)
     valid = validate_routes(routes, node_count)
 
-    return {
+    return ensure_instance_family(
+        {
         "instance": instance_path.name,
         "path": normalize_display_path(instance_path),
         "node_count": node_count,
@@ -167,32 +172,37 @@ def solve_instance_with_ortools(instance_path: Path, reference_cfg: dict) -> dic
         "valid": valid,
         "routes": json.dumps(routes, ensure_ascii=False),
         "status": "ok" if valid else "invalid",
-    }
+        }
+    )
 
 
 def build_reference_rows(source_rows: list[dict], reference_cfg: dict, existing_rows: list[dict]) -> list[dict]:
     normalized_existing_rows = []
     for row in existing_rows:
-        normalized = dict(row)
+        normalized = ensure_instance_family(row)
         normalized["path"] = normalize_display_path(resolve_path(row["path"]))
         normalized_existing_rows.append(normalized)
 
     existing_by_path = {row["path"]: row for row in normalized_existing_rows}
     instances: dict[str, dict] = {}
     for row in source_rows:
-        resolved_path = resolve_path(row["path"])
+        normalized_row = ensure_instance_family(row)
+        resolved_path = resolve_path(str(normalized_row["path"]))
         display_path = normalize_display_path(resolved_path)
         instances[display_path] = {
             "absolute_path": resolved_path,
             "display_path": display_path,
+            "instance_family": normalized_row["instance_family"],
         }
 
     merged_by_path = dict(existing_by_path)
     for item in sorted(instances.values(), key=lambda value: value["display_path"]):
         if item["display_path"] in merged_by_path:
+            merged_by_path[item["display_path"]]["instance_family"] = item["instance_family"]
             continue
         solved = solve_instance_with_ortools(item["absolute_path"], reference_cfg)
         solved["path"] = item["display_path"]
+        solved["instance_family"] = item["instance_family"]
         merged_by_path[item["display_path"]] = solved
     return [merged_by_path[key] for key in sorted(merged_by_path)]
 
@@ -202,34 +212,37 @@ def build_comparison_rows(source_rows: list[dict], reference_rows: list[dict]) -
     rows = []
 
     for row in source_rows:
-        display_path = normalize_display_path(resolve_path(row["path"]))
+        normalized_row = ensure_instance_family(row)
+        display_path = normalize_display_path(resolve_path(str(normalized_row["path"])))
         reference_row = reference_by_path[display_path]
-        solver_valid = is_true(row["valid"])
+        normalized_reference_row = ensure_instance_family(reference_row)
+        solver_valid = is_true(normalized_row["valid"])
         reference_valid = is_true(reference_row["valid"])
 
         if not solver_valid or not reference_valid or reference_row["objective"] == "":
             gap = ""
             gap_percent = ""
         else:
-            solver_objective = float(row["objective"])
+            solver_objective = float(normalized_row["objective"])
             reference_objective = float(reference_row["objective"])
             gap = round(solver_objective - reference_objective, 6)
             gap_percent = round((gap / reference_objective) * 100.0, 6) if reference_objective else 0.0
 
         rows.append(
             {
-                "instance": row["instance"],
+                "instance_family": normalized_row["instance_family"],
+                "instance": normalized_row["instance"],
                 "path": display_path,
-                "node_count": row["node_count"],
-                "salesman_count": row["salesman_count"],
-                "solver": row["solver"],
-                "objective": row["objective"],
-                "time_seconds": row["time_seconds"],
-                "valid": row["valid"],
-                "reference_solver": reference_row["solver"],
-                "reference_objective": reference_row["objective"],
-                "reference_time_seconds": reference_row["time_seconds"],
-                "reference_valid": reference_row["valid"],
+                "node_count": normalized_row["node_count"],
+                "salesman_count": normalized_row["salesman_count"],
+                "solver": normalized_row["solver"],
+                "objective": normalized_row["objective"],
+                "time_seconds": normalized_row["time_seconds"],
+                "valid": normalized_row["valid"],
+                "reference_solver": normalized_reference_row["solver"],
+                "reference_objective": normalized_reference_row["objective"],
+                "reference_time_seconds": normalized_reference_row["time_seconds"],
+                "reference_valid": normalized_reference_row["valid"],
                 "objective_gap": gap,
                 "relative_gap_percent": gap_percent,
             }
@@ -239,12 +252,28 @@ def build_comparison_rows(source_rows: list[dict], reference_rows: list[dict]) -
 
 
 def aggregate_comparison_rows(rows: list[dict]) -> list[dict]:
-    grouped: dict[tuple[int, int, str], list[dict]] = defaultdict(list)
+    grouped: dict[tuple[str, int, int, str], list[dict]] = defaultdict(list)
     for row in rows:
-        grouped[(int(row["node_count"]), int(row["salesman_count"]), row["solver"])].append(row)
+        normalized_row = ensure_instance_family(row)
+        grouped[
+            (
+                str(normalized_row["instance_family"]),
+                int(normalized_row["node_count"]),
+                int(normalized_row["salesman_count"]),
+                str(normalized_row["solver"]),
+            )
+        ].append(normalized_row)
 
     summary = []
-    for (node_count, salesman_count, solver), items in sorted(grouped.items()):
+    for (instance_family, node_count, salesman_count, solver), items in sorted(
+        grouped.items(),
+        key=lambda item: (
+            instance_family_sort_key(item[0][0]),
+            item[0][1],
+            item[0][2],
+            item[0][3],
+        ),
+    ):
         valid_solver_rows = [item for item in items if is_true(item["valid"])]
         valid_reference_rows = [item for item in items if is_true(item["reference_valid"]) and item["reference_objective"] != ""]
         comparable_rows = [item for item in items if item["objective_gap"] != ""]
@@ -258,6 +287,7 @@ def aggregate_comparison_rows(rows: list[dict]) -> list[dict]:
 
         summary.append(
             {
+                "instance_family": instance_family,
                 "node_count": node_count,
                 "salesman_count": salesman_count,
                 "solver": solver,
@@ -307,6 +337,7 @@ def main() -> None:
         reference_results_csv,
         reference_rows,
         [
+            "instance_family",
             "instance",
             "path",
             "node_count",
@@ -323,6 +354,7 @@ def main() -> None:
         resolve_path(config["comparison_csv"]),
         comparison_rows,
         [
+            "instance_family",
             "instance",
             "path",
             "node_count",
@@ -343,6 +375,7 @@ def main() -> None:
         resolve_path(config["summary_csv"]),
         summary_rows,
         [
+            "instance_family",
             "node_count",
             "salesman_count",
             "solver",

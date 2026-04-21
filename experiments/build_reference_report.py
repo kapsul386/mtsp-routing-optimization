@@ -6,6 +6,9 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+from mtsp_experiment_utils import ensure_instance_families, instance_family_sort_key
+
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -34,15 +37,18 @@ def is_true(value: object) -> bool:
 
 
 def build_markdown(summary_rows: list[dict], comparison_rows: list[dict]) -> str:
-    grouped_by_size: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    summary_rows = ensure_instance_families(summary_rows)
+    comparison_rows = ensure_instance_families(comparison_rows)
+
+    grouped_by_config: dict[tuple[str, str, str], list[dict]] = defaultdict(list)
     for row in summary_rows:
-        grouped_by_size[(row["node_count"], row["salesman_count"])].append(row)
+        grouped_by_config[(row["instance_family"], row["node_count"], row["salesman_count"])].append(row)
 
     lines: list[str] = []
     lines.append("# Сравнение с внешним reference baseline")
     lines.append("")
     lines.append(
-        "Этот отчет сравнивает наши mTSP-эвристики с внешним решением OR-Tools (`GUIDED_LOCAL_SEARCH`) "
+        "Этот отчёт сравнивает наши mTSP-эвристики с внешним решением OR-Tools (`GUIDED_LOCAL_SEARCH`) "
         "на том же наборе инстансов."
     )
     lines.append("")
@@ -53,13 +59,20 @@ def build_markdown(summary_rows: list[dict], comparison_rows: list[dict]) -> str
     lines.append("## Агрегированные таблицы")
     lines.append("")
 
-    for (node_count, salesman_count), rows in sorted(grouped_by_size.items(), key=lambda item: (int(item[0][0]), int(item[0][1]))):
+    for (instance_family, node_count, salesman_count), rows in sorted(
+        grouped_by_config.items(),
+        key=lambda item: (
+            instance_family_sort_key(item[0][0]),
+            int(item[0][1]),
+            int(item[0][2]),
+        ),
+    ):
         rows = sorted(
             rows,
             key=lambda row: maybe_float(row["avg_objective_gap"])
             if maybe_float(row["avg_objective_gap"]) is not None else float("inf"),
         )
-        lines.append(f"### n={node_count}, m={salesman_count}")
+        lines.append(f"### {instance_family} | n={node_count}, m={salesman_count}")
         lines.append("")
         lines.append("| Solver | Runs | Our | OR-Tools | Gap | Gap % | Time (our/ref) | Valid Runs |")
         lines.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
@@ -77,7 +90,7 @@ def build_markdown(summary_rows: list[dict], comparison_rows: list[dict]) -> str
     lines.append("")
 
     best_gap_counts: dict[str, int] = defaultdict(int)
-    for rows in grouped_by_size.values():
+    for rows in grouped_by_config.values():
         valid_rows = [row for row in rows if maybe_float(row["avg_objective_gap"]) is not None]
         if not valid_rows:
             continue
@@ -123,11 +136,11 @@ def build_markdown(summary_rows: list[dict], comparison_rows: list[dict]) -> str
     lines.append("## Интерпретация")
     lines.append("")
     lines.append(
-        "Главный формат сравнения здесь фиксирован: `our | OR-Tools | gap | time`."
+        "Главный формат сравнения здесь фиксирован: `family | our | OR-Tools | gap | time`."
     )
     lines.append(
-        "Если новая версия `lkh-wrapper` уменьшает gap на том же canonical reference CSV, "
-        "значит улучшение действительно содержательное, а не случайное."
+        "Агрегация теперь идёт отдельно по семействам инстансов, поэтому длинные хвосты `mixed-outliers` "
+        "и более регулярные `uniform`/`clustered-*` не смешиваются в одной строке."
     )
     lines.append("")
 

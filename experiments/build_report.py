@@ -6,6 +6,8 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+from mtsp_experiment_utils import ensure_instance_families, instance_family_sort_key
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -46,15 +48,20 @@ def is_true(value: object) -> bool:
     return str(value).lower() == "true"
 
 
-def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_rows: list[dict]) -> str:
-    grouped_by_size: dict[tuple[str, str], list[dict]] = defaultdict(list)
-    for row in summary_rows:
-        grouped_by_size[(row["node_count"], row["salesman_count"])].append(row)
+def report_key(row: dict) -> tuple[str, str, str, str]:
+    return row["instance_family"], row["node_count"], row["salesman_count"], row["solver"]
 
-    reference_by_key = {
-        (row["node_count"], row["salesman_count"], row["solver"]): row
-        for row in reference_rows
-    }
+
+def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_rows: list[dict]) -> str:
+    summary_rows = ensure_instance_families(summary_rows)
+    raw_rows = ensure_instance_families(raw_rows)
+    reference_rows = ensure_instance_families(reference_rows)
+
+    grouped_by_config: dict[tuple[str, str, str], list[dict]] = defaultdict(list)
+    for row in summary_rows:
+        grouped_by_config[(row["instance_family"], row["node_count"], row["salesman_count"])].append(row)
+
+    reference_by_key = {report_key(row): row for row in reference_rows}
 
     lines: list[str] = []
     lines.append("# Результаты вычислительных экспериментов")
@@ -64,9 +71,16 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
     lines.append("## Агрегированные таблицы")
     lines.append("")
 
-    for (node_count, salesman_count), rows in sorted(grouped_by_size.items(), key=lambda item: (int(item[0][0]), int(item[0][1]))):
+    for (instance_family, node_count, salesman_count), rows in sorted(
+        grouped_by_config.items(),
+        key=lambda item: (
+            instance_family_sort_key(item[0][0]),
+            int(item[0][1]),
+            int(item[0][2]),
+        ),
+    ):
         def score(row: dict) -> float:
-            reference_row = reference_by_key.get((row["node_count"], row["salesman_count"], row["solver"]))
+            reference_row = reference_by_key.get(report_key(row))
             gap = maybe_float(reference_row["avg_objective_gap"]) if reference_row is not None else None
             if gap is not None:
                 return gap
@@ -74,13 +88,10 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
             return objective if objective is not None else float("inf")
 
         rows = sorted(rows, key=score)
-        lines.append(f"### n={node_count}, m={salesman_count}")
+        lines.append(f"### {instance_family} | n={node_count}, m={salesman_count}")
         lines.append("")
 
-        has_reference = any(
-            (row["node_count"], row["salesman_count"], row["solver"]) in reference_by_key
-            for row in rows
-        )
+        has_reference = any(report_key(row) in reference_by_key for row in rows)
         if has_reference:
             lines.append("| Solver | Runs | Our | OR-Tools | Gap | Time (our/ref) | Valid Runs |")
             lines.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: |")
@@ -89,7 +100,7 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
             lines.append("| --- | ---: | ---: | ---: | ---: |")
 
         for row in rows:
-            reference_row = reference_by_key.get((row["node_count"], row["salesman_count"], row["solver"]))
+            reference_row = reference_by_key.get(report_key(row))
             if reference_row is None:
                 lines.append(
                     f"| {row['solver']} | {display_value(row['runs'])} | {display_value(row['avg_objective'])} | "
@@ -109,15 +120,16 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
     lines.append("")
 
     best_counts: dict[str, int] = defaultdict(int)
-    for rows in grouped_by_size.values():
-        best = min(rows, key=lambda row: (
-            maybe_float(
-                reference_by_key.get((row["node_count"], row["salesman_count"], row["solver"]), {}).get("avg_objective_gap", "")
-            )
-            if reference_by_key.get((row["node_count"], row["salesman_count"], row["solver"])) is not None and
-            maybe_float(reference_by_key[(row["node_count"], row["salesman_count"], row["solver"])]["avg_objective_gap"]) is not None
-            else (maybe_float(row["avg_objective"]) if maybe_float(row["avg_objective"]) is not None else float("inf"))
-        ))
+    for rows in grouped_by_config.values():
+        best = min(
+            rows,
+            key=lambda row: (
+                maybe_float(reference_by_key.get(report_key(row), {}).get("avg_objective_gap", ""))
+                if reference_by_key.get(report_key(row)) is not None and
+                maybe_float(reference_by_key[report_key(row)]["avg_objective_gap"]) is not None
+                else (maybe_float(row["avg_objective"]) if maybe_float(row["avg_objective"]) is not None else float("inf"))
+            ),
+        )
         best_counts[best["solver"]] += 1
 
     if best_counts:
@@ -170,17 +182,18 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
                 )
         lines.append("")
 
-    lines.append("## Интерпретация для отчета")
+    lines.append("## Интерпретация для отчёта")
     lines.append("")
     lines.append(
-        "Основной ориентир теперь задается не только внутренним сравнением между нашими методами, "
+        "Основной ориентир теперь задаётся не только внутренним сравнением между нашими методами, "
         "но и единым зафиксированным reference CSV от OR-Tools."
     )
     lines.append(
-        "Базовый формат чтения строк в отчетах теперь такой: `our | OR-Tools | gap | time`."
+        "Агрегация теперь ведётся отдельно по семействам инстансов, поэтому `uniform`, `clustered-*` и "
+        "`mixed-outliers` не смешиваются в одной строке сводки."
     )
     lines.append(
-        "Это позволяет честно оценивать прогресс новых версий `lkh-wrapper` относительно одного и того же внешнего baseline."
+        "Базовый формат чтения строк в отчётах теперь такой: `family | our | OR-Tools | gap | time`."
     )
     lines.append("")
 

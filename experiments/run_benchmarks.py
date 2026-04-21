@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from python.cpp_updater import get_executable_path, recompiles_if_necessary
+from mtsp_experiment_utils import ensure_instance_family, instance_family_sort_key
 
 
 def resolve_path(path_str: str) -> Path:
@@ -67,7 +68,8 @@ def run_solver(executable: Path, instance_path: Path, solver_name: str, solver_a
         raise RuntimeError(f"{instance_path} | {' '.join(solver_args)}\n{process.stderr}")
 
     output = json.loads(process.stdout)
-    return {
+    return ensure_instance_family(
+        {
         "instance": instance_path.name,
         "path": normalize_display_path(instance_path),
         "node_count": node_count,
@@ -79,7 +81,8 @@ def run_solver(executable: Path, instance_path: Path, solver_name: str, solver_a
         "valid": bool(output["valid"]),
         "steps": json.dumps(output.get("steps", []), ensure_ascii=False),
         "routes": json.dumps(output["routes"], ensure_ascii=False),
-    }
+        }
+    )
 
 
 def write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
@@ -91,18 +94,35 @@ def write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
 
 
 def aggregate(rows: list[dict]) -> list[dict]:
-    grouped: dict[tuple[int, int, str], list[dict]] = defaultdict(list)
+    grouped: dict[tuple[str, int, int, str], list[dict]] = defaultdict(list)
     for row in rows:
-        grouped[(row["node_count"], row["salesman_count"], row["solver"])].append(row)
+        normalized_row = ensure_instance_family(row)
+        grouped[
+            (
+                str(normalized_row["instance_family"]),
+                int(normalized_row["node_count"]),
+                int(normalized_row["salesman_count"]),
+                str(normalized_row["solver"]),
+            )
+        ].append(normalized_row)
 
     summary = []
-    for (node_count, salesman_count, solver), items in sorted(grouped.items()):
+    for (instance_family, node_count, salesman_count, solver), items in sorted(
+        grouped.items(),
+        key=lambda item: (
+            instance_family_sort_key(item[0][0]),
+            item[0][1],
+            item[0][2],
+            item[0][3],
+        ),
+    ):
         valid_items = [item for item in items if item["valid"]]
         avg_objective = round(sum(item["objective"] for item in valid_items) / len(valid_items), 6) if valid_items else ""
         avg_time = round(sum(item["time_seconds"] for item in items) / len(items), 6)
         avg_step_time = round(sum(item["step_time_seconds"] for item in items) / len(items), 6)
         summary.append(
             {
+                "instance_family": instance_family,
                 "node_count": node_count,
                 "salesman_count": salesman_count,
                 "solver": solver,
@@ -144,7 +164,7 @@ def main() -> None:
         results_csv,
         rows,
         [
-            "instance", "path", "node_count", "salesman_count", "solver", "objective",
+            "instance_family", "instance", "path", "node_count", "salesman_count", "solver", "objective",
             "time_seconds", "step_time_seconds", "valid", "steps", "routes",
         ],
     )
@@ -152,7 +172,7 @@ def main() -> None:
         summary_csv,
         aggregate(rows),
         [
-            "node_count", "salesman_count", "solver", "runs", "avg_objective",
+            "instance_family", "node_count", "salesman_count", "solver", "runs", "avg_objective",
             "avg_time_seconds", "avg_step_time_seconds", "valid_runs",
         ],
     )

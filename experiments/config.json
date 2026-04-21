@@ -36,6 +36,22 @@
     "repeats": 10,
     "base_seed": 20260404,
     "width": 100.0,
-    "height": 100.0
+    "height": 100.0,
+    "families": ["uniform", "clustered-center", "clustered-offset-depot", "mixed-outliers"],
+    "cluster_counts": [3, 4],
+    "cluster_spread_ratio": 0.08,
+    "cluster_center_margin_ratio": 0.18,
+    "cluster_center_separation_ratio": 0.2,
+    "depot_margin_ratio": 0.08,
+    "depot_separation_ratio": 0.18,
+    "mixed_outlier_ratio_min": 0.1,
+    "mixed_outlier_ratio_max": 0.2,
+    "mixed_outlier_cluster_distance_ratio": 0.3,
+    "mixed_outlier_depot_distance_ratio": 0.22,
+    "mixed_outlier_edge_band_ratio": 0.12,
+    "extra_salesmen_by_node_count": {
+      "100": [7],
+      "200": [7]
+    }
   }
 }
