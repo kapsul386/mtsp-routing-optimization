@@ -1,0 +1,37 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{indentfirst}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{csquotes}
+\usepackage[
+  backend=bibtex,
+  style=numeric,
+  sorting=none,
+  giveninits=true,
+  doi=true,
+  url=true,
+  isbn=false,
+  eprint=false
+]{biblatex}
+
+\geometry{left=2.5cm,right=1.8cm,top=2cm,bottom=2cm}
+\setlength{\parindent}{1.25cm}
+\setstretch{1.35}
+\renewcommand{\arraystretch}{1.15}
+\hypersetup{colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black}
+\addbibresource{mtsp_experiment_methodology_appendix.bib}
+
+\begin{document}
+\input{mtsp_experiment_methodology_appendix_body}
+\end{document}
