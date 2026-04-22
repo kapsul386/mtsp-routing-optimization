@@ -7,16 +7,21 @@
 
 #include "../include/json.hpp"
 #include <mtsp_factory.h>
+#include <mtsp_instance.h>
 #include <mtsp_solver.h>
 #include <mtsp_utils.h>
 
-inline std::vector<std::pair<std::string, std::unordered_map<std::string, std::string>>>
-ParseMtspArguments(int argc, char** argv) {
+struct MtspCliOptions {
+    std::string input_file;
+    std::vector<std::pair<std::string, std::unordered_map<std::string, std::string>>> steps;
+};
+
+inline MtspCliOptions ParseMtspArguments(int argc, char** argv) {
     if ((argc - 1) % 2 != 0) {
         throw std::runtime_error("Arguments must be passed as --key value pairs.");
     }
 
-    std::vector<std::pair<std::string, std::unordered_map<std::string, std::string>>> steps;
+    MtspCliOptions options;
     std::unordered_map<std::string, std::string> args;
     std::string solver_name;
 
@@ -28,12 +33,19 @@ ParseMtspArguments(int argc, char** argv) {
         }
 
         name = name.substr(2);
+        if (name == "input-file") {
+            if (val.empty()) {
+                throw std::runtime_error("Path after --input-file must not be empty.");
+            }
+            options.input_file = val;
+            continue;
+        }
         if (name == "step") {
             if (val.empty()) {
                 throw std::runtime_error("Solver name after --step must not be empty.");
             }
             if (!solver_name.empty()) {
-                steps.emplace_back(solver_name, args);
+                options.steps.emplace_back(solver_name, args);
                 args.clear();
             }
             solver_name = val;
@@ -46,22 +58,26 @@ ParseMtspArguments(int argc, char** argv) {
     }
 
     if (!solver_name.empty()) {
-        steps.emplace_back(solver_name, args);
+        options.steps.emplace_back(solver_name, args);
     }
-    if (steps.empty()) {
+    if (options.steps.empty()) {
         throw std::runtime_error("At least one --step <solver> must be provided.");
     }
 
-    return steps;
+    return options;
 }
 
 int main(int argc, char** argv) {
     try {
-        auto steps = ParseMtspArguments(argc, argv);
+        auto options = ParseMtspArguments(argc, argv);
+        mtsp::Instance::Reset();
+        if (!options.input_file.empty()) {
+            mtsp::Instance::LoadFromFile(options.input_file);
+        }
 
         std::vector<std::unique_ptr<mtsp::Solver>> solvers;
         std::vector<std::string> solver_names;
-        for (const auto& [name, args] : steps) {
+        for (const auto& [name, args] : options.steps) {
             solvers.push_back(mtsp::SolverFactory::Create(name));
             solvers.back()->Configure(args);
             solver_names.push_back(name);

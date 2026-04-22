@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -15,6 +14,7 @@ if str(ROOT) not in sys.path:
 import numpy as np
 
 from python.cpp_updater import get_executable_path, recompiles_if_necessary
+from python.tsp_runner import run_latlon_solver
 
 
 def resolve_path(path_str: str) -> Path:
@@ -59,20 +59,7 @@ def run_solver(executable: Path, coords_map: dict[int, tuple[float, float]], tas
                solver_args: list[str]) -> dict:
     node_count, ids = read_task(task_path)
     latlon = np.asarray([coords_map[node_id] for node_id in ids], dtype=np.float64)
-    payload = json.dumps({"n": node_count, "latlon": latlon.T.tolist()})
-
-    process = subprocess.run(
-        [str(executable)] + solver_args,
-        input=payload,
-        text=True,
-        capture_output=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    if process.returncode != 0:
-        raise RuntimeError(f"{task_path} | {' '.join(solver_args)}\n{process.stderr}")
-
-    output = json.loads(process.stdout)
+    output = run_latlon_solver(executable, latlon, solver_args)
     return {
         "task": task_path.name,
         "path": normalize_display_path(task_path),

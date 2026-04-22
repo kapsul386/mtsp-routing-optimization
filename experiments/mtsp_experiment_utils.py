@@ -11,6 +11,9 @@ INSTANCE_FAMILY_ORDER = {
     "clustered-center": 1,
     "clustered-offset-depot": 2,
     "mixed-outliers": 3,
+    "outliers": 4,
+    "mixed": 5,
+    "high-m-stress": 6,
 }
 
 

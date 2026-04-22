@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
-import json
 import math
-import subprocess
 from pathlib import Path
 
 import pandas as pd
@@ -12,6 +10,12 @@ from scipy import stats
 
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from python.mtsp_runner import run_solver as run_mtsp_solver
 
 
 def load_generator_module():
@@ -75,26 +79,8 @@ def ensure_pilot_instances(pilot_dir: Path) -> list[dict]:
     return specs
 
 
-def read_instance(path: Path) -> tuple[int, int, list[tuple[float, float]]]:
-    lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    node_count, salesman_count = map(int, lines[0].split())
-    coords = [tuple(map(float, line.split())) for line in lines[1:]]
-    return node_count, salesman_count, coords
-
-
 def run_solver(executable: Path, instance_path: Path, solver_args: list[str]) -> dict:
-    node_count, salesman_count, coords = read_instance(instance_path)
-    payload = json.dumps({"n": node_count, "m": salesman_count, "coords": coords})
-    process = subprocess.run(
-        [str(executable)] + solver_args,
-        input=payload,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=True,
-    )
-    return json.loads(process.stdout)
+    return run_mtsp_solver(executable, instance_path, solver_args)
 
 
 def build_pilot_outputs(seed_runs: int) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:

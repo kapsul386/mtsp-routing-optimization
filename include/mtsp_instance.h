@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -8,6 +9,8 @@ namespace mtsp {
 class Instance {
 public:
     static Instance& GetInstance();
+    static void LoadFromFile(const std::string& path);
+    static void LoadFromJsonString(const std::string& payload);
     static void Reset();
 
     Instance(const Instance&) = delete;
@@ -22,6 +25,9 @@ public:
 
 private:
     Instance();
+    Instance(int node_count, int salesman_count, std::vector<std::pair<double, double>> coords);
+
+    void BuildDistanceStorage();
 
     int n_;
     int m_;

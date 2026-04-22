@@ -1,0 +1,38 @@
+{
+  "source_results_csv": "data/results/hybrid_source_results.csv",
+  "baseline_candidates_csv": "data/results/hybrid_reference_candidates.csv",
+  "best_baseline_csv": "data/results/hybrid_reference_best.csv",
+  "comparison_csv": "data/results/all_solvers_v3_hybrid_reference_comparison.csv",
+  "summary_csv": "data/results/all_solvers_v3_hybrid_reference_summary.csv",
+  "report_md": "data/results/hybrid_reference_report.md",
+  "reuse_existing_candidates": false,
+  "policy": {
+    "small_max_nodes": 30,
+    "medium_max_nodes": 1000,
+    "tiers": {
+      "small": ["exact-mip", "ortools-gls", "tsp-transform-lkh"],
+      "medium": ["ortools-gls", "tsp-transform-lkh"],
+      "large": ["tsp-transform-lkh"]
+    }
+  },
+  "baselines": {
+    "exact-mip": {
+      "backend_preferences": ["SCIP", "CBC"],
+      "time_limit_seconds": 5,
+      "distance_scale": 1000,
+      "log_search": false
+    },
+    "ortools-gls": {
+      "time_limit_seconds": 5,
+      "distance_scale": 1000,
+      "first_solution_strategy": "PARALLEL_CHEAPEST_INSERTION",
+      "local_search_metaheuristic": "GUIDED_LOCAL_SEARCH",
+      "log_search": false
+    },
+    "tsp-transform-lkh": {
+      "solver_args": ["--step", "lkh", "--start", "0", "--rounds", "24", "--seed", "42"],
+      "exhaustive_rotation_limit": 256,
+      "rotation_samples": 16
+    }
+  }
+}

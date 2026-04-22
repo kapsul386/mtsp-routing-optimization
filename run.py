@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import argparse
-import json
 import logging
-import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -16,6 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from python.cpp_updater import get_executable_path, recompiles_if_necessary
+from python.tsp_runner import run_latlon_solver
 from python.validate import validate_tour
 
 
@@ -65,23 +64,11 @@ def main() -> None:
     n_nodes, ids = read_task(task_path)
     id_to_coord = load_coords(coords_npz)
     latlon = latlon_for_selected(ids, id_to_coord)
-    payload = json.dumps({"n": n_nodes, "latlon": latlon.T.tolist()})
 
     executable = get_executable_path("tsp")
     recompiles_if_necessary(exe_path=executable)
 
-    process = subprocess.run(
-        [str(executable)] + cpp_args,
-        input=payload,
-        text=True,
-        capture_output=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    if process.returncode != 0:
-        raise RuntimeError(process.stderr.strip() or "TSP executable failed")
-
-    output = json.loads(process.stdout)
+    output = run_latlon_solver(executable, latlon, cpp_args)
     route_pos = output["route"]
     real_time = output["time"]
     length_km = output["len"]

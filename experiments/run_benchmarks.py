@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -13,6 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from python.cpp_updater import get_executable_path, recompiles_if_necessary
+from python.mtsp_runner import read_instance, run_solver as run_mtsp_solver
 from mtsp_experiment_utils import ensure_instance_family, instance_family_sort_key
 
 
@@ -44,30 +44,41 @@ def is_true(value: object) -> bool:
     return str(value).lower() == "true"
 
 
-def read_instance(path: Path) -> tuple[int, int, list[tuple[float, float]]]:
-    lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    node_count, salesman_count = map(int, lines[0].split())
-    coords = [tuple(map(float, line.split())) for line in lines[1:]]
-    if len(coords) != node_count:
-        raise ValueError(f"{path}: expected {node_count} coordinates, got {len(coords)}")
-    return node_count, salesman_count, coords
+def read_instance_header(path: Path) -> tuple[int, int]:
+    with path.open("r", encoding="utf-8") as fh:
+        first_line = fh.readline().strip()
+    if not first_line:
+        raise ValueError(f"{path} does not contain an mTSP header line.")
+    node_count, salesman_count = map(int, first_line.split())
+    return node_count, salesman_count
+
+
+def instance_matches_filters(instance_path: Path, config: dict) -> bool:
+    normalized_row = ensure_instance_family({"instance": instance_path.name, "path": str(instance_path)})
+    allowed_families = {str(value) for value in config.get("instance_families", [])}
+    if allowed_families and str(normalized_row["instance_family"]) not in allowed_families:
+        return False
+
+    node_count, salesman_count = read_instance_header(instance_path)
+    min_node_count = int(config.get("min_node_count", 0))
+    max_node_count = int(config.get("max_node_count", 0))
+    allowed_node_counts = {int(value) for value in config.get("allowed_node_counts", [])}
+    allowed_salesman_counts = {int(value) for value in config.get("allowed_salesman_counts", [])}
+
+    if node_count < min_node_count:
+        return False
+    if max_node_count > 0 and node_count > max_node_count:
+        return False
+    if allowed_node_counts and node_count not in allowed_node_counts:
+        return False
+    if allowed_salesman_counts and salesman_count not in allowed_salesman_counts:
+        return False
+    return True
 
 
 def run_solver(executable: Path, instance_path: Path, solver_name: str, solver_args: list[str]) -> dict:
-    node_count, salesman_count, coords = read_instance(instance_path)
-    payload = json.dumps({"n": node_count, "m": salesman_count, "coords": coords})
-    process = subprocess.run(
-        [str(executable)] + solver_args,
-        input=payload,
-        text=True,
-        capture_output=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    if process.returncode != 0:
-        raise RuntimeError(f"{instance_path} | {' '.join(solver_args)}\n{process.stderr}")
-
-    output = json.loads(process.stdout)
+    node_count, salesman_count, _coords = read_instance(instance_path)
+    output = run_mtsp_solver(executable, instance_path, solver_args)
     return ensure_instance_family(
         {
         "instance": instance_path.name,
@@ -146,6 +157,7 @@ def main() -> None:
 
     instance_dir = resolve_path(config["instance_dir"])
     instances = sorted(instance_dir.glob(config["instance_glob"]))
+    instances = [instance_path for instance_path in instances if instance_matches_filters(instance_path, config)]
     if not instances:
         raise RuntimeError(f"No instances matched in {instance_dir}")
 

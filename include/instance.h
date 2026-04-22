@@ -1,15 +1,22 @@
 #pragma once
 
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace tsp {
 
 class Instance {
 public:
-    static Instance& GetInstance() {
-        static Instance inst;
-        return inst;
-    }
+    enum class MetricType {
+        GreatCircle,
+        Euclidean,
+    };
+
+    static Instance& GetInstance();
+    static void LoadFromFile(const std::string& path);
+    static void LoadFromJsonString(const std::string& payload);
+    static void Reset();
 
     Instance(const Instance&) = delete;
     Instance& operator=(const Instance&) = delete;
@@ -18,12 +25,17 @@ public:
 
     [[nodiscard]] int GetN() const;
     [[nodiscard]] double Distance(int i, int j) const;
+    ~Instance() = default;
 
 private:
     Instance();
-    ~Instance() = default;
+    Instance(int node_count, MetricType metric, std::vector<std::pair<double, double>> coords);
+
+    void BuildDistanceStorage();
 
     int n;
+    MetricType metric_;
+    std::vector<std::pair<double, double>> coords_;
     std::vector<std::vector<double>> mat;
 };
 
