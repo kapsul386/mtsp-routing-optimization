@@ -35,10 +35,14 @@ def main() -> None:
     recompiles_if_necessary(exe_path=executable)
 
     output = run_solver(executable, input_path, solver_args)
-    logging.info(f"Valid: {output['valid']} | Objective: {output['objective']:.6f} | Time: {output['time']:.4f} s")
+    status = output.get("status", "ok")
+    objective_text = f"{float(output['objective']):.6f}" if output.get("valid", False) else "n/a"
+    logging.info(f"Status: {status} | Valid: {output['valid']} | Objective: {objective_text} | Time: {output['time']:.4f} s")
     for step in output.get("steps", []):
+        step_status = step.get("status", "ok")
+        step_objective = f"{float(step['objective']):.6f}" if step.get("valid", False) else "n/a"
         logging.info(
-            f"Step {step['name']}: objective={step['objective']:.6f} | "
+            f"Step {step['name']}: status={step_status} | objective={step_objective} | "
             f"valid={step['valid']} | time={step['time']:.6f} s"
         )
     for idx, route in enumerate(output["routes"], start=1):

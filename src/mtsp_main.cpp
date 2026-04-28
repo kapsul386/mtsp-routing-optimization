@@ -99,6 +99,14 @@ int main(int argc, char** argv) {
             step_json["time"] = step_time;
             step_json["objective"] = mtsp::ObjectiveMinsum(routes);
             step_json["valid"] = mtsp::ValidateRoutes(routes);
+            step_json["status"] = solvers[idx]->GetLastStatus();
+            if (!solvers[idx]->GetLastMessage().empty()) {
+                step_json["message"] = solvers[idx]->GetLastMessage();
+            }
+            const auto metadata = solvers[idx]->GetLastMetadata();
+            if (!metadata.empty()) {
+                step_json["metadata"] = metadata;
+            }
             steps_json.push_back(step_json);
         }
         auto total_stop = std::chrono::high_resolution_clock::now();
@@ -113,6 +121,16 @@ int main(int argc, char** argv) {
         output["objective"] = mtsp::ObjectiveMinsum(routes);
         output["valid"] = mtsp::ValidateRoutes(routes);
         output["steps"] = steps_json;
+        output["status"] = solvers.empty() ? "ok" : solvers.back()->GetLastStatus();
+        if (!solvers.empty() && !solvers.back()->GetLastMessage().empty()) {
+            output["message"] = solvers.back()->GetLastMessage();
+        }
+        if (!solvers.empty()) {
+            const auto metadata = solvers.back()->GetLastMetadata();
+            if (!metadata.empty()) {
+                output["metadata"] = metadata;
+            }
+        }
         std::cout << output.dump();
         return 0;
     } catch (const std::exception& exc) {

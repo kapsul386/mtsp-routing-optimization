@@ -79,6 +79,7 @@ def instance_matches_filters(instance_path: Path, config: dict) -> bool:
 def run_solver(executable: Path, instance_path: Path, solver_name: str, solver_args: list[str]) -> dict:
     node_count, salesman_count, _coords = read_instance(instance_path)
     output = run_mtsp_solver(executable, instance_path, solver_args)
+    valid = bool(output["valid"])
     return ensure_instance_family(
         {
         "instance": instance_path.name,
@@ -86,10 +87,11 @@ def run_solver(executable: Path, instance_path: Path, solver_name: str, solver_a
         "node_count": node_count,
         "salesman_count": salesman_count,
         "solver": solver_name,
-        "objective": float(output["objective"]),
+        "objective": float(output["objective"]) if valid else "",
         "time_seconds": float(output["time"]),
         "step_time_seconds": float(output["steps"][-1]["time"]) if output.get("steps") else float(output["time"]),
-        "valid": bool(output["valid"]),
+        "valid": valid,
+        "status": str(output.get("status", "ok")),
         "steps": json.dumps(output.get("steps", []), ensure_ascii=False),
         "routes": json.dumps(output["routes"], ensure_ascii=False),
         }
@@ -177,7 +179,7 @@ def main() -> None:
         rows,
         [
             "instance_family", "instance", "path", "node_count", "salesman_count", "solver", "objective",
-            "time_seconds", "step_time_seconds", "valid", "steps", "routes",
+            "time_seconds", "step_time_seconds", "valid", "status", "steps", "routes",
         ],
     )
     write_csv(

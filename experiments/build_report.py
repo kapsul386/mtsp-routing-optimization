@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -10,6 +11,16 @@ from mtsp_experiment_utils import ensure_instance_families, instance_family_sort
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def configure_csv_field_limit() -> None:
+    limit = sys.maxsize
+    while True:
+        try:
+            csv.field_size_limit(limit)
+            return
+        except OverflowError:
+            limit //= 10
 
 
 def resolve_path(path_str: str) -> Path:
@@ -201,6 +212,7 @@ def build_markdown(summary_rows: list[dict], raw_rows: list[dict], reference_row
 
 
 def main() -> None:
+    configure_csv_field_limit()
     parser = argparse.ArgumentParser(description="Build a report-friendly markdown summary from mTSP CSV outputs.")
     parser.add_argument("--config", default="experiments/config.json", help="Path to experiment config JSON.")
     args = parser.parse_args()

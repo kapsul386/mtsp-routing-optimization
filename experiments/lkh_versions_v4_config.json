@@ -45,6 +45,14 @@
         "--inter-route-batch", "3",
         "--time-budget-ms", "300000"
       ]
+    },
+    {
+      "name": "lkh3-baseline",
+      "args": [
+        "--step", "lkh3-baseline",
+        "--objective", "minsum",
+        "--time-budget-ms", "300000"
+      ]
     }
   ]
 }

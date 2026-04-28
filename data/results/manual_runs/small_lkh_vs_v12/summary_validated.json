@@ -1,0 +1,57 @@
+[
+  {
+    "instance": "uniform_n100_m5_r01",
+    "lkh_objective": 697.8716934317627,
+    "lkh_time": 0.015417,
+    "v12_objective": 476.1383159560199,
+    "v12_time": 2.138677,
+    "improvement_pct": 31.77280000932201,
+    "valid_clean": true,
+    "lkh_imbalance": 1.3761228142068618,
+    "v12_imbalance": 1.3073459878780778
+  },
+  {
+    "instance": "mixed_n200_m5_r01",
+    "lkh_objective": 1019.9470989022144,
+    "lkh_time": 0.148185,
+    "v12_objective": 835.5730281128278,
+    "v12_time": 2.184694,
+    "improvement_pct": 18.076826826394367,
+    "valid_clean": false,
+    "lkh_imbalance": 1.6052592570670963,
+    "v12_imbalance": 2.791396792256669
+  },
+  {
+    "instance": "outliers_n500_m5_r01",
+    "lkh_objective": 3439.269128181078,
+    "lkh_time": 1.075048,
+    "v12_objective": 3082.5144946079668,
+    "v12_time": 2.32636,
+    "improvement_pct": 10.3729781031061,
+    "valid_clean": true,
+    "lkh_imbalance": 1.4445466266458364,
+    "v12_imbalance": 1.343661065461098
+  },
+  {
+    "instance": "clustered-center_n1000_m5_r01",
+    "lkh_objective": 4663.382736280354,
+    "lkh_time": 22.626048,
+    "v12_objective": 3870.878340934605,
+    "v12_time": 2.215799,
+    "improvement_pct": 16.994195848009525,
+    "valid_clean": false,
+    "lkh_imbalance": 1.1075193895925257,
+    "v12_imbalance": 1.00337926187109
+  },
+  {
+    "instance": "high-m-stress_n1000_m5_r01",
+    "lkh_objective": 8047.09576597462,
+    "lkh_time": 16.978699,
+    "v12_objective": 6431.157321508964,
+    "v12_time": 3.939242,
+    "improvement_pct": 20.081014212584588,
+    "valid_clean": true,
+    "lkh_imbalance": 1.4538876968858854,
+    "v12_imbalance": 1.0757638087815828
+  }
+]

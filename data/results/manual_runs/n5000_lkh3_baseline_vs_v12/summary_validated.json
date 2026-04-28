@@ -1,0 +1,67 @@
+[
+  {
+    "instance": "uniform_n5000_m5_r01",
+    "lkh3_objective": 127094.4631911779,
+    "lkh3_time": 36.629301,
+    "v12_objective": 159615.2311929852,
+    "v12_time": 4.795729,
+    "lkh3_better_pct": 20.374476645331907,
+    "speedup_v12_vs_lkh3": 7.63790051522928,
+    "lkh3_clean": true,
+    "v12_clean": true,
+    "lkh3_imbalance": 4.988297432642775,
+    "v12_imbalance": 1.0070539594853947
+  },
+  {
+    "instance": "mixed_n5000_m5_r01",
+    "lkh3_objective": 62667.81219515594,
+    "lkh3_time": 28.047062,
+    "v12_objective": 75288.82379884468,
+    "v12_time": 4.830262,
+    "lkh3_better_pct": 16.763459656919775,
+    "speedup_v12_vs_lkh3": 5.806530163374161,
+    "lkh3_clean": true,
+    "v12_clean": true,
+    "lkh3_imbalance": 3.8510835714906264,
+    "v12_imbalance": 2.7358123530293383
+  },
+  {
+    "instance": "outliers_n5000_m5_r01",
+    "lkh3_objective": 60255.928401979785,
+    "lkh3_time": 27.415434,
+    "v12_objective": 71603.77083255508,
+    "v12_time": 4.796774,
+    "lkh3_better_pct": 15.848107297466418,
+    "speedup_v12_vs_lkh3": 5.715389968341222,
+    "lkh3_clean": true,
+    "v12_clean": true,
+    "lkh3_imbalance": 3.8832869933343073,
+    "v12_imbalance": 2.639573335274384
+  },
+  {
+    "instance": "clustered-center_n5000_m5_r01",
+    "lkh3_objective": 27837.740916975366,
+    "lkh3_time": 28.313739,
+    "v12_objective": 37140.17251139302,
+    "v12_time": 4.734532,
+    "lkh3_better_pct": 25.046818486274034,
+    "speedup_v12_vs_lkh3": 5.9802614070408655,
+    "lkh3_clean": true,
+    "v12_clean": true,
+    "lkh3_imbalance": 1.7315407439246748,
+    "v12_imbalance": 1.044827981774703
+  },
+  {
+    "instance": "high-m-stress_n5000_m5_r01",
+    "lkh3_objective": 61312.37843910835,
+    "lkh3_time": 28.275903,
+    "v12_objective": 84752.46565989395,
+    "v12_time": 4.826524,
+    "lkh3_better_pct": 27.657115386883397,
+    "speedup_v12_vs_lkh3": 5.858440359977491,
+    "lkh3_clean": true,
+    "v12_clean": true,
+    "lkh3_imbalance": 4.989086939174518,
+    "v12_imbalance": 1.114723169149639
+  }
+]

@@ -1,0 +1,46 @@
+﻿"timestamp_utc","instance","instance_path","n","m","solver","status","valid","objective","solve_time_seconds","wall_seconds","killed","exit_code","extra","stdout_tail","stderr_tail"
+"2026-04-26T19:32:40.1751981Z","uniform_n20_m2_r01.txt","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\mtsp\generated_multifamily\uniform_n20_m2_r01.txt","20","2","2opt+greed","runner_error","False",,,"0.502273","False",,"","","Traceback (most recent call last):
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\run_mtsp.py"", line 53, in <module>
+    main()
+    ~~~~^^
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\run_mtsp.py"", line 37, in main
+    output = run_solver(executable, input_path, solver_args)
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\python\mtsp_runner.py"", line 28, in run_solver
+    raise RuntimeError(f""{instance_path} | {' '.join(solver_args)}\n{process.stderr}"")
+RuntimeError: C:\Users\ddkup\coursework\mtsp-routing-optimization\data\mtsp\generated_multifamily\uniform_n20_m2_r01.txt | 
+At least one --step <solver> must be provided.
+"
+"2026-04-26T19:32:40.6665571Z","uniform_n20_m2_r01.txt","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\mtsp\generated_multifamily\uniform_n20_m2_r01.txt","20","2","grasp","runner_error","False",,,"0.453932","False",,"","","Traceback (most recent call last):
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\run_mtsp.py"", line 53, in <module>
+    main()
+    ~~~~^^
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\run_mtsp.py"", line 37, in main
+    output = run_solver(executable, input_path, solver_args)
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\python\mtsp_runner.py"", line 28, in run_solver
+    raise RuntimeError(f""{instance_path} | {' '.join(solver_args)}\n{process.stderr}"")
+RuntimeError: C:\Users\ddkup\coursework\mtsp-routing-optimization\data\mtsp\generated_multifamily\uniform_n20_m2_r01.txt | 
+At least one --step <solver> must be provided.
+"
+"2026-04-26T19:32:41.0883813Z","uniform_n20_m2_r01.txt","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\mtsp\generated_multifamily\uniform_n20_m2_r01.txt","20","2","lkh-wrapper-v12","runner_error","False",,,"0.407711","False",,"","","Traceback (most recent call last):
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\run_mtsp.py"", line 53, in <module>
+    main()
+    ~~~~^^
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\run_mtsp.py"", line 37, in main
+    output = run_solver(executable, input_path, solver_args)
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\python\mtsp_runner.py"", line 28, in run_solver
+    raise RuntimeError(f""{instance_path} | {' '.join(solver_args)}\n{process.stderr}"")
+RuntimeError: C:\Users\ddkup\coursework\mtsp-routing-optimization\data\mtsp\generated_multifamily\uniform_n20_m2_r01.txt | 
+At least one --step <solver> must be provided.
+"
+"2026-04-26T19:32:41.5043136Z","uniform_n20_m2_r01.txt","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\mtsp\generated_multifamily\uniform_n20_m2_r01.txt","20","2","lkh3-baseline","runner_error","False",,,"0.400127","False",,"","","Traceback (most recent call last):
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\run_mtsp.py"", line 53, in <module>
+    main()
+    ~~~~^^
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\run_mtsp.py"", line 37, in main
+    output = run_solver(executable, input_path, solver_args)
+  File ""C:\Users\ddkup\coursework\mtsp-routing-optimization\python\mtsp_runner.py"", line 28, in run_solver
+    raise RuntimeError(f""{instance_path} | {' '.join(solver_args)}\n{process.stderr}"")
+RuntimeError: C:\Users\ddkup\coursework\mtsp-routing-optimization\data\mtsp\generated_multifamily\uniform_n20_m2_r01.txt | 
+At least one --step <solver> must be provided.
+"
+"2026-04-26T19:32:41.5043136Z","uniform_n20_m2_r01.txt","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\mtsp\generated_multifamily\uniform_n20_m2_r01.txt","20","2","filo2-cvrp-adapter","skipped","False",,,"0","False",,"disabled_by_flag","",""

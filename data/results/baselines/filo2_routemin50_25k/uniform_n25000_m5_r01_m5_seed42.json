@@ -1,0 +1,59 @@
+{
+  "algorithm": "FILO2_CVRP_adapter",
+  "status": "ok",
+  "source_instance": "data/mtsp/generated_multifamily/uniform_n25000_m5_r01.txt",
+  "converted_instance": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n25000_m5_r01_m5.vrp",
+  "solution_source": "data/results/baselines/filo2_routemin50_25k/raw/uniform_n25000_m5_r01_m5_seed42/uniform_n25000_m5_r01_m5.vrp_seed-42.vrp.sol",
+  "routes_path": "data/results/baselines/filo2_routemin50_25k/uniform_n25000_m5_r01_m5_seed42_routes.json",
+  "n_vertices": 25000,
+  "n_customers": 24999,
+  "m_requested": 5,
+  "capacity": 5000,
+  "time_limit_seconds": 60,
+  "seed": 42,
+  "elapsed_seconds": 62.1658992767334,
+  "return_code": 0,
+  "peak_memory_mb": null,
+  "postprocess": "exact-m",
+  "postprocess_actions": [
+    "merge_best_pair"
+  ],
+  "raw_metrics": {
+    "routes_count": 6,
+    "m_requested": 5,
+    "exact_m": false,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 1606652.7820066027,
+    "max_route_distance": 319679.58791316877,
+    "avg_route_distance": 267775.4636677671,
+    "imbalance": 1.1938345042315
+  },
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 1606564.9504673341,
+    "max_route_distance": 427864.86037479015,
+    "avg_route_distance": 321312.9900934668,
+    "imbalance": 1.3316139514008707
+  },
+  "stdout_tail": "Pre-processing the instance.\nDone in 5 seconds.\n\nRunning CLARKE&WRIGHT to generate an initial solution.\nDone in 0 seconds.\nInitial solution: obj = 1.62633e+06, n. of routes = 6.\n\nSetting up MOVEGENERATORS data structures.\nDone in 0 seconds.\nUsing at most 682906 move-generators out of 625000000 total arcs (approx. 0.10926%)\n\nComputing a greedy upper bound on the n. of routes.\nDone in 0 milliseconds.\nAround 5 routes should do the job.\n\nRunning ROUTEMIN heuristic for at most 50 iterations.\nStarting solution: obj = 1.6263e+06, n. of routes = 6.\n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n   6      1626328        6      1.49    32.16     0.67 \n  12      1626328        6      1.20    37.57     0.67 \n  18      1626328        6      1.28    32.71     0.67 \n  22      1626328        6      1.10    36.40     0.55 \n  28      1626328        6      1.17    31.74     0.43 \n  32      1626328        6      1.14    30.65     0.50 \n  40      1626328        6      1.18    26.37     0.50 \n  42      1626328        6      1.10    27.16     0.52 \n  48      1626328        6      1.09    24.76     0.54 \n  54      1626328        6      1.12    21.34     0.48 \n  56      1626328        6      1.00    23.01     0.50 \n  60      1626328        6      1.00    21.01     0.50 \n  68      1626328        6      1.03    16.50     0.50 \n  72      1626328        6      0.88    17.09     0.47 \n  76      1626328        6      0.86    15.06     0.47 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  78      1617577        6      0.85    14.16     0.46 \n  84      1617577        6      0.86    10.50     0.45 \n  86      1617577        6      0.84     9.49     0.44 \n  96      1606548        6      0.91     3.31     0.40 \nFinal solution: obj = 1606548, n. routes = 6\nDone in 56 seconds.\n\nShaking LB = 24.08762145\nShaking UB = 54.59860861\nSimulated annealing temperature goes from 649.881836 to 6.49881836.\n\nRunning COREOPT for 0 seconds.\n\nBest solution found:\nobj = 1606548, n. routes = 6\n\nRun completed in 61 seconds \nResults stored in\n - data/results/baselines/filo2_routemin50_25k/raw/uniform_n25000_m5_r01_m5_seed42/uniform_n25000_m5_r01_m5.vrp_seed-42.out\n - data/results/baselines/filo2_routemin50_25k/raw/uniform_n25000_m5_r01_m5_seed42/uniform_n25000_m5_r01_m5.vrp_seed-42.vrp.sol\n",
+  "stderr_tail": "",
+  "command": [
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/external/filo2/build/filo2",
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n25000_m5_r01_m5.vrp",
+    "--optimization-seconds",
+    "60",
+    "--seed",
+    "42",
+    "--outpath",
+    "data/results/baselines/filo2_routemin50_25k/raw/uniform_n25000_m5_r01_m5_seed42",
+    "--routemin-iterations",
+    "50"
+  ]
+}

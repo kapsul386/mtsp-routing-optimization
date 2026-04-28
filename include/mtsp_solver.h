@@ -14,6 +14,9 @@ using RouteSet = std::vector<std::vector<int>>;
 class Solver {
 public:
     virtual void Configure(const std::unordered_map<std::string, std::string>& opts) {}
+    virtual std::string GetLastStatus() const { return "ok"; }
+    virtual std::string GetLastMessage() const { return ""; }
+    virtual std::unordered_map<std::string, std::string> GetLastMetadata() const { return {}; }
     virtual void Solve(RouteSet& out) = 0;
     virtual ~Solver() = default;
 };

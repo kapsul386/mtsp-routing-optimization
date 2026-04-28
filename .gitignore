@@ -42,6 +42,10 @@
 
 # Build artifacts
 build/
+external/filo2/
+data/cvrp_tmp/
+data/results/baselines/filo2/raw/
+data/results/baselines/filo2*/raw/
 
 # Python cache
 __pycache__/

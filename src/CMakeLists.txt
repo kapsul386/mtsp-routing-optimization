@@ -1,6 +1,8 @@
 file(GLOB_RECURSE LIB_SOURCES CONFIGURE_DEPENDS "*.cpp")
 list(FILTER LIB_SOURCES EXCLUDE REGEX "main.cpp$")
 list(FILTER LIB_SOURCES EXCLUDE REGEX "mtsp_main.cpp$")
+list(FILTER LIB_SOURCES EXCLUDE REGEX ".*/lkh_wrapper_v8/.*\\.cpp$")
+list(FILTER LIB_SOURCES EXCLUDE REGEX ".*/lkh_wrapper_v9/[0-9][0-9]_.*\\.cpp$")
 list(FILTER LIB_SOURCES EXCLUDE REGEX ".*/algorithms/mtsp/2opt\\+greed\\.cpp$")
 list(FILTER LIB_SOURCES EXCLUDE REGEX ".*/algorithms/mtsp/grasp\\.cpp$")
 list(FILTER LIB_SOURCES EXCLUDE REGEX ".*/algorithms/mtsp/rand\\+nn\\.cpp$")

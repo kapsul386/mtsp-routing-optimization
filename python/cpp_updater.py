@@ -67,6 +67,13 @@ def _run_command(command: list[str], cwd: Path) -> subprocess.CompletedProcess[s
     )
 
 
+def _is_stale_cmake_cache(stderr: str) -> bool:
+    lowered = stderr.lower()
+    return (
+        "cmakecache.txt directory" in lowered and "different than the directory" in lowered
+    ) or "does not match the source" in lowered
+
+
 def compile_project(build_dir: str | Path = "build") -> bool:
     print("Compiling project...")
     build_path = resolve_build_dir(build_dir)
@@ -74,10 +81,18 @@ def compile_project(build_dir: str | Path = "build") -> bool:
 
     config_cmd = ["cmake", "-S", str(ROOT), "-B", str(build_path), "-DCMAKE_BUILD_TYPE=Release"]
     result = _run_command(config_cmd, ROOT)
+    if result.returncode != 0 and _is_stale_cmake_cache(result.stderr):
+        safe_remove_build_dir(build_path)
+        build_path.mkdir(parents=True, exist_ok=True)
+        result = _run_command(config_cmd, ROOT)
 
     if result.returncode != 0:
         fallback_cmd = config_cmd + ["-G", "MinGW Makefiles"]
         result = _run_command(fallback_cmd, ROOT)
+        if result.returncode != 0 and _is_stale_cmake_cache(result.stderr):
+            safe_remove_build_dir(build_path)
+            build_path.mkdir(parents=True, exist_ok=True)
+            result = _run_command(fallback_cmd, ROOT)
 
     if result.returncode != 0:
         raise RuntimeError(f"CMake failed: {result.stderr}")
