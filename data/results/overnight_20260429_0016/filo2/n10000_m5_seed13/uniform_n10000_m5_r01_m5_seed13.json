@@ -1,0 +1,57 @@
+{
+  "algorithm": "FILO2_CVRP_adapter",
+  "status": "ok",
+  "source_instance": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/mtsp/generated_multifamily/uniform_n10000_m5_r01.txt",
+  "converted_instance": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n10000_m5_r01_m5.vrp",
+  "solution_source": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed13/raw/uniform_n10000_m5_r01_m5_seed13/uniform_n10000_m5_r01_m5.vrp_seed-13.vrp.sol",
+  "routes_path": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed13/uniform_n10000_m5_r01_m5_seed13_routes.json",
+  "n_vertices": 10000,
+  "n_customers": 9999,
+  "m_requested": 5,
+  "capacity": 2000,
+  "time_limit_seconds": 60,
+  "seed": 13,
+  "elapsed_seconds": 177.14942955970764,
+  "return_code": 0,
+  "peak_memory_mb": null,
+  "postprocess": "exact-m",
+  "postprocess_actions": [
+    "merge_best_pair"
+  ],
+  "raw_metrics": {
+    "routes_count": 6,
+    "m_requested": 5,
+    "exact_m": false,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 401263.5405206609,
+    "max_route_distance": 80687.4161116323,
+    "avg_route_distance": 66877.2567534435,
+    "imbalance": 1.2065000873032627
+  },
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 401201.0617929576,
+    "max_route_distance": 115270.7218493224,
+    "avg_route_distance": 80240.21235859153,
+    "imbalance": 1.4365704982706227
+  },
+  "stdout_tail": "6      5.38   152.02     0.72 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  19       407668        6      5.39   149.79     0.69 \n  20       407668        6      5.42   146.69     0.69 \n  21       407668        6      5.42   144.55     0.68 \n  23       405271        6      5.50   140.03     0.65 \n  24       405271        6      5.64   133.63     0.64 \n  25       402885        6      5.63   131.81     0.63 \n  26       402885        6      5.58   131.31     0.62 \n  28       402885        6      5.60   128.78     0.60 \n  29       402885        6      5.60   126.90     0.60 \n  31       402885        6      5.74   120.39     0.58 \n  32       402885        6      5.63   120.77     0.57 \n  33       402885        6      5.66   117.84     0.56 \n  34       402885        6      5.69   114.99     0.54 \n  36       402885        6      5.71   112.19     0.54 \n  36       402885        6      5.53   115.02     0.53 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  37       402885        6      5.47   115.00     0.53 \n  38       402885        6      5.46   113.45     0.53 \n  39       402885        6      5.50   110.02     0.52 \n  41       402885        6      5.54   106.68     0.50 \n  42       401849        6      5.57   103.86     0.50 \n  43       401849        6      5.56   101.15     0.49 \n  45       401849        6      5.58    98.39     0.48 \n  46       401849        6      5.60    95.68     0.48 \n  48       401849        6      5.68    91.17     0.46 \n  49       401849        6      5.68    89.30     0.46 \n  50       401849        6      5.72    86.04     0.45 \n  51       401849        6      5.69    84.86     0.45 \n  53       401849        6      5.71    82.33     0.44 \n  54       401849        6      5.72    80.14     0.44 \n  55       401849        6      5.69    78.91     0.44 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  55       401849        6      5.51    80.52     0.43 \n  57       401849        6      5.54    77.57     0.42 \n  58       401849        6      5.56    74.98     0.42 \n  59       401849        6      5.57    72.72     0.41 \n  61       401849        6      5.60    69.58     0.40 \n  62       401849        6      5.63    66.78     0.39 \n  63       401849        6      5.65    64.02     0.39 \n  65       401849        6      5.70    60.75     0.39 \n  66       401849        6      5.65    59.09     0.38 \n  68       401849        6      5.67    56.39     0.37 \n  69       401849        6      5.70    53.47     0.37 \n  70       401849        6      5.70    51.57     0.36 \n  71       401849        6      5.71    49.42     0.36 \n  73       401849        6      5.73    46.56     0.35 \n  74       401849        6      5.74    44.44     0.34 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  75       401849        6      5.73    42.55     0.34 \n  76       401849        6      5.63    42.81     0.34 \n  76       401849        6      5.61    41.33     0.34 \n  78       401849        6      5.65    38.25     0.33 \n  79       401849        6      5.66    35.87     0.33 \n  81       401849        6      5.68    33.07     0.32 \n  82       401849        6      5.70    30.51     0.31 \n  84       401849        6      5.72    27.97     0.31 \n  85       401849        6      5.74    25.44     0.31 \n  86       401849        6      5.74    23.34     0.30 \n  87       401222        6      5.74    21.24     0.30 \n  89       401222        6      5.77    18.55     0.30 \n  90       401222        6      5.75    15.99     0.29 \n  92       401222        6      5.76    13.90     0.29 \n  93       401222        6      5.75    12.18     0.28 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  94       401222        6      5.73    10.64     0.28 \n  95       401222        6      5.76     7.63     0.28 \n  96       401222        6      5.69     7.03     0.28 \n  97       401222        6      5.69     4.92     0.27 \n  98       401222        6      5.70     2.45     0.27 \nFinal solution: obj = 401222, n. routes = 6\nDone in 175 seconds.\n\nShaking LB = 15.02929278\nShaking UB = 34.06639696\nSimulated annealing temperature goes from 263.33143 to 2.6333143.\n\nRunning COREOPT for 0 seconds.\n\nBest solution found:\nobj = 401222, n. routes = 6\n\nRun completed in 177 seconds \nResults stored in\n - /mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed13/raw/uniform_n10000_m5_r01_m5_seed13/uniform_n10000_m5_r01_m5.vrp_seed-13.out\n - /mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed13/raw/uniform_n10000_m5_r01_m5_seed13/uniform_n10000_m5_r01_m5.vrp_seed-13.vrp.sol\n",
+  "stderr_tail": "",
+  "command": [
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/external/filo2/build/filo2",
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n10000_m5_r01_m5.vrp",
+    "--optimization-seconds",
+    "60",
+    "--seed",
+    "13",
+    "--outpath",
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed13/raw/uniform_n10000_m5_r01_m5_seed13"
+  ]
+}

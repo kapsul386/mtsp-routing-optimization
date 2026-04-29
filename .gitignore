@@ -53,3 +53,5 @@ __pycache__/
 
 # IDE
 .idea/
+.claude/worktrees/kind-antonelli-984a84/
+.claude/worktrees/quirky-germain-809e21/

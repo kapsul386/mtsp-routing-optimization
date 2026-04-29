@@ -1,0 +1,12 @@
+﻿{
+    "instance":  "uniform_n10000_m5_r01.txt",
+    "solver":  "lkh-wrapper-v18",
+    "seed":  42,
+    "time_budget_ms":  30000,
+    "status":  "ok",
+    "valid":  true,
+    "objective":  457585.7325281055,
+    "solve_time_seconds":  31.030185,
+    "wall_seconds":  31.09,
+    "raw_json":  "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\data\\results\\manual_runs\\v18_single_n10000\\v18_uniform_n10000_m5_r01_20260428_221652.raw.json"
+}

@@ -1,0 +1,57 @@
+{
+  "algorithm": "FILO2_CVRP_adapter",
+  "status": "ok",
+  "source_instance": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/mtsp/generated_multifamily/uniform_n10000_m5_r01.txt",
+  "converted_instance": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n10000_m5_r01_m5.vrp",
+  "solution_source": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed42/raw/uniform_n10000_m5_r01_m5_seed42/uniform_n10000_m5_r01_m5.vrp_seed-42.vrp.sol",
+  "routes_path": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed42/uniform_n10000_m5_r01_m5_seed42_routes.json",
+  "n_vertices": 10000,
+  "n_customers": 9999,
+  "m_requested": 5,
+  "capacity": 2000,
+  "time_limit_seconds": 60,
+  "seed": 42,
+  "elapsed_seconds": 60.03710341453552,
+  "return_code": 0,
+  "peak_memory_mb": null,
+  "postprocess": "exact-m",
+  "postprocess_actions": [
+    "merge_best_pair"
+  ],
+  "raw_metrics": {
+    "routes_count": 6,
+    "m_requested": 5,
+    "exact_m": false,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 372025.80401967384,
+    "max_route_distance": 71658.30936180608,
+    "avg_route_distance": 62004.30066994564,
+    "imbalance": 1.1556990174479926
+  },
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 371985.0921705419,
+    "max_route_distance": 108201.38216196036,
+    "avg_route_distance": 74397.01843410838,
+    "imbalance": 1.4543779366345397
+  },
+  "stdout_tail": "Pre-processing the instance.\nDone in 1 seconds.\n\nRunning CLARKE&WRIGHT to generate an initial solution.\nDone in 0 seconds.\nInitial solution: obj = 410603, n. of routes = 6.\n\nSetting up MOVEGENERATORS data structures.\nDone in 0 seconds.\nUsing at most 274512 move-generators out of 100000000 total arcs (approx. 0.27451%)\n\nComputing a greedy upper bound on the n. of routes.\nDone in 0 milliseconds.\nAround 5 routes should do the job.\n\nRunning ROUTEMIN heuristic for at most 1000 iterations.\nStarting solution: obj = 4.106e+05, n. of routes = 6.\n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n   0       410603        6      1.00   1003.99     0.50 \n   1       410603        6      3.49   282.70     0.86 \n   2       410603        6      3.83   255.56     0.91 \n   3       410603        6      4.62   208.69     0.84 \n   4       410603        6      4.80   198.74     0.83 \n   6       410603        6      4.61   204.04     0.83 \n   7       410603        6      4.80   193.67     0.81 \n   8       410603        6      4.88   188.13     0.77 \n   9       410603        6      5.10   177.17     0.76 \n  11       410603        6      5.28   168.46     0.74 \nFinal solution: obj = 406657, n. routes = 5\nDone in 21 seconds.\n\nShaking LB = 15.23592517\nShaking UB = 34.53476371\nSimulated annealing temperature goes from 261.99733 to 2.6199733.\n\nRunning COREOPT for 37 seconds.\n\n\u001b[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  \u001b[0m\n                                                                                                                         \n  5.43         3963       382269        5      1971.00        35.00       301.48       197.45    0.25    12.10   204.06 \n 10.84         7740       378484        6      1930.00        33.00       358.65       151.93    0.25    13.98   159.07 \n 16.24        11451       377158        6      1905.00        31.00       382.24       135.83    0.25    15.69   124.02 \n 21.65        14804       377036        6      1848.00        29.00       402.86       132.31    0.26    17.21    96.67 \n 27.06        18165       376480        6      1814.00        27.00       412.05       132.46    0.26    18.66    75.36 \n 32.46        21184       375994        6      1763.00        25.00       426.60       133.88    0.27    20.00    58.76 \n 40.52        21865       375908        6      1560.00        23.00       544.32       134.80    0.27    20.29    40.53 \n 45.93        24739       375405        6      1545.00        21.00       544.40       135.86    0.28    21.58    31.60 \n 51.34        27199       374822        6      1510.00        19.00       552.51       139.07    0.28    22.60    24.63 \n 56.75        29831       374213        6      1490.00        17.00       556.20       140.73    0.28    23.65    19.20 \n 62.16        32400       373800        6      1472.00        15.00       560.75       142.07    0.28    24.71    14.97 \n 67.56        34951       373638        6      1455.00        13.00       563.91       144.34    0.29    25.71    11.67 \n 72.97        37463       373237        6      1440.00        11.00       567.42       146.15    0.29    26.71     9.10 \n 78.38        39919       372918        6      1376.00         8.00       571.01       147.75    0.29    27.71     7.09 \n 83.78        42445       372537        6      1368.00         6.00       573.39       149.19    0.30    28.77     5.53 \n\n\u001b[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  \u001b[0m\n                                                                                                                         \n 89.19        45044       372391        6      1364.00         4.00       574.66       150.21    0.30    29.86     4.31 \n 94.60        47513       372064        6      1357.00         2.00       577.15       151.74    0.31    30.96     3.36 \n\nBest solution found:\nobj = 371994, n. routes = 6\n\nRun completed in 60 seconds \nResults stored in\n - /mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed42/raw/uniform_n10000_m5_r01_m5_seed42/uniform_n10000_m5_r01_m5.vrp_seed-42.out\n - /mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed42/raw/uniform_n10000_m5_r01_m5_seed42/uniform_n10000_m5_r01_m5.vrp_seed-42.vrp.sol\n",
+  "stderr_tail": "",
+  "command": [
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/external/filo2/build/filo2",
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n10000_m5_r01_m5.vrp",
+    "--optimization-seconds",
+    "60",
+    "--seed",
+    "42",
+    "--outpath",
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/results/overnight_20260429_0016/filo2/n10000_m5_seed42/raw/uniform_n10000_m5_r01_m5_seed42"
+  ]
+}

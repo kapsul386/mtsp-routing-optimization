@@ -1,0 +1,12 @@
+﻿{
+    "instance":  "uniform_n25000_m5_r01.txt",
+    "solver":  "2opt+greed",
+    "seed":  42,
+    "time_budget_ms":  null,
+    "status":  "ok",
+    "valid":  true,
+    "objective":  1673508.8890763307,
+    "solve_time_seconds":  12.988646,
+    "wall_seconds":  13.08,
+    "raw_json":  "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\data\\results\\manual_runs\\greedy2opt_single_n25000\\2opt_greed_uniform_n25000_m5_r01_20260428_222019.raw.json"
+}

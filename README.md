@@ -1,106 +1,110 @@
-# mtsp-routing-optimization
+# v14 Patch
 
-Учебно-исследовательский проект по задаче множественного коммивояжера (`mTSP`). Репозиторий собирает в одном месте кодовую базу, материалы по контрольным точкам и экспериментальный контур для сравнения эвристических алгоритмов маршрутизации.
+## Что лежит в этой папке
 
-## Цель
+- `mtsp_lkh_wrapper_v14.cpp` — новая полноценная версия solver'а под именем
+  `lkh-wrapper-v14`. Это копия `v12.cpp` + правки B (квадратичный repair),
+  metadata, repair timing, OpenMP polish, anneal force-on на n>=50k.
+  v12 не трогается, остается фиксированным baseline.
 
-Исследовать, какие эвристические подходы дают лучшее качество решения `mTSP` по критерию `MINSUM` при фиксированном ограничении на время вычислений.
+- `CMakeLists.txt` — обновленная сборка `src/CMakeLists.txt`.
+  Изменения относительно текущего `src/CMakeLists.txt` в репо:
+  1. Добавлен `find_package(OpenMP)` + линковка `OpenMP::OpenMP_CXX`
+     к `mtsp_core`, `tsp`, `mtsp` (нужно для правки D).
+  2. Добавлен `if(NOT WIN32)` exclude для `baselines/lkh3_baseline.cpp` -
+     это фикс для Linux-сборок где `windows.h` недоступен. На Windows эта
+     ветка ничего не меняет, так что безопасно перезаписать.
 
-## Рабочая гипотеза
+## Куда класть
 
-При ограничении времени до 60 секунд более сильные эвристики, сочетающие построение начального решения и локальное улучшение, будут давать лучшее значение `MINSUM`, чем простые базовые стратегии вроде `random + nearest neighbor` и `greedy + 2-opt`. Ожидается, что это преимущество сохранится при росте размерности задачи и числа коммивояжеров.
+```
+mtsp-routing-optimization/
+  src/
+    mtsp_lkh_wrapper_v14.cpp   <- сюда положить новый файл
+    CMakeLists.txt              <- сюда заменить (или вручную добавить
+                                    блок OpenMP к существующему)
+```
 
-## Что уже есть
-
-- `src/algorithms/tsp/` содержит базовые TSP-эвристики и перенесенный общий каркас солверов.
-- `src/algorithms/mtsp/` содержит ранние прототипы `mTSP`-алгоритмов; актуальные рабочие реализации лежат в корне `src/` и запускаются через общий runner.
-- `docs/KT/` хранит описание проекта и материалы контрольной точки.
-- `docs/appendices/` содержит оформленные приложения к курсовой работе.
-- `experiments/` предназначен для конфигураций запусков и журнала результатов.
-- `data/` зарезервирован под TSPLIB-инстансы, синтетику и итоговые результаты.
-
-## Ближайший план
-
-1. Унифицировать формат входа и выхода для `mTSP`-алгоритмов.
-2. Подготовить набор инстансов для сравнения baseline-методов.
-3. Добавить воспроизводимый сценарий экспериментов.
-4. Довести исследование до связки `synthetic benchmark -> reference baseline -> математическое приложение к курсовой`.
+CMake авто-подхватит новый `.cpp` через `file(GLOB_RECURSE LIB_SOURCES ...)`.
 
 ## Сборка
 
-```bash
-cmake -S . -B build
-cmake --build build
+```powershell
+cd C:\Users\ddkup\coursework\mtsp-routing-optimization
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release -j
 ```
 
-## Запуск TSP-каркаса
+Если CMake скажет `OpenMP not found` — на Windows MSVC он обычно есть из
+коробки. Если используется MinGW - убедиться что установлен `libgomp`.
 
-Сейчас в репозиторий перенесен базовый runner из старого `tsp-cpp`, который полезен как архитектурная основа и для сравнения простых TSP-эвристик:
+## Использование
 
-```bash
-python run.py --task path/to/task.txt --coords path/to/coords.npz --step nearest --start 0
+Идентично v12, плюс одна новая опция:
+
+```powershell
+.\build\src\Release\mtsp.exe `
+  --input-file data\mtsp\generated_multifamily\uniform_n100000_m5_r01.txt `
+  --step lkh-wrapper-v14 `
+  --time-budget-ms 300000 `
+  --seed 42
 ```
 
-Следующий этап развития репозитория: адаптировать этот каркас под единый запуск `mTSP`-эвристик и сравнительные эксперименты по курсовому проекту.
+Опционально:
+- `--omp-polish false` - выключить OpenMP polish (диагностика, или если OOM)
+- `--threads 5` - ограничить число OMP потоков (default - auto)
+- `--anneal-route-ms 80000` - переопределить дефолтный anneal-бюджет
 
-## Запуск mTSP-каркаса
+## Что появилось в metadata
 
-Для `mTSP` теперь есть отдельный runner с единым JSON-входом и общими baseline-солверами:
+```
+omp_polish: true|false|unavailable
+omp_max_threads: <N>
 
-```bash
-python run_mtsp.py --input path/to/instance.txt --step rand+nn
-python run_mtsp.py --input path/to/instance.txt --step 2opt+greed
-python run_mtsp.py --input path/to/instance.txt --step grasp --iters 50 --rcl 3
-python run_mtsp.py --input path/to/instance.txt --step lkh-wrapper-v2 --rounds 24 --seed 42 --candidate-count 12 --lookahead-weight 0.35 --depot-weight 0.12
+improve_phase_budget_ms
+improve_phase_passes_completed
+improve_phase_passes_improved_minsum
+improve_phase_passes_improved_balanced
+improve_phase_minsum_delta
+improve_phase_balanced_delta
+improve_phase_elapsed_ms
+improve_phase_start_minsum
+improve_phase_end_minsum
+polish_pass_<N>_minsum   (для каждого pass)
+polish_pass_<N>_delta    (для каждого pass)
+
+route_repair_early_insert_us
+route_repair_early_cleanup_us
+route_repair_first_insert_us
+route_repair_first_cleanup_us
+route_repair_late_insert_us
+route_repair_late_cleanup_us
+
+route_anneal_requested_ms   (что хотели; route_anneal_ms - что реально дали)
 ```
 
-Формат входного файла:
+## Sweep-команда для проверки на n=100000, 300s
 
-```text
-n m
-x0 y0
-x1 y1
-...
+```powershell
+mkdir runs
+foreach ($seed in 1,2,3,4,5) {
+  foreach ($ver in "v12","v14") {
+    .\build\src\Release\mtsp.exe `
+      --input-file data\mtsp\generated_multifamily\uniform_n100000_m5_r01.txt `
+      --step "lkh-wrapper-$ver" `
+      --time-budget-ms 300000 `
+      --seed $seed `
+      > "runs\${ver}_n100k_300s_seed${seed}.json" 2>&1
+  }
+}
 ```
 
-Где вершина `0` считается депо.
+После прогона: сравнить `objective` по 5 seed'ам (median + min) для
+v12 vs v14, плюс посмотреть в metadata v14 действительно ли работает
+`improve_phase_minsum_delta > 0` и `route_anneal_best_delta > 0`.
 
-## Экспериментальный пайплайн
+## Что НЕ вошло (отложено в v15)
 
-Для первого воспроизводимого контура добавлены:
-
-- [experiments/generate_mtsp_instances.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/generate_mtsp_instances.py) для генерации синтетических инстансов;
-- [experiments/run_benchmarks.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/run_benchmarks.py) для пакетного прогона солверов;
-- [experiments/config.json](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/config.json) с машинно-читаемой конфигурацией эксперимента.
-
-Текущий основной `mTSP`-benchmark сравнивает `rand+nn`, `2opt+greed`, `grasp` и `lkh-wrapper-v2`.
-
-Базовый запуск:
-
-```bash
-python experiments/generate_mtsp_instances.py
-python experiments/run_benchmarks.py
-```
-
-После запуска появляются:
-
-- [data/results/mtsp_results.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/mtsp_results.csv) со всеми сырыми прогонами;
-- [data/results/mtsp_summary.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/mtsp_summary.csv) со средними значениями по каждому набору параметров.
-
-Отдельное математическое приложение под реализованные алгоритмы лежит в файле
-[docs/appendices/mtsp_math_appendix.tex](C:/Users/ddkup/курчас/mtsp-routing-optimization/docs/appendices/mtsp_math_appendix.tex).
-
-## Экспериментальный пайплайн TSP
-
-Для TSP добавлен отдельный контур:
-
-- [experiments/tsp_config.json](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/tsp_config.json)
-- [experiments/generate_tsp_benchmarks.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/generate_tsp_benchmarks.py)
-- [experiments/run_tsp_benchmarks.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/run_tsp_benchmarks.py)
-- [experiments/build_tsp_report.py](C:/Users/ddkup/курчас/mtsp-routing-optimization/experiments/build_tsp_report.py)
-
-Он сравнивает `nearest`, `vns`, `genetic`, `memetic` и `lkh` на синтетических TSP-инстансах и сохраняет:
-
-- [data/results/tsp_results.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/tsp_results.csv)
-- [data/results/tsp_summary.csv](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/tsp_summary.csv)
-- [data/results/tsp_report.md](C:/Users/ddkup/курчас/mtsp-routing-optimization/data/results/tsp_report.md)
+- Правка C (точечный сброс don't-look bits): требует переписать
+  `ApplyFirstImproving2OptV5` на queue-based loop, иначе регрессия
+  ~1% objective. Это ~80-100 строк правок в `lkh_wrapper_v9/20_route_local_search.cpp`.

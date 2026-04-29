@@ -1,0 +1,57 @@
+{
+  "algorithm": "FILO2_CVRP_adapter",
+  "status": "ok",
+  "source_instance": "data/mtsp/generated_multifamily/uniform_n5000_m5_r01.txt",
+  "converted_instance": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n5000_m5_r01_m5.vrp",
+  "solution_source": "data/results/manual_runs/filo2_single_n5000/raw/uniform_n5000_m5_r01_m5_seed42/uniform_n5000_m5_r01_m5.vrp_seed-42.vrp.sol",
+  "routes_path": "data/results/manual_runs/filo2_single_n5000/uniform_n5000_m5_r01_m5_seed42_routes.json",
+  "n_vertices": 5000,
+  "n_customers": 4999,
+  "m_requested": 5,
+  "capacity": 1000,
+  "time_limit_seconds": 30,
+  "seed": 42,
+  "elapsed_seconds": 116.93558192253113,
+  "return_code": 0,
+  "peak_memory_mb": null,
+  "postprocess": "exact-m",
+  "postprocess_actions": [
+    "merge_best_pair"
+  ],
+  "raw_metrics": {
+    "routes_count": 6,
+    "m_requested": 5,
+    "exact_m": false,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 142571.9335962083,
+    "max_route_distance": 28515.40370416774,
+    "avg_route_distance": 23761.988932701384,
+    "imbalance": 1.2000427988132205
+  },
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 142527.3266256466,
+    "max_route_distance": 34236.24265958523,
+    "avg_route_distance": 28505.465325129317,
+    "imbalance": 1.2010413536173319
+  },
+  "stdout_tail": "Pre-processing the instance.\nDone in 2 seconds.\n\nRunning CLARKE&WRIGHT to generate an initial solution.\nDone in 0 seconds.\nInitial solution: obj = 146328, n. of routes = 6.\n\nSetting up MOVEGENERATORS data structures.\nDone in 0 seconds.\nUsing at most 137346 move-generators out of 25000000 total arcs (approx. 0.54938%)\n\nComputing a greedy upper bound on the n. of routes.\nDone in 0 milliseconds.\nAround 5 routes should do the job.\n\nRunning ROUTEMIN heuristic for at most 1000 iterations.\nStarting solution: obj = 1.4633e+05, n. of routes = 6.\n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n   2       146328        6     10.45    93.80     0.43 \n   3       146328        6      9.48   101.62     0.39 \n   5       146328        6      9.15   103.37     0.44 \n   7       146328        6      9.11   101.83     0.41 \n   9       146328        6      9.19    98.90     0.43 \n  10       146328        6      8.91   100.35     0.39 \n  12       146328        6      8.99    97.29     0.37 \n  14       146328        6      8.93    96.06     0.35 \n  16       146328        6      8.88    94.67     0.33 \n  17       146328        6      8.90    92.52     0.30 \n  19       146328        6      8.72    92.74     0.30 \n  20       146328        6      8.62    92.10     0.29 \n  22       146328        6      8.65    89.71     0.29 \n  24       146328        6      8.68    87.37     0.27 \n  25       146328        6      8.60    86.42     0.26 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  27       146328        6      8.65    83.67     0.25 \n  29       145785        6      8.40    84.19     0.24 \n  30       145785        6      8.32    83.27     0.23 \n  32       145785        6      8.36    80.77     0.23 \n  34       145785        6      8.41    77.98     0.22 \n  36       145494        6      8.44    75.59     0.21 \n  38       145494        6      8.49    72.94     0.20 \n  40       145494        6      8.53    70.34     0.19 \n  42       144231        6      8.59    67.52     0.19 \n  44       144231        6      8.70    63.99     0.18 \n  46       144231        6      8.79    60.86     0.17 \n  48       144231        6      8.89    57.60     0.17 \n  50       144231        6      8.91    55.33     0.16 \n  52       144231        6      8.95    52.86     0.16 \n  54       144231        6      8.95    50.84     0.15 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  56       144231        6      8.86    49.00     0.15 \n  59       144231        6      8.95    45.79     0.14 \n  61       142530        6      8.98    43.41     0.14 \n  63       142530        6      9.01    41.05     0.13 \n  63       142530        6      8.82    41.50     0.13 \n  64       142530        6      8.64    40.86     0.13 \n  66       142530        6      8.61    39.26     0.13 \n  68       142530        6      8.63    36.96     0.13 \n  70       142530        6      8.65    34.67     0.12 \n  72       142530        6      8.71    31.92     0.12 \n  74       142530        6      8.74    29.52     0.12 \n  76       142530        6      8.77    27.14     0.12 \n  78       142530        6      8.82    24.49     0.11 \n  80       142530        6      8.83    22.30     0.11 \n  82       142530        6      8.87    19.84     0.11 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  84       142530        6      8.80    17.72     0.11 \n  86       142530        6      8.83    15.41     0.10 \n  88       142530        6      8.89    12.60     0.10 \n  90       142530        6      8.90    10.45     0.10 \n  92       142530        6      8.88     8.67     0.10 \n  93       142530        6      8.77     7.07     0.10 \n  96       142530        6      8.81     4.66     0.09 \n  98       142530        6      8.76     2.28     0.09 \n  99       142530        6      8.75     0.34     0.09 \nFinal solution: obj = 142530, n. routes = 6\nDone in 114 seconds.\n\nShaking LB = 10.66628417\nShaking UB = 24.1769108\nSimulated annealing temperature goes from 129.55362 to 1.2955362.\n\nRunning COREOPT for 0 seconds.\n\nBest solution found:\nobj = 142530, n. routes = 6\n\nRun completed in 116 seconds \nResults stored in\n - data/results/manual_runs/filo2_single_n5000/raw/uniform_n5000_m5_r01_m5_seed42/uniform_n5000_m5_r01_m5.vrp_seed-42.out\n - data/results/manual_runs/filo2_single_n5000/raw/uniform_n5000_m5_r01_m5_seed42/uniform_n5000_m5_r01_m5.vrp_seed-42.vrp.sol\n",
+  "stderr_tail": "",
+  "command": [
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/external/filo2/build/filo2",
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n5000_m5_r01_m5.vrp",
+    "--optimization-seconds",
+    "30",
+    "--seed",
+    "42",
+    "--outpath",
+    "data/results/manual_runs/filo2_single_n5000/raw/uniform_n5000_m5_r01_m5_seed42"
+  ]
+}

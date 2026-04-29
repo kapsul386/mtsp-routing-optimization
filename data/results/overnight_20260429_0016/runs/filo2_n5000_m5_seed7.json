@@ -1,0 +1,9 @@
+{
+  "status": "ok",
+  "objective": 130151.21207698953,
+  "valid": true,
+  "exact_m": true,
+  "elapsed": 62.59640097618103,
+  "solver_time": 60.05113482475281,
+  "result_path": "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\data\\results\\overnight_20260429_0016\\filo2\\n5000_m5_seed7\\uniform_n5000_m5_r01_m5_seed7.json"
+}

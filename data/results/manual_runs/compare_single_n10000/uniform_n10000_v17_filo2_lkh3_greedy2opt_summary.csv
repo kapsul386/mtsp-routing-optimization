@@ -1,0 +1,5 @@
+﻿"instance","solver","status","valid","objective","elapsed_seconds","note","artifact"
+"uniform_n10000_m5_r01.txt","lkh3-baseline","ok","True","360052.653323749","163.304498","time_budget_ms=30000; WSL LKH3","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\lkh3_single_n10000\lkh3_uniform_n10000_m5_r01.raw.json"
+"uniform_n10000_m5_r01.txt","FILO2_CVRP_adapter","ok","True","406676.119209574","58.4357669353485","requested time_limit=30s; actual FILO2 elapsed from adapter","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\filo2_single_n10000\uniform_n10000_m5_r01_m5_seed42.json"
+"uniform_n10000_m5_r01.txt","2opt+greed","ok","True","435897.518299519","1.982542","internal greedy+2opt baseline","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\greedy2opt_single_n10000\greedy2opt_uniform_n10000_m5_r01.raw.json"
+"uniform_n10000_m5_r01.txt","lkh-wrapper-v17","ok","True","459648.801805205","31.083437","time_budget_ms=30000","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\v17_single_n10000\v17_uniform_n10000_m5_r01_20260428_221034.raw.json"
