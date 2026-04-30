@@ -38,9 +38,50 @@ namespace mtsp::v21 {
 
 struct PipelineMetadata {
     std::unordered_map<std::string, std::string> data;
+
+    // Anytime trace: monotone non-increasing (elapsed_ms, best_cost) samples
+    // recorded at every best-update event. Day-1 reads this to spot plateau
+    // onset on n=100k vs continuous-progress on smaller instances.
+    std::vector<std::pair<long long, double>> anytime_trace;
+    std::chrono::steady_clock::time_point anytime_t0{};
+    bool anytime_started = false;
+
     void Set(const std::string& k, const std::string& v) { data[k] = v; }
     void SetInt(const std::string& k, long long v) { data[k] = std::to_string(v); }
     void SetDouble(const std::string& k, double v) { data[k] = std::to_string(v); }
+
+    void StartAnytime() {
+        anytime_t0 = std::chrono::steady_clock::now();
+        anytime_trace.clear();
+        anytime_started = true;
+    }
+
+    void EmitAnytimeBest(double cost) {
+        if (!anytime_started) return;
+        const long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - anytime_t0).count();
+        if (!anytime_trace.empty() && cost >= anytime_trace.back().second - 1e-9) return;
+        anytime_trace.emplace_back(ms, cost);
+    }
+
+    // Serialize trace as a JSON array literal under key "anytime_trace".
+    // Downstream Python parses with json.loads(meta["anytime_trace"]).
+    void FlushAnytimeToData() {
+        std::string out;
+        out.reserve(16 + anytime_trace.size() * 24);
+        out += "[";
+        for (size_t i = 0; i < anytime_trace.size(); ++i) {
+            if (i > 0) out += ",";
+            out += "[";
+            out += std::to_string(anytime_trace[i].first);
+            out += ",";
+            out += std::to_string(anytime_trace[i].second);
+            out += "]";
+        }
+        out += "]";
+        data["anytime_trace"] = std::move(out);
+        SetInt("anytime_trace_points", static_cast<long long>(anytime_trace.size()));
+    }
 };
 
 // Returns elapsed ms from a steady_clock time_point.
@@ -281,6 +322,7 @@ inline bool DoOneAlnsStep(PtReplicaCtx& rep, AcceptPolicy& accept,
             outcome_class = 3;
             improved_best = true;
             rep.iters_since_best = 0;
+            rep.sa->NoteBestUpdate();
             if (gls_decay_on_best > 0.0 && gls_decay_on_best < 1.0) {
                 rep.gls.Decay(gls_decay_on_best);
             }
@@ -328,6 +370,7 @@ inline bool DoOneAlnsStep(PtReplicaCtx& rep, AcceptPolicy& accept,
                     ++rep.best_updates;
                     rep.iters_since_best = 0;
                     improved_best = true;
+                    rep.sa->NoteBestUpdate();
                 }
             }
         }
@@ -446,6 +489,8 @@ void RunAlnsSaLoop(RouteList& rl, AlnsFramework& alns, AcceptPolicy& accept,
                 outcome_class = 3;
                 improved_best = true;
                 iters_since_best = 0;
+                meta.EmitAnytimeBest(best_cost);
+                sa.NoteBestUpdate();
                 if (gls && gls_decay_on_best > 0.0 && gls_decay_on_best < 1.0) {
                     gls->Decay(gls_decay_on_best);
                 }
@@ -495,6 +540,8 @@ void RunAlnsSaLoop(RouteList& rl, AlnsFramework& alns, AcceptPolicy& accept,
                         ++best_updates;
                         ++pair_reopt_best_updates;
                         iters_since_best = 0;
+                        meta.EmitAnytimeBest(best_cost);
+                        sa.NoteBestUpdate();
                     }
                 }
             }
@@ -519,6 +566,8 @@ void RunAlnsSaLoop(RouteList& rl, AlnsFramework& alns, AcceptPolicy& accept,
                     ++best_updates;
                     ++popmusic_best_updates;
                     iters_since_best = 0;
+                    meta.EmitAnytimeBest(best_cost);
+                    sa.NoteBestUpdate();
                 }
             }
         }
@@ -671,6 +720,7 @@ inline void RunPtAlnsSaLoop(std::vector<std::unique_ptr<PtReplicaCtx>>& reps,
             if (rep.best_cost + kEps < best_cost_global) {
                 best_cost_global = rep.best_cost;
                 best_routes_global = rep.best_routes;
+                meta.EmitAnytimeBest(best_cost_global);
             }
         }
     }
@@ -756,6 +806,7 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
     meta.SetInt("budget_polish_ms", polish_ms);
     meta.SetInt("budget_alns_ms", alns_ms);
     meta.SetInt("budget_final_ms", final_ms);
+    meta.StartAnytime();
 
     // ---- Phase 1: candidate set ----
     const auto t_phase1 = std::chrono::steady_clock::now();
@@ -815,9 +866,12 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
     sc.T_frac_init = params.T_frac_init;
     sc.cooling = params.sa_cooling;
     sc.reheat_after_no_improvement = params.reheat_after;
+    sc.reheat_after_no_improvement_ms = params.reheat_after_ms;
 
     RouteSet best_routes = current;
     double best_cost = accept.ScalarCostOfRoutes(current, d);
+    // Initial anytime point: cost of the post-polish solution (pre-ALNS baseline).
+    meta.EmitAnytimeBest(best_cost);
 
     // GLS lambda based on average real edge cost — same scale for both branches.
     const double polish_real_sum = RouteSumLength(current, d);
@@ -831,6 +885,9 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
         DestroyContext dctx{d, kdtree, n};
         RepairContext rctx_normal{d, global, false};
         RepairContext rctx_balance{d, global, true};
+        // Plumb FILO2-style capacity (0 = disabled in legacy solvers).
+        rctx_normal.route_cap = params.route_cap;
+        rctx_balance.route_cap = params.route_cap;
         AlnsFramework alns;
         RegisterAlnsOps(alns, dctx, rctx_normal, rctx_balance, accept);
         SaEngine sa(sc, rng);
@@ -851,6 +908,9 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
             auto& rep = *reps.back();
             rep.rng.seed(seed + static_cast<unsigned>(r) * 1009u);
             rep.rl.LoadFrom(current, rep.oracle);
+            // Plumb FILO2-style capacity to per-replica repair contexts.
+            rep.rctx_normal.route_cap = params.route_cap;
+            rep.rctx_balance.route_cap = params.route_cap;
             rep.sa = std::make_unique<SaEngine>(sc, rep.rng);
             rep.sa->InitFromBaseline(accept.ScalarCost(rep.rl));
             rep.gls.SetLambda(gls_lambda);
@@ -877,6 +937,7 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
     if (final_cost + kEps < best_cost) {
         best_routes = current;
         best_cost = final_cost;
+        meta.EmitAnytimeBest(best_cost);
     }
     meta.SetInt("phase6_ms", ElapsedMs(t_phase6));
 
@@ -893,6 +954,7 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
     meta.SetDouble("final_cost_scalar", accept.ScalarCostOfRoutes(out, d));
     meta.SetDouble("final_sum", RouteSumLength(out, d));
     meta.SetDouble("final_max", MaxRouteLength(out, d));
+    meta.FlushAnytimeToData();
 }
 
 }  // namespace mtsp::v21

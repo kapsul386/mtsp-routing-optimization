@@ -1,0 +1,144 @@
+{
+  "tag": "v21_cap",
+  "solver": "lkh_v21_minsum_cap",
+  "executable": "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\build\\src\\Release\\mtsp.exe",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "budget_by_n": "10000:60000",
+  "instances": [
+    {
+      "instance": "clustered-center_n10000_m100_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 100,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        12041.269077006564,
+        12251.795028201144,
+        12142.784003191155,
+        12532.508790558642,
+        12212.251829698907
+      ],
+      "times": [
+        30.651922,
+        30.637472,
+        30.612058,
+        30.661717,
+        30.721552
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 12236.121745731283,
+      "std_objective": 183.94306300313445,
+      "min_objective": 12041.269077006564,
+      "max_objective": 12532.508790558642,
+      "cv_percent": 1.5032791175627618,
+      "mean_time_seconds": 30.656944199999998
+    },
+    {
+      "instance": "mixed-outliers_n10000_m100_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 100,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        16745.488218442024,
+        18390.52982393031,
+        16099.475814659841,
+        17072.30474012059,
+        16668.09146151781
+      ],
+      "times": [
+        30.617785,
+        30.751942,
+        30.734898,
+        30.715723,
+        30.709288
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 16995.178011734115,
+      "std_objective": 855.068453704312,
+      "min_objective": 16099.475814659841,
+      "max_objective": 18390.52982393031,
+      "cv_percent": 5.03124152694335,
+      "mean_time_seconds": 30.7059272
+    },
+    {
+      "instance": "n10000_m100_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 100,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        15177.338025702318,
+        15458.977978664796,
+        14979.130415380067,
+        15829.123195732376,
+        15483.28170577353
+      ],
+      "times": [
+        30.537794,
+        30.520615,
+        30.592082,
+        30.580796,
+        30.813425
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 15385.570264250617,
+      "std_objective": 324.1255301911641,
+      "min_objective": 14979.130415380067,
+      "max_objective": 15829.123195732376,
+      "cv_percent": 2.106685190241476,
+      "mean_time_seconds": 30.6089424
+    }
+  ],
+  "started_at": 1777500377.696334,
+  "wall_time_seconds": 460.36108600000443,
+  "finished_at": 1777500838.057426
+}

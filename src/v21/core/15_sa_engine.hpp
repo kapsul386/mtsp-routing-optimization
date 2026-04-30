@@ -2,6 +2,7 @@
 
 #include "00_types.hpp"
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <random>
 
@@ -10,7 +11,16 @@ namespace mtsp::v21 {
 struct SaConfig {
     double T_frac_init = 0.05;
     double cooling = 0.995;
+    // Reheat fires when EITHER threshold is exceeded since the last improvement:
+    //   - iter-count: classic ALNS streak (works on small/medium n where iter
+    //     rate is high enough that the count saturates within a stagnation
+    //     window).
+    //   - wall-time ms: needed on very large n (>60k) where each iter takes
+    //     >1s and the iter-count threshold rarely accumulates; a 30s wall
+    //     gap reliably triggers diversification on plateau-prone seeds.
+    // Set ms threshold to 0 to disable it (iter-count-only mode).
     int reheat_after_no_improvement = 200;
+    int reheat_after_no_improvement_ms = 0;
     double reheat_factor = 0.5;
     int pilot_moves = 1000;
     double T_clamp_lo_frac = 1e-4;  // T_init >= sum * 1e-4
@@ -29,6 +39,7 @@ public:
         no_improve_streak_ = 0;
         reheats_ = 0;
         cooldowns_ = 0;
+        last_best_time_ = std::chrono::steady_clock::now();
     }
 
     // Force initial T directly (used by Parallel Tempering to spread replicas
@@ -39,6 +50,7 @@ public:
         no_improve_streak_ = 0;
         reheats_ = 0;
         cooldowns_ = 0;
+        last_best_time_ = std::chrono::steady_clock::now();
     }
 
     // Auto-tune T0 via Ben-Ameur (2004): T0 = -avg(positive delta) / log(target_acceptance).
@@ -73,12 +85,38 @@ public:
     void Reheat() {
         T_ = T_init_ * cfg_.reheat_factor;
         no_improve_streak_ = 0;
+        last_best_time_ = std::chrono::steady_clock::now();
         ++reheats_;
     }
 
+    // Called on any cost decrease (delta_real < 0): resets the iter-count
+    // streak. Does NOT reset the wall-time clock — that one tracks time
+    // since last BEST update, which is what plateau-detection actually wants.
     void NoteImprovement() { no_improve_streak_ = 0; }
     void NoteNoImprovement() { ++no_improve_streak_; }
-    bool ShouldReheat() const { return no_improve_streak_ >= cfg_.reheat_after_no_improvement; }
+
+    // Called from the pipeline on every BEST-cost update. Resets the wall-time
+    // clock used by the time-based reheat trigger. We separate this from
+    // NoteImprovement because on large n the algorithm can keep making small
+    // non-best improvements for hundreds of seconds while best is stuck —
+    // exactly the plateau case we want to escape.
+    void NoteBestUpdate() {
+        last_best_time_ = std::chrono::steady_clock::now();
+    }
+
+    long long MsSinceBestUpdate() const {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - last_best_time_).count();
+    }
+
+    bool ShouldReheat() const {
+        if (no_improve_streak_ >= cfg_.reheat_after_no_improvement) return true;
+        if (cfg_.reheat_after_no_improvement_ms > 0 &&
+            MsSinceBestUpdate() >= cfg_.reheat_after_no_improvement_ms) {
+            return true;
+        }
+        return false;
+    }
 
     double Temperature() const { return T_; }
     double InitialTemperature() const { return T_init_; }
@@ -94,6 +132,7 @@ private:
     int no_improve_streak_ = 0;
     int reheats_ = 0;
     int cooldowns_ = 0;
+    std::chrono::steady_clock::time_point last_best_time_{};
 };
 
 }  // namespace mtsp::v21

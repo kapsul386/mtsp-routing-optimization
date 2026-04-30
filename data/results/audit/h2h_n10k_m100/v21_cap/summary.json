@@ -1,0 +1,60 @@
+{
+  "tag": "v21_cap",
+  "solver": "lkh_v21_minsum_cap",
+  "executable": "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\build\\src\\Release\\mtsp.exe",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "budget_by_n": "10000:60000",
+  "instances": [
+    {
+      "instance": "clustered-offset-depot_n10000_m100_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 100,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        21022.46257359515,
+        20830.535244911793,
+        21326.6964474745,
+        21046.020054548295,
+        20831.476204206177
+      ],
+      "times": [
+        30.656586,
+        30.660721,
+        30.676405,
+        30.769769,
+        30.657902
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 21011.43810494718,
+      "std_objective": 203.60341547206085,
+      "min_objective": 20830.535244911793,
+      "max_objective": 21326.6964474745,
+      "cv_percent": 0.9690122801452703,
+      "mean_time_seconds": 30.684276599999997
+    }
+  ],
+  "started_at": 1777498762.2264664,
+  "wall_time_seconds": 122.92770960000053,
+  "finished_at": 1777498885.154181
+}

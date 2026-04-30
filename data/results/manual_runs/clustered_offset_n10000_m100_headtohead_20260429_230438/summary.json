@@ -1,0 +1,42 @@
+﻿[
+    {
+        "Solver":  "LKH3",
+        "Objective":  8524.15143844927,
+        "TimeSec":  60.68,
+        "Valid":  true,
+        "Routes":  100,
+        "Max":  5072.6200213218981,
+        "Imbalance":  59.508797537795971,
+        "Note":  "parsed result.txt"
+    },
+    {
+        "Solver":  "FILO2",
+        "Objective":  17874.361505593282,
+        "TimeSec":  60.098415851593018,
+        "Valid":  true,
+        "Routes":  100,
+        "Max":  298.79615132512475,
+        "Imbalance":  1.6716465717201974,
+        "Note":  "ok"
+    },
+    {
+        "Solver":  "lkh_v21_minsum",
+        "Objective":  23261.606514787003,
+        "TimeSec":  31.426025,
+        "Valid":  true,
+        "Routes":  100,
+        "Max":  473.30466843053546,
+        "Imbalance":  2.0347032700843934,
+        "Note":  "ok"
+    },
+    {
+        "Solver":  "2opt+greed",
+        "Objective":  29470.09353605051,
+        "TimeSec":  0.335481,
+        "Valid":  true,
+        "Routes":  100,
+        "Max":  361.16824805050095,
+        "Imbalance":  1.22554157355723,
+        "Note":  "ok"
+    }
+]

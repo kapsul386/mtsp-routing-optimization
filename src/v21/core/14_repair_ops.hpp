@@ -14,10 +14,17 @@ struct RepairContext {
     DistanceOracle& d;
     const CandidateSets& candidates;
     bool balance_aware = false;  // for min-max: penalise inserting onto longest routes
+    // FILO2-inspired capacity-aware repair (high-m MINSUM stabilization).
+    // 0 = disabled (legacy MINSUM/MINMAX behaviour). >0 = max number of
+    // customers (excluding depot endpoints) that any route may hold; repair
+    // skips at-cap routes entirely. Set by `lkh_v21_minsum_cap` solver from
+    // ceil((n-1)/m) * (1 + slack_frac).
+    int route_cap = 0;
 };
 
 // Cheapest-insertion repair: for each removed customer (in random order),
 // scan candidate-restricted positions across all routes and pick the cheapest.
+// When ctx.route_cap > 0, routes already at capacity are skipped entirely.
 inline void RepairCheapestInsertion(RouteList& rl, std::vector<int>& removed,
                                      std::mt19937& rng, RepairContext& ctx) {
     std::shuffle(removed.begin(), removed.end(), rng);
@@ -29,6 +36,9 @@ inline void RepairCheapestInsertion(RouteList& rl, std::vector<int>& removed,
         for (int r = 0; r < rl.RouteCount(); ++r) {
             const auto& route = rl.Route(r);
             if (route.size() < 2) continue;
+            // FILO2-style hard cap: skip routes that already have capacity
+            // worth of customers. cap == 0 disables the check (legacy mode).
+            if (ctx.route_cap > 0 && rl.RouteSize(r) >= ctx.route_cap) continue;
             // Try candidate-driven positions + endpoints
             std::vector<int> positions;
             positions.push_back(0);
@@ -63,9 +73,25 @@ inline void RepairCheapestInsertion(RouteList& rl, std::vector<int>& removed,
             }
         }
         if (best_r < 0) {
-            // Fallback: append to shortest route
-            int sr = 0; double sl = std::numeric_limits<double>::max();
-            for (int r = 0; r < rl.RouteCount(); ++r) if (rl.RouteLength(r) < sl) { sl = rl.RouteLength(r); sr = r; }
+            // Fallback: in cap mode, prefer the route with the fewest customers
+            // (under cap) so we keep distribution tight; in legacy mode, fall
+            // back to shortest-length route as before.
+            int sr = -1;
+            if (ctx.route_cap > 0) {
+                int min_size = std::numeric_limits<int>::max();
+                for (int r = 0; r < rl.RouteCount(); ++r) {
+                    const int sz = rl.RouteSize(r);
+                    if (sz < ctx.route_cap && sz < min_size) {
+                        min_size = sz;
+                        sr = r;
+                    }
+                }
+            }
+            if (sr < 0) {
+                sr = 0;
+                double sl = std::numeric_limits<double>::max();
+                for (int r = 0; r < rl.RouteCount(); ++r) if (rl.RouteLength(r) < sl) { sl = rl.RouteLength(r); sr = r; }
+            }
             const auto& route = rl.Route(sr);
             const int after = static_cast<int>(route.size()) - 2;
             rl.InsertAt(sr, after, city, ctx.d);
@@ -77,7 +103,7 @@ inline void RepairCheapestInsertion(RouteList& rl, std::vector<int>& removed,
 
 // Regret-2 insertion: for each removed customer, compute (best - second_best)
 // insertion cost. Insert the customer with largest regret first at its best
-// position. Repeat.
+// position. Repeat. Same FILO2-style cap logic as RepairCheapestInsertion.
 inline void RepairRegret2Insertion(RouteList& rl, std::vector<int>& removed,
                                     std::mt19937& /*rng*/, RepairContext& ctx) {
     while (!removed.empty()) {
@@ -95,6 +121,7 @@ inline void RepairRegret2Insertion(RouteList& rl, std::vector<int>& removed,
             for (int r = 0; r < rl.RouteCount(); ++r) {
                 const auto& route = rl.Route(r);
                 if (route.size() < 2) continue;
+                if (ctx.route_cap > 0 && rl.RouteSize(r) >= ctx.route_cap) continue;
                 std::vector<int> positions;
                 positions.push_back(0);
                 positions.push_back(static_cast<int>(route.size()) - 2);
@@ -138,10 +165,26 @@ inline void RepairRegret2Insertion(RouteList& rl, std::vector<int>& removed,
             }
         }
         if (chosen_idx < 0) {
-            // No insertion found — append remaining to shortest routes
+            // No insertion found — fall back. In cap mode prefer smallest-size
+            // under-cap route to keep balance tight; in legacy mode use the
+            // shortest-length route as before.
             for (int city : removed) {
-                int sr = 0; double sl = std::numeric_limits<double>::max();
-                for (int r = 0; r < rl.RouteCount(); ++r) if (rl.RouteLength(r) < sl) { sl = rl.RouteLength(r); sr = r; }
+                int sr = -1;
+                if (ctx.route_cap > 0) {
+                    int min_size = std::numeric_limits<int>::max();
+                    for (int r = 0; r < rl.RouteCount(); ++r) {
+                        const int sz = rl.RouteSize(r);
+                        if (sz < ctx.route_cap && sz < min_size) {
+                            min_size = sz;
+                            sr = r;
+                        }
+                    }
+                }
+                if (sr < 0) {
+                    sr = 0;
+                    double sl = std::numeric_limits<double>::max();
+                    for (int r = 0; r < rl.RouteCount(); ++r) if (rl.RouteLength(r) < sl) { sl = rl.RouteLength(r); sr = r; }
+                }
                 const auto& route = rl.Route(sr);
                 rl.InsertAt(sr, static_cast<int>(route.size()) - 2, city, ctx.d);
             }

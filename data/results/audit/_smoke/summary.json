@@ -1,0 +1,40 @@
+{
+  "tag": "smoke",
+  "solver": "lkh_v21_minsum",
+  "executable": "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\build\\src\\Release\\mtsp.exe",
+  "seeds": [
+    1
+  ],
+  "budget_by_n": "10000:60000,50000:180000,100000:380000",
+  "instances": [
+    {
+      "instance": "uniform_n500_m5_r01.txt",
+      "node_count": 500,
+      "salesman_count": 5,
+      "budget_ms": 5000,
+      "seeds": [
+        1
+      ],
+      "valid": [
+        true
+      ],
+      "objectives": [
+        4371.576206650037
+      ],
+      "times": [
+        2.234027
+      ],
+      "valid_count": 1,
+      "total_count": 1,
+      "mean_objective": 4371.576206650037,
+      "std_objective": 0.0,
+      "min_objective": 4371.576206650037,
+      "max_objective": 4371.576206650037,
+      "cv_percent": 0.0,
+      "mean_time_seconds": 2.234027
+    }
+  ],
+  "started_at": 1777471829.014689,
+  "wall_time_seconds": 2.371793099999195,
+  "finished_at": 1777471831.3864856
+}

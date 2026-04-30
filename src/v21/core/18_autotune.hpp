@@ -12,6 +12,7 @@ struct AutoTuneParams {
     double T_frac_init = 0.05;
     double sa_cooling = 0.995;
     int reheat_after = 200;
+    int reheat_after_ms = 0;  // 0 = iter-count-only mode; set >0 for time-based fallback
     int popmusic_solutions = 2;
     int ils_rounds = 4;
     int num_threads = 4;
@@ -41,6 +42,12 @@ struct AutoTuneParams {
     // neighbourhood of K_pop customers and re-stitches across routes.
     int popmusic_every = 0;
     int popmusic_K = 2500;
+    // FILO2-inspired capacity cap for high-m MINSUM stabilization.
+    // 0 = disabled (legacy MINSUM/MINMAX). >0 = max customers per route.
+    // Set externally by `lkh_v21_minsum_cap` solver from instance (n,m);
+    // ResolveParamsForInstance does NOT auto-set this — only the cap solver
+    // populates it.
+    int route_cap = 0;
 };
 
 // Resolve all knobs from (n, m) — single source of truth.
@@ -106,7 +113,18 @@ inline AutoTuneParams ResolveParamsForInstance(int n, int m, bool is_minmax) {
         p.K_destroy_max = 2500;
         p.T_frac_init = 0.03;
         p.sa_cooling = 0.99;
+        // Day-2 finding: on n>60k the per-iter cost is so high (~0.5–1 iter/s)
+        // that the iter-count threshold rarely accumulates within the wall-time
+        // budget (variance audit on uniform_n100000_m5 showed sa_reheats=0
+        // across all 10 seeds, even though 7/10 had plateau gaps of 70–204s).
+        // Lowering the iter-count threshold to 40 in B v1 still produced 0
+        // reheats because best/iter ~55% kept resetting the streak.
+        // Solution: keep iter-count threshold at the original 120 for
+        // backwards compat, AND add a 30s wall-time threshold that fires
+        // reliably on plateau-prone seeds (gaps 70-200s). Healthy seeds with
+        // best every 5-10s never accumulate 30s of stagnation.
         p.reheat_after = 120;
+        p.reheat_after_ms = 30000;
         p.popmusic_solutions = 0;
         p.ils_rounds = 2;
         p.budget_seed_pct = 3;

@@ -55,6 +55,14 @@ public:
     int RouteCount() const { return m_; }
     int NodeCount() const { return n_; }
 
+    // Number of customers in route r (excluding the two depot endpoints).
+    // O(1). Used by capacity-aware repair/relocate variants for high-m MINSUM
+    // (FILO2-inspired stabilization).
+    int RouteSize(int r) const {
+        const auto& route = routes_[static_cast<size_t>(r)];
+        return route.size() >= 2 ? static_cast<int>(route.size()) - 2 : 0;
+    }
+
     double RouteLength(int r) const { return route_length_[static_cast<size_t>(r)]; }
     double TotalLength() const {
         double s = 0.0;
