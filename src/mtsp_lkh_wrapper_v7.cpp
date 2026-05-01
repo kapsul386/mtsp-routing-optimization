@@ -1,3 +1,9 @@
+// Closes the v4--v7 large-instance line. Tightens the spatial grid + cache
+// trade-offs from v4--v6, fixes the validity issues v6 had on n>=25k, and
+// produces an end-to-end working pipeline for very large n. Quality vs raw
+// MINSUM still trails v2/v3 on small instances; intended specifically for
+// n>=10k. Registered as "lkh-wrapper-v7".
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>

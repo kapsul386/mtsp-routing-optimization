@@ -1,3 +1,9 @@
+// First "big-instance" version. Adds geometric candidate sets (uniform spatial
+// grid), an on-demand distance cache, and an explicit time-budget surface.
+// On n>=10k it produces valid solutions in seconds where v1--v3 would either
+// time out or run out of memory. Quality lower than v2/v3 in absolute terms,
+// but the only path to large n at this stage. Registered as "lkh-wrapper-v4".
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>

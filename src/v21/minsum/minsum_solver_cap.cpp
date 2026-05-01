@@ -110,9 +110,12 @@ public:
         const int budget_ms = (time_budget_ms_ > 0 ? time_budget_ms_ : 60'000);
         RunPipeline(inst, accept, params, budget_ms, seed_, out, meta);
 
-        // Sanitize: ensure exactly m routes with depot endpoints.
+        // Sanitize: ensure exactly m routes with depot endpoints, then
+        // rebalance any empty agents (move 1 customer from busiest route).
         DistanceOracle d(inst);
         SanitizeRoutes(out, inst);
+        EnsureClosedDepot(out);
+        RebalanceEmptyRoutes(out, d);
         EnsureClosedDepot(out);
         meta.Set("validation_ok", ValidateRoutes(out, n) ? "true" : "false");
         meta.SetDouble("final_minsum", RouteSumLength(out, d));

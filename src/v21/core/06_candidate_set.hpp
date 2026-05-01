@@ -1,5 +1,11 @@
 #pragma once
 
+// Candidate-set construction. Every move generator in v21 (repair, relocate,
+// 2-opt, intra-3opt) restricts itself to the per-node candidate list, which
+// is the entire reason large instances stay tractable (Toth--Vigo granular
+// neighborhoods, see references in the report). Built once at instance load
+// and reused for the rest of the run.
+
 #include "00_types.hpp"
 #include "01_budget.hpp"
 #include "02_distance.hpp"

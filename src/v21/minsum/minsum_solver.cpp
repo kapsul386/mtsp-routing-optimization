@@ -1,7 +1,7 @@
-// v21 MINSUM solver. Self-contained — pulls in everything from src/v21/core/
-// via header includes (header-only ports of v9 modules + new ALNS/SA framework).
-//
-// Registered as "lkh_v21_minsum" in mtsp::SolverFactory.
+// MINSUM entry point for v21. Wires the v21 core (ALNS+SA+PT pipeline) to
+// MinsumAccept, exposes it as solver name "lkh_v21_minsum" through the
+// SolverFactory, and accepts CLI options (seed, time-budget-ms, threads) via
+// Configure. Self-contained: includes the entire v21 core (header-only).
 
 #include "../core/00_types.hpp"
 #include "../core/01_budget.hpp"
@@ -64,6 +64,8 @@ public:
         // Sanitize: ensure exactly m routes with depot endpoints.
         DistanceOracle d(inst);
         SanitizeRoutes(out, inst);
+        EnsureClosedDepot(out);
+        RebalanceEmptyRoutes(out, d);
         EnsureClosedDepot(out);
         meta.Set("validation_ok", ValidateRoutes(out, n) ? "true" : "false");
         meta.SetDouble("final_minsum", RouteSumLength(out, d));

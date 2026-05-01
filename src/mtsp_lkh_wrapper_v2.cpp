@@ -1,3 +1,9 @@
+// Major-quality milestone. Adds k-NN candidate lists, lookahead-weight, and
+// depot-weight tuning on top of v1. Halves the gap to OR-Tools on uniform
+// instances (29.6% -> 14.5% — see report 5.1 / 5.2). Used as the headline
+// candidate-based baseline in pairwise comparisons. Registered as
+// "lkh-wrapper-v2".
+
 #include <algorithm>
 #include <cmath>
 #include <limits>

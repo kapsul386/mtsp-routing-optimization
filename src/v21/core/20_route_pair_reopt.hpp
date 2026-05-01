@@ -1,5 +1,12 @@
 #pragma once
 
+// Periodic re-optimization of two routes treated as a single TSP. When the
+// ALNS loop has not improved for a while, picking the longest route and its
+// nearest neighbor (PickClosestRoute) and running Exhaustive2Opt over the
+// concatenated city sequence often finds a refactoring that destroy+repair
+// would not stumble onto. Disabled on n>60k where individual routes are too
+// long for O(L^2) 2-opt to fit in the per-call sub-budget.
+
 #include "00_types.hpp"
 #include "01_budget.hpp"
 #include "02_distance.hpp"

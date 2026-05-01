@@ -1,3 +1,9 @@
+// First LKH-flavoured mTSP wrapper. Builds m greedy seeds and runs k-opt
+// improvement on each route independently. Marks the transition from a pure
+// 2opt+greed baseline to a candidate-based search; introduces no spatial
+// structures yet. Registered as "lkh-wrapper-v1" — kept as a baseline for
+// the Pareto comparison in section 5.4 of the report.
+
 #include <algorithm>
 #include <limits>
 #include <random>

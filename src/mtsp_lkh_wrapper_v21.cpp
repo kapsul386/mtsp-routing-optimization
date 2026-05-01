@@ -1,6 +1,13 @@
-// mtsp_lkh_wrapper_v21.cpp
+// Naming note: registered as "lkh-wrapper-v21" (with hyphens). NOT to be
+// confused with the modular v21 architecture in src/v21/, whose solvers are
+// "lkh_v21_minsum" / "lkh_v21_minsum_cap" / "lkh_v21_minmax" (with
+// underscores). This file is the last of the single-file wrapper line and
+// is superseded by the modular architecture; kept for direct comparability
+// with v20 in result CSVs and as the closing entry of the v1--v21 single-
+// file evolution.
 //
-// v21: v20 + Large-Neighborhood-Search (LNS) ruin-and-recreate diversification.
+// Algorithmic summary of THIS file: v20 + Large-Neighborhood-Search (LNS)
+// ruin-and-recreate diversification.
 //
 // Goal: escape from "locally good but globally suboptimal" plateaus left by
 // v20's pure descent. The key idea (FILO-like, also Pisinger-Ropke ALNS):

@@ -1,18 +1,23 @@
 #pragma once
 
+// O(L) (city -> position) lookup for a single route. Build() bumps a version
+// stamp instead of zeroing the position array, so repeated rebuilds during
+// inner loops stay O(L) instead of O(n). Used by 2-opt and inter-route move
+// generators that need to translate "nearest neighbor of city c is city b"
+// into a position in the current route.
+
 #include <cstdint>
 #include <vector>
 #include <algorithm>
 
 namespace mtsp::v21 {
 
-// Stamped lookup of (city -> position-in-route). Calling Build() bumps a
-// version stamp instead of clearing the array, so repeated builds stay O(L).
 struct RouteIndex {
     explicit RouteIndex(int node_count)
         : position(static_cast<size_t>(node_count), -1),
           seen(static_cast<size_t>(node_count), 0) {}
 
+    // Repopulate the index for `route`. O(|route|).
     void Build(const std::vector<int>& route) {
         ++stamp;
         if (stamp == 0) {
@@ -26,6 +31,7 @@ struct RouteIndex {
         }
     }
 
+    // Position of `node` in the most recently built route, or -1 if absent.
     int Get(int node) const {
         return seen[static_cast<size_t>(node)] == stamp
                    ? position[static_cast<size_t>(node)]

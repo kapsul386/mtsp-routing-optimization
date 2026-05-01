@@ -1,0 +1,59 @@
+{
+  "algorithm": "FILO2_CVRP_adapter",
+  "status": "ok",
+  "source_instance": "data/mtsp/generated_multifamily/uniform_n50000_m5_r01.txt",
+  "converted_instance": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n50000_m5_r01_m5.vrp",
+  "solution_source": "/mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5/raw/uniform_n50000_m5_r01_m5_seed1/uniform_n50000_m5_r01_m5.vrp_seed-1.vrp.sol",
+  "routes_path": "/mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5/uniform_n50000_m5_r01_m5_seed1_routes.json",
+  "n_vertices": 50000,
+  "n_customers": 49999,
+  "m_requested": 5,
+  "capacity": 10000,
+  "time_limit_seconds": 300,
+  "seed": 1,
+  "elapsed_seconds": 300.09891414642334,
+  "return_code": 0,
+  "peak_memory_mb": null,
+  "postprocess": "exact-m",
+  "postprocess_actions": [
+    "merge_best_pair"
+  ],
+  "raw_metrics": {
+    "routes_count": 6,
+    "m_requested": 5,
+    "exact_m": false,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 4180038.524227096,
+    "max_route_distance": 826536.0184331659,
+    "avg_route_distance": 696673.0873711826,
+    "imbalance": 1.1864044031785501
+  },
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 4180019.695474553,
+    "max_route_distance": 1100252.628805269,
+    "avg_route_distance": 836003.9390949106,
+    "imbalance": 1.3160854600714489
+  },
+  "stdout_tail": "    6       474.00        67.00      1501.65       555.64    0.29    12.92   214.28 \n 41.01        21521      4214865        6       478.00        65.00      1500.94       541.13    0.29    13.02   197.06 \n 42.84        22669      4213495        6       482.00        63.00      1497.44       528.34    0.29    13.12   181.16 \n 44.66        23834      4211895        6       486.00        61.00      1492.65       516.58    0.29    13.23   166.60 \n 46.48        24894      4210997        6       488.00        59.00      1493.56       509.10    0.30    13.33   153.21 \n 48.30        25937      4209083        6       489.00        57.00      1495.36       502.52    0.30    13.43   140.88 \n 50.12        27066      4207277        6       492.00        55.00      1493.63       493.51    0.30    13.53   129.56 \n 51.94        28177      4206333        6       494.00        53.00      1491.86       486.75    0.30    13.63   119.15 \n 53.76        29133      4205308        6       493.00        51.00      1498.42       482.71    0.31    13.73   109.56 \n 55.58        30170      4203711        6       494.00        49.00      1500.77       477.26    0.31    13.82   100.75 \n\n\u001b[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  \u001b[0m\n                                                                                                                         \n 57.40        31189      4202497        6       494.00        47.00      1503.47       472.70    0.31    13.92    92.65 \n 59.22        32374      4201528        6       497.00        45.00      1497.97       466.51    0.32    14.02    85.20 \n 61.05        33417      4200368        6       498.00        43.00      1499.21       462.76    0.32    14.12    78.33 \n 62.88        34525      4199446        6       500.00        41.00      1498.98       457.11    0.32    14.22    72.00 \n 64.70        35631      4198789        6       501.00        39.00      1497.89       452.77    0.33    14.32    66.21 \n 66.52        36805      4197993        6       504.00        37.00      1495.17       446.77    0.33    14.43    60.89 \n 68.34        37896      4196881        6       505.00        35.00      1494.96       442.80    0.34    14.52    55.99 \n 70.16        38888      4196116        6       504.00        33.00      1498.48       440.31    0.34    14.60    51.49 \n 71.97        39866      4195048        6       504.00        31.00      1500.27       439.60    0.34    14.70    47.36 \n 73.79        40754      4194177        6       503.00        29.00      1506.87       438.86    0.35    14.78    43.55 \n 75.61        41721      4193118        6       502.00        27.00      1510.99       436.60    0.35    14.87    40.05 \n 77.43        42739      4192254        6       502.00        25.00      1513.03       434.16    0.36    14.96    36.83 \n 79.25        43837      4191579        6       503.00        23.00      1512.15       431.03    0.36    15.05    33.88 \n 81.07        44864      4190236        6       504.00        21.00      1514.58       427.88    0.36    15.15    31.15 \n 82.89        45747      4188590        6       502.00        19.00      1519.41       428.35    0.37    15.23    28.64 \n\n\u001b[1m     %   Iterations    Objective   Routes       Iter/s      Eta (s)   RR (micro)   LS (micro)   Gamma    Omega     Temp  \u001b[0m\n                                                                                                                         \n 84.71        46817      4186439        6       503.00        17.00      1519.74       425.29    0.37    15.32    26.34 \n 86.53        47775      4185552        6       502.00        15.00      1522.47       424.47    0.37    15.41    24.22 \n 88.35        48821      4184608        6       503.00        13.00      1522.99       422.28    0.38    15.50    22.27 \n 90.18        49855      4183653        6       503.00        11.00      1524.06       420.43    0.38    15.60    20.47 \n 92.01        50850      4182885        6       503.00         9.00      1525.49       419.33    0.38    15.69    18.82 \n 93.83        51905      4182296        6       503.00         7.00      1525.13       417.85    0.39    15.77    17.31 \n 95.66        52966      4181913        6       504.00         5.00      1526.05       415.26    0.39    15.86    15.91 \n 97.48        53799      4180690        6       502.00         3.00      1531.91       415.77    0.40    15.94    14.63 \n 99.29        54586      4180034        6       500.00         1.00      1538.16       417.14    0.40    16.01    13.46 \n\nOptimizing for 5 minutes.\n\n\nBest solution found:\nobj = 4179885, n. routes = 6\n\nRun completed in 300 seconds \nResults stored in\n - /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5/raw/uniform_n50000_m5_r01_m5_seed1/uniform_n50000_m5_r01_m5.vrp_seed-1.out\n - /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5/raw/uniform_n50000_m5_r01_m5_seed1/uniform_n50000_m5_r01_m5.vrp_seed-1.vrp.sol\n",
+  "stderr_tail": "",
+  "command": [
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/external/filo2/build/filo2",
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n50000_m5_r01_m5.vrp",
+    "--optimization-seconds",
+    "300",
+    "--seed",
+    "1",
+    "--outpath",
+    "/mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5/raw/uniform_n50000_m5_r01_m5_seed1",
+    "--routemin-iterations",
+    "30"
+  ]
+}

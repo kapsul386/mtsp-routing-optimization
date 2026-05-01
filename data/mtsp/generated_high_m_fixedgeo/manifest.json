@@ -1,0 +1,1009 @@
+{
+  "families": [
+    "uniform",
+    "clustered-center",
+    "clustered-offset-depot",
+    "mixed-outliers",
+    "outliers",
+    "mixed",
+    "high-m-stress"
+  ],
+  "node_counts": [
+    10000,
+    25000,
+    50000,
+    100000
+  ],
+  "salesmen": [
+    10,
+    30,
+    50,
+    80,
+    100
+  ],
+  "source_m": 7,
+  "sources": [
+    {
+      "family": "uniform",
+      "n": 10000,
+      "source": "data\\mtsp\\generated_multifamily\\uniform_n10000_m7_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 25000,
+      "source": "data\\mtsp\\generated_multifamily\\uniform_n25000_m7_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 50000,
+      "source": "data\\mtsp\\generated_multifamily\\uniform_n50000_m7_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 100000,
+      "source": "data\\mtsp\\generated_multifamily\\uniform_n100000_m7_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 10000,
+      "source": "data\\mtsp\\generated_multifamily\\clustered-center_n10000_m7_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 25000,
+      "source": "data\\mtsp\\generated_multifamily\\clustered-center_n25000_m7_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 50000,
+      "source": "data\\mtsp\\generated_multifamily\\clustered-center_n50000_m7_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 100000,
+      "source": "data\\mtsp\\generated_multifamily\\clustered-center_n100000_m7_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 10000,
+      "source": "data\\mtsp\\generated_multifamily\\clustered-offset-depot_n10000_m7_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 25000,
+      "source": "data\\mtsp\\generated_multifamily\\clustered-offset-depot_n25000_m7_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 50000,
+      "source": "data\\mtsp\\generated_multifamily\\clustered-offset-depot_n50000_m7_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 100000,
+      "source": "data\\mtsp\\generated_multifamily\\clustered-offset-depot_n100000_m7_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 10000,
+      "source": "generated:mixed-outliers:n10000:seed_m7"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 25000,
+      "source": "generated:mixed-outliers:n25000:seed_m7"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 50000,
+      "source": "generated:mixed-outliers:n50000:seed_m7"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 100000,
+      "source": "generated:mixed-outliers:n100000:seed_m7"
+    },
+    {
+      "family": "outliers",
+      "n": 10000,
+      "source": "data\\mtsp\\generated_multifamily\\outliers_n10000_m7_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 25000,
+      "source": "data\\mtsp\\generated_multifamily\\outliers_n25000_m7_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 50000,
+      "source": "data\\mtsp\\generated_multifamily\\outliers_n50000_m7_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 100000,
+      "source": "data\\mtsp\\generated_multifamily\\outliers_n100000_m7_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 10000,
+      "source": "data\\mtsp\\generated_multifamily\\mixed_n10000_m7_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 25000,
+      "source": "data\\mtsp\\generated_multifamily\\mixed_n25000_m7_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 50000,
+      "source": "data\\mtsp\\generated_multifamily\\mixed_n50000_m7_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 100000,
+      "source": "data\\mtsp\\generated_multifamily\\mixed_n100000_m7_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 10000,
+      "source": "data\\mtsp\\generated_multifamily\\high-m-stress_n10000_m7_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 25000,
+      "source": "data\\mtsp\\generated_multifamily\\high-m-stress_n25000_m7_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 50000,
+      "source": "data\\mtsp\\generated_multifamily\\high-m-stress_n50000_m7_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 100000,
+      "source": "data\\mtsp\\generated_multifamily\\high-m-stress_n100000_m7_r01.txt"
+    }
+  ],
+  "instances": [
+    {
+      "family": "uniform",
+      "n": 10000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n10000_m10_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 10000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n10000_m30_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 10000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n10000_m50_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 10000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n10000_m80_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 10000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n10000_m100_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 25000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n25000_m10_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 25000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n25000_m30_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 25000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n25000_m50_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 25000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n25000_m80_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 25000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n25000_m100_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 50000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n50000_m10_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 50000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n50000_m30_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 50000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n50000_m50_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 50000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n50000_m80_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 50000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n50000_m100_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 100000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n100000_m10_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 100000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n100000_m30_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 100000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n100000_m50_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 100000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n100000_m80_r01.txt"
+    },
+    {
+      "family": "uniform",
+      "n": 100000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/uniform_n100000_m100_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 10000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n10000_m10_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 10000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n10000_m30_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 10000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n10000_m50_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 10000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n10000_m80_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 10000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n10000_m100_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 25000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n25000_m10_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 25000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n25000_m30_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 25000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n25000_m50_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 25000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n25000_m80_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 25000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n25000_m100_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 50000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n50000_m10_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 50000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n50000_m30_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 50000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n50000_m50_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 50000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n50000_m80_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 50000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n50000_m100_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 100000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n100000_m10_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 100000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n100000_m30_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 100000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n100000_m50_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 100000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n100000_m80_r01.txt"
+    },
+    {
+      "family": "clustered-center",
+      "n": 100000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-center_n100000_m100_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 10000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n10000_m10_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 10000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n10000_m30_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 10000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n10000_m50_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 10000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n10000_m80_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 10000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n10000_m100_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 25000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n25000_m10_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 25000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n25000_m30_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 25000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n25000_m50_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 25000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n25000_m80_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 25000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n25000_m100_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 50000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n50000_m10_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 50000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n50000_m30_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 50000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n50000_m50_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 50000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n50000_m80_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 50000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n50000_m100_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 100000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n100000_m10_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 100000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n100000_m30_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 100000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n100000_m50_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 100000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n100000_m80_r01.txt"
+    },
+    {
+      "family": "clustered-offset-depot",
+      "n": 100000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/clustered-offset-depot_n100000_m100_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 10000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n10000_m10_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 10000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n10000_m30_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 10000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n10000_m50_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 10000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n10000_m80_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 10000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n10000_m100_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 25000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n25000_m10_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 25000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n25000_m30_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 25000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n25000_m50_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 25000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n25000_m80_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 25000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n25000_m100_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 50000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n50000_m10_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 50000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n50000_m30_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 50000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n50000_m50_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 50000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n50000_m80_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 50000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n50000_m100_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 100000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n100000_m10_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 100000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n100000_m30_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 100000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n100000_m50_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 100000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n100000_m80_r01.txt"
+    },
+    {
+      "family": "mixed-outliers",
+      "n": 100000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed-outliers_n100000_m100_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 10000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n10000_m10_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 10000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n10000_m30_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 10000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n10000_m50_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 10000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n10000_m80_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 10000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n10000_m100_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 25000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n25000_m10_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 25000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n25000_m30_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 25000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n25000_m50_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 25000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n25000_m80_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 25000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n25000_m100_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 50000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n50000_m10_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 50000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n50000_m30_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 50000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n50000_m50_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 50000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n50000_m80_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 50000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n50000_m100_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 100000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n100000_m10_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 100000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n100000_m30_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 100000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n100000_m50_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 100000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n100000_m80_r01.txt"
+    },
+    {
+      "family": "outliers",
+      "n": 100000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/outliers_n100000_m100_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 10000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n10000_m10_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 10000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n10000_m30_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 10000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n10000_m50_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 10000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n10000_m80_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 10000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n10000_m100_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 25000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n25000_m10_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 25000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n25000_m30_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 25000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n25000_m50_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 25000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n25000_m80_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 25000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n25000_m100_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 50000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n50000_m10_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 50000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n50000_m30_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 50000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n50000_m50_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 50000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n50000_m80_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 50000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n50000_m100_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 100000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n100000_m10_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 100000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n100000_m30_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 100000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n100000_m50_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 100000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n100000_m80_r01.txt"
+    },
+    {
+      "family": "mixed",
+      "n": 100000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/mixed_n100000_m100_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 10000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n10000_m10_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 10000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n10000_m30_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 10000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n10000_m50_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 10000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n10000_m80_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 10000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n10000_m100_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 25000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n25000_m10_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 25000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n25000_m30_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 25000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n25000_m50_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 25000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n25000_m80_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 25000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n25000_m100_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 50000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n50000_m10_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 50000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n50000_m30_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 50000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n50000_m50_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 50000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n50000_m80_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 50000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n50000_m100_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 100000,
+      "m": 10,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n100000_m10_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 100000,
+      "m": 30,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n100000_m30_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 100000,
+      "m": 50,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n100000_m50_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 100000,
+      "m": 80,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n100000_m80_r01.txt"
+    },
+    {
+      "family": "high-m-stress",
+      "n": 100000,
+      "m": 100,
+      "path": "data/mtsp/generated_high_m_fixedgeo/high-m-stress_n100000_m100_r01.txt"
+    }
+  ]
+}

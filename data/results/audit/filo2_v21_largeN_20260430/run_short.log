@@ -1,0 +1,218 @@
+[19:26:54] ============================================================
+[19:26:54] FILO2 vs lkh_v21_minsum_cap, shorter budgets
+[19:26:54]   n=50k uniform m=5 :  3 seeds × 90s
+[19:26:54]   n=100k uniform m=5:  3 seeds × 300s
+[19:26:54] ============================================================
+[19:26:54] 
+[19:26:54] === n=50000 uniform m=5 @ 90s ===
+[19:26:54] >>> FILO2 [n50k_uniform_m5_90s] seed=1 budget=90s
+{
+  "status": "ok",
+  "elapsed_seconds": 163.85750007629395,
+  "return_code": 0,
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 4590615.337945974,
+    "max_route_distance": 1386462.1875584992,
+    "avg_route_distance": 918123.0675891949,
+    "imbalance": 1.5101049483475761
+  }
+}
+Saved result to /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5_90s/uniform_n50000_m5_r01_m5_seed1.json
+[19:29:39] <<< FILO2 [n50k_uniform_m5_90s] seed=1 rc=0
+[19:29:39] >>> FILO2 [n50k_uniform_m5_90s] seed=2 budget=90s
+{
+  "status": "ok",
+  "elapsed_seconds": 205.04658126831055,
+  "return_code": 0,
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 4543517.525437987,
+    "max_route_distance": 1279237.9715796402,
+    "avg_route_distance": 908703.5050875975,
+    "imbalance": 1.407761678498559
+  }
+}
+Saved result to /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5_90s/uniform_n50000_m5_r01_m5_seed2.json
+[19:33:05] <<< FILO2 [n50k_uniform_m5_90s] seed=2 rc=0
+[19:33:05] >>> FILO2 [n50k_uniform_m5_90s] seed=3 budget=90s
+{
+  "status": "ok",
+  "elapsed_seconds": 177.75818848609924,
+  "return_code": 0,
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 4540644.829514092,
+    "max_route_distance": 1342385.8293958234,
+    "avg_route_distance": 908128.9659028184,
+    "imbalance": 1.478188539070866
+  }
+}
+Saved result to /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5_90s/uniform_n50000_m5_r01_m5_seed3.json
+[19:36:04] <<< FILO2 [n50k_uniform_m5_90s] seed=3 rc=0
+[19:36:04] >>> v21 [n50k_uniform_m5_90s] seeds=3 budget=90000ms
+[1/3] run: uniform_n50000_m5_r01.txt seed=1 budget_ms=90000 solver=lkh_v21_minsum_cap
+           done: obj=4569420.445854915 valid=True wall_s=78.4
+[2/3] run: uniform_n50000_m5_r01.txt seed=2 budget_ms=90000 solver=lkh_v21_minsum_cap
+           done: obj=4571757.969032476 valid=True wall_s=79.3
+[3/3] run: uniform_n50000_m5_r01.txt seed=3 budget_ms=90000 solver=lkh_v21_minsum_cap
+           done: obj=4566934.051104573 valid=True wall_s=82.2
+
+Wrote summary: /mnt/c/Users/ddkup/for_claude/filo2_probe/v21_n50k_uniform_m5_90s/summary.json
+Per-instance:
+  uniform_n50000_m5_r01.txt                               mean=4569370.82 std=2412.34 cv=0.053% min=4566934.05 max=4571757.97 (3/3 valid)
+[19:40:05] <<< v21 [n50k_uniform_m5_90s] rc=0
+[19:40:05] After n=50k batch: 791s
+[19:40:05] 
+[19:40:05] === n=100000 uniform m=5 @ 300s ===
+[19:40:05] >>> FILO2 [n100k_uniform_m5_300s] seed=1 budget=300s
+{
+  "status": "ok",
+  "elapsed_seconds": 1043.9717571735382,
+  "return_code": 0,
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 12771046.710730977,
+    "max_route_distance": 3586901.904663053,
+    "avg_route_distance": 2554209.3421461955,
+    "imbalance": 1.4043100718005865
+  }
+}
+Saved result to /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n100k_uniform_m5_300s/uniform_n100000_m5_r01_m5_seed1.json
+[19:57:31] <<< FILO2 [n100k_uniform_m5_300s] seed=1 rc=0
+[19:57:31] >>> FILO2 [n100k_uniform_m5_300s] seed=2 budget=300s
+{
+  "status": "ok",
+  "elapsed_seconds": 903.7643146514893,
+  "return_code": 0,
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 12613477.14184478,
+    "max_route_distance": 3558942.662634933,
+    "avg_route_distance": 2522695.428368956,
+    "imbalance": 1.4107698545820733
+  }
+}
+Saved result to /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n100k_uniform_m5_300s/uniform_n100000_m5_r01_m5_seed2.json
+[20:12:38] <<< FILO2 [n100k_uniform_m5_300s] seed=2 rc=0
+[20:12:38] >>> FILO2 [n100k_uniform_m5_300s] seed=3 budget=300s
+{
+  "status": "ok",
+  "elapsed_seconds": 1126.3800489902496,
+  "return_code": 0,
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 12739911.416530244,
+    "max_route_distance": 3290321.5234164484,
+    "avg_route_distance": 2547982.2833060487,
+    "imbalance": 1.2913439567355243
+  }
+}
+Saved result to /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n100k_uniform_m5_300s/uniform_n100000_m5_r01_m5_seed3.json
+[20:31:27] <<< FILO2 [n100k_uniform_m5_300s] seed=3 rc=0
+[20:31:27] >>> v21 [n100k_uniform_m5_300s] seeds=3 budget=300000ms
+[1/3] run: uniform_n100000_m5_r01.txt seed=1 budget_ms=300000 solver=lkh_v21_minsum_cap
+           done: obj=13089335.221176496 valid=True wall_s=294.8
+[2/3] run: uniform_n100000_m5_r01.txt seed=2 budget_ms=300000 solver=lkh_v21_minsum_cap
+           done: obj=12971286.0547637 valid=True wall_s=295.6
+[3/3] run: uniform_n100000_m5_r01.txt seed=3 budget_ms=300000 solver=lkh_v21_minsum_cap
+           done: obj=12998327.89916215 valid=True wall_s=296.6
+
+Wrote summary: /mnt/c/Users/ddkup/for_claude/filo2_probe/v21_n100k_uniform_m5_300s/summary.json
+Per-instance:
+  uniform_n100000_m5_r01.txt                              mean=13019649.73 std=61845.51 cv=0.475% min=12971286.05 max=13089335.22 (3/3 valid)
+[20:46:15] <<< v21 [n100k_uniform_m5_300s] rc=0
+[20:46:15] After n=100k batch: 4761s
+[20:46:15] 
+[20:46:15] === Generating summary ===
+====================================================================================================
+  FILO2 vs lkh_v21_minsum_cap — shorter budgets (uniform m=5)
+====================================================================================================
+
+====================================================================================================
+  n=50,000  m=5  budget 90s,  3 seeds
+====================================================================================================
+
+FILO2:
+  seed             obj        max_rt  imbal    wall_s  routes
+  1        4,590,615.3   1,386,462.2   1.51     163.9       5
+  2        4,543,517.5   1,279,238.0   1.41     205.0       5
+  3        4,540,644.8   1,342,385.8   1.48     177.8       5
+  mean     4,558,259.2   1,336,028.7   1.47     182.2
+  cv obj = 0.62%
+
+lkh_v21_minsum_cap:
+  seed             obj        max_rt  imbal    wall_s  budget_s  routes
+  1        4,569,420.4     948,421.9   1.04      78.2        90       5
+  2        4,571,758.0     955,335.7   1.04      79.1        90       5
+  3        4,566,934.1     940,758.6   1.03      81.9        90       5
+  mean     4,569,370.8     948,172.1   1.04      79.7
+  cv obj = 0.05%
+
+v21 vs FILO2 (delta %):
+  obj    :  +0.24%   (v21 worse)
+  max_rt : -29.03%   (v21 better)
+  imbal  : -29.20%   (v21 better)
+  wall   : -56.25%
+
+
+====================================================================================================
+  n=100,000 m=5  budget 300s, 3 seeds
+====================================================================================================
+
+FILO2:
+  seed             obj        max_rt  imbal    wall_s  routes
+  1       12,771,046.7   3,586,901.9   1.40   1,044.0       5
+  2       12,613,477.1   3,558,942.7   1.41     903.8       5
+  3       12,739,911.4   3,290,321.5   1.29   1,126.4       5
+  mean    12,708,145.1   3,478,722.0   1.37   1,024.7
+  cv obj = 0.66%
+
+lkh_v21_minsum_cap:
+  seed             obj        max_rt  imbal    wall_s  budget_s  routes
+  1       13,089,335.2   2,646,238.5   1.01     294.0       300       5
+  2       12,971,286.1   2,648,448.8   1.02     294.9       300       5
+  3       12,998,327.9   2,657,071.0   1.02     295.9       300       5
+  mean    13,019,649.7   2,650,586.1   1.02     294.9
+  cv obj = 0.48%
+
+v21 vs FILO2 (delta %):
+  obj    :  +2.45%   (v21 worse)
+  max_rt : -23.81%   (v21 better)
+  imbal  : -25.63%   (v21 better)
+  wall   : -71.22%
+
+[20:46:16] 
+[20:46:16] TOTAL WALL: 4762s
+[20:46:16] Summary: /mnt/c/Users/ddkup/for_claude/filo2_probe/summary_short.txt
+[20:46:16] Log: /mnt/c/Users/ddkup/for_claude/filo2_probe/run_short.log

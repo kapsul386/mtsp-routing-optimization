@@ -1,5 +1,13 @@
 #pragma once
 
+// POPMUSIC-style spatial decomposition step. Picks a center customer, gathers
+// the K nearest customers (across routes) into a sub-problem, removes them
+// from their current positions, and runs cheapest-insertion + 2-opt over the
+// concatenated remainders. Strict accept (only commits on improvement).
+// Empirically off by default for n>60k (post-polish solutions are already
+// at a local optimum that this step cannot beat); kept as an experimental
+// hook controllable via AutoTuneParams.popmusic_every.
+
 #include "00_types.hpp"
 #include "01_budget.hpp"
 #include "02_distance.hpp"

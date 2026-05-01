@@ -1,5 +1,9 @@
 #pragma once
 
+// 2D KDTree used by candidate-set construction and zone-based destroy. Built
+// once over the instance's coords; supports k-NN and radius queries. Memory
+// ~24*n bytes — fits at n=100k. Thread-safe for queries after Build.
+
 #include "00_types.hpp"
 #include <algorithm>
 #include <cmath>
@@ -10,15 +14,15 @@
 
 namespace mtsp::v21 {
 
-// Simple median-split 2D KDTree. Built once over Instance coords; supports
-// k-NN and radius queries. Memory ~24 * n bytes — fine at n=100k.
 class KDTree2D {
 public:
+    // (squared distance, node id) pair used by the bounded k-NN heap.
     struct Item { double d2; int idx; bool operator<(const Item& o) const { return d2 < o.d2; } };
 
     KDTree2D() = default;
     explicit KDTree2D(const std::vector<Coord>& coords) { Build(coords); }
 
+    // Build/rebuild over the given coord array. The array must outlive the tree.
     void Build(const std::vector<Coord>& coords) {
         coords_ = &coords;
         const int n = static_cast<int>(coords.size());
@@ -27,6 +31,7 @@ public:
         if (n > 0) BuildRec(0, n, 0);
     }
 
+    // k nearest neighbors of `node` (excluding `node` itself), ascending by distance.
     void Knn(int node, int k, std::vector<int>& out) const {
         out.clear();
         if (!coords_ || k <= 0 || coords_->empty()) return;
@@ -42,6 +47,7 @@ public:
         std::vector<int> r; Knn(node, k, r); return r;
     }
 
+    // All neighbors of `node` within Euclidean distance `r` (excluding `node` itself).
     void RangeRadius(int node, double r, std::vector<int>& out) const {
         out.clear();
         if (!coords_ || r <= 0.0) return;

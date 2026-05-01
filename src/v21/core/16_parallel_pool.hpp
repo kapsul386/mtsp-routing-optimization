@@ -1,5 +1,12 @@
 #pragma once
 
+// Multi-start coordinator used by the Parallel Tempering branch in 17_pipeline.
+// Owns a pool of independent ALNS+SA replicas; the pipeline runs them in
+// parallel via OpenMP and periodically attempts Metropolis swaps between
+// adjacent replicas on the geometric T ladder. Single-replica mode is the
+// fast path (zero PT overhead); PT is enabled only on the medium-n tier
+// where the cost of ensemble swaps amortizes (see 18_autotune.hpp).
+
 #include "00_types.hpp"
 #include <mtsp_solver.h>
 #include <algorithm>

@@ -1,3 +1,10 @@
+// Successor to the modular v8 wrapper (see src/lkh_wrapper_v8/). Same module
+// layout (00..60); v9 collapsed 10_candidate_sets into 00_common and tuned
+// the cluster model. Last of the 00..60-style modular wrappers before the
+// pipeline was condensed back into a single .cpp (v10..v20) and finally
+// re-modularized as src/v21/core/ with header-only modules (00..21) plus
+// objective-specific entry points. Registered as "lkh-wrapper-v9".
+
 namespace mtsp {
 
 class LkhWrapperSolverV9 : public Solver {

@@ -1,5 +1,16 @@
 #pragma once
 
+// Lazy distance oracle. For small instances (n*n <= kLargeInstanceDistancePairs)
+// we delegate every call to the underlying Instance which already holds a full
+// O(n^2) matrix. For large instances we keep an on-demand unordered_map cache
+// keyed by PackEdgeKey, paying memory only for actually-queried pairs.
+// Depot distances are precomputed once because seed strategies query them
+// densely.
+//
+// Not thread-safe: the cache map is mutated by operator(). Each replica/thread
+// must own its own DistanceOracle (see PtReplicaCtx) or use Raw() / a separate
+// stateless functor.
+
 #include "00_types.hpp"
 #include <mtsp_instance.h>
 #include <cmath>
@@ -25,6 +36,7 @@ public:
         }
     }
 
+    // Euclidean distance between two nodes; cached on large instances. Mutating.
     double operator()(int a, int b) {
         if (a == b) return 0.0;
         if (!cache_enabled_) return inst_.Distance(a, b);
@@ -36,7 +48,7 @@ public:
         return v;
     }
 
-    // Cache-free distance — useful when raw arithmetic must match Instance::Distance exactly.
+    // Cache-free distance: bit-identical to Instance::Distance, safe across threads.
     double Raw(int a, int b) const { return inst_.Distance(a, b); }
 
     double SquaredDistance(int a, int b) const {
@@ -59,6 +71,7 @@ private:
     std::vector<double> depot_dist_;
 };
 
+// Sum of edge lengths along a route (caller-supplied distance functor).
 template <typename DistanceFn>
 double RouteLengthGeneric(const std::vector<int>& route, DistanceFn& d) {
     double total = 0.0;

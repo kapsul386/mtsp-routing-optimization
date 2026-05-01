@@ -1,5 +1,11 @@
 #pragma once
 
+// Initial-solution constructors. The pipeline runs several of these in the
+// seed phase and picks the best by ScalarCost; constructive cost dominates
+// only the first ~5% of the search budget, so quality is what matters. Every
+// constructor here returns m closed routes (each starts and ends at depot 0)
+// and covers all customers exactly once.
+
 #include "00_types.hpp"
 #include "01_budget.hpp"
 #include "02_distance.hpp"
@@ -14,6 +20,7 @@
 
 namespace mtsp::v21 {
 
+// Closes any open route by adding/removing depot endpoints as needed.
 inline void EnsureClosedDepot(RouteSet& routes) {
     for (auto& r : routes) {
         if (r.empty()) { r = {0, 0}; continue; }
@@ -22,7 +29,8 @@ inline void EnsureClosedDepot(RouteSet& routes) {
     }
 }
 
-// Round-robin nearest-neighbour seed (matches the legacy 2opt+greed baseline).
+// Round-robin nearest-neighbor over all m agents. O(n^2) — strongest seed for
+// small/medium n; matches the legacy 2opt+greed baseline shape.
 inline RouteSet BuildRoundRobinNN(const mtsp::Instance& inst) {
     const int m = std::max(1, inst.GetSalesmanCount());
     const int n = inst.GetNodeCount();

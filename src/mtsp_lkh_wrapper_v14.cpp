@@ -1,17 +1,10 @@
-// mtsp_lkh_wrapper_v14.cpp
-// MINSUM-oriented successor to v12. Carries forward the full v12 pipeline and
-// adds:
-//   - metadata for the improve phase (improve_phase_*, polish_pass_*) so that
-//     the json output finally shows whether polish does anything on n>=50k;
-//   - timing fields for repair (insert_us, cleanup_us) to validate that the
-//     hoisted index actually saves time on large instances;
-//   - hoisted route/position index in RepairRoutesMinsumV14 (was rebuilt
-//     O(n) per re-inserted city; now built once + incremental reindex);
-//   - OpenMP-parallel intra-route polish with thread-local distance oracles
-//     and search budgets (the polish loop is the only embarrassingly parallel
-//     part of the pipeline, m independent routes);
-//   - non-zero anneal budget for n>=50k (was 0, leaving 60-100s on the floor
-//     during the improve phase on large instances).
+// First of the v14--v17 short-lived A/B variants on the v12 pipeline. v14
+// introduced: hoisted RouteIndex inside repair (was rebuilt O(n) per insert),
+// OpenMP-parallel intra-route polish with thread-local distance oracles, and
+// non-zero anneal budget for n>=50k (which was previously 0). v15--v17
+// continued tuning the same surface; differentiating performance is in git
+// history. Superseded by v18 (polar-sweep seed) and by the modular v21
+// architecture in src/v21/. Registered as "lkh-wrapper-v14".
 // Inter-route improvement, savings seed, candidate enrichment, repair stages
 // and final route anneal stay logically identical to v12.
 

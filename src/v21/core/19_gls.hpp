@@ -1,5 +1,12 @@
 #pragma once
 
+// Guided Local Search edge-penalty overlay (Voudouris & Tsang 1996, KGLS in
+// VRP literature). Augments the cost function with a per-edge penalty term
+// that grows when an edge is "stuck" in many local minima — pushing search
+// toward edges it has not been forced to use. Penalties decay on best-cost
+// improvement so the augmented landscape converges back to the real cost.
+// Used by RunAlnsSaLoop in 17_pipeline as a stagnation-escape mechanism.
+
 #include "00_types.hpp"
 #include "02_distance.hpp"
 #include "05_route_list.hpp"

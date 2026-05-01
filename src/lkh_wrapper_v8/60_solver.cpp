@@ -1,3 +1,10 @@
+// First modular wrapper (predecessor of the src/v21/core/ architecture). The
+// directory layout numbered the modules 00..60 (00_common, 10_candidate_sets,
+// 20_route_local_search, 30_cluster_model, 40_seed_routes, 50_rebalance,
+// 60_solver — this file). Same pattern was kept in src/v21/core/. See
+// src/lkh_wrapper_v8/README.md for the per-module rationale of v8.
+// Registered as "lkh-wrapper-v8".
+
 namespace mtsp {
 
 class LkhWrapperSolverV8 : public Solver {

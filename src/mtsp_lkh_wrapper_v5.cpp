@@ -1,3 +1,9 @@
+// Speed iteration on v4. Cuts the spatial-grid + cache loop bookkeeping; runs
+// faster than v4 on large uniform instances but loses MINSUM (the
+// abbreviation it does in the inner loop trades quality for time). Used as a
+// data point in the v4--v6 large-instance trade-off study (report 5.5).
+// Registered as "lkh-wrapper-v5".
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>

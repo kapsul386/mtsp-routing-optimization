@@ -1,5 +1,15 @@
 #pragma once
 
+// HISTORICAL — not currently invoked by the v21 pipeline. The greedy-descent
+// inter-route move operators below (relocate, swap, or-opt cross-route) were
+// part of an early v21 design that bypassed ALNS. The shipped pipeline
+// performs all inter-route mixing through destroy+repair (operators in
+// 13_destroy_ops.hpp / 14_repair_ops.hpp), which subsumes these moves under
+// the SA acceptance criterion. Kept here as reference; no `#include` of this
+// file currently depends on the function definitions executing. The known
+// `RecomputeLength` redundancy after the delta-evaluation block (lines below)
+// is harmless because none of the calling code paths exercise it.
+
 #include "00_types.hpp"
 #include "01_budget.hpp"
 #include "02_distance.hpp"
@@ -10,13 +20,8 @@
 
 namespace mtsp::v21 {
 
-// AcceptPolicy contract:
-//   double Cost(const RouteList&)                // current scalar cost
-//   double DeltaIfRelocate(rl, from_r, to_r, dL_from, dL_to)
-//   bool   StrictAccept(double delta)            // for greedy improving moves
-//
-// We provide concrete policies in minsum/minmax/*_accept.hpp. Move operators
-// here pick the best improving move under StrictAccept (greedy descent).
+// AcceptPolicy contract used by the (unreferenced) operators below; concrete
+// implementations live in minsum/minmax/*_accept.hpp.
 
 // Best-improving cross-route relocate: move one customer from any route to any
 // other if AcceptPolicy::StrictAccept(delta) holds.

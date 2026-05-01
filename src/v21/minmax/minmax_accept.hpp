@@ -1,5 +1,11 @@
 #pragma once
 
+// AcceptPolicy plug-in for MINMAX. Pure max-of-routes is a discrete
+// landscape (changing the longest route by epsilon may not change "max"),
+// so we use a soft α-blend with λ·sum to give SA a usable gradient: early
+// iterations explore via the sum component, late iterations focus on max.
+// α is reduced over the run (controlled externally from the pipeline).
+
 #include "../core/02_distance.hpp"
 #include "../core/05_route_list.hpp"
 #include "../core/11_validation.hpp"
@@ -8,13 +14,8 @@
 
 namespace mtsp::v21 {
 
-// MIN-MAX acceptance policy: lexicographic (max, λ·sum), with a soft-α
-// blend that smooths the discrete-max landscape.
-//
-// effective = (1 - alpha) * max + alpha * lambda * sum
-//
-// alpha is reduced over the run (set externally from pipeline) so early SA
-// iterations have a gradient through sum, late iterations focus on max.
+// effective_cost = (1 - alpha) * max + alpha * lambda * sum + (lambda * sum / 2)
+// The trailing tie-breaker term keeps Δmax=0 moves discriminable by Δsum.
 class MinmaxAccept {
 public:
     explicit MinmaxAccept(double lambda) : lambda_(lambda) {}

@@ -1,3 +1,9 @@
+// Aggressive-speed variant pushing v5's trade-offs further. Documented in
+// report 5.5 as failing to maintain validity on parts of the n=25k/50k
+// uniform sweep (~25% valid runs); kept in the codebase as a negative result
+// — illustrates the cost of trading too much quality for throughput.
+// Registered as "lkh-wrapper-v6".
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>

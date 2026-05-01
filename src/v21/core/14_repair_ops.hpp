@@ -1,5 +1,14 @@
 #pragma once
 
+// Repair operators for the ALNS pipeline. Take a list of removed customers
+// produced by a destroy operator and reinsert them into the partial solution.
+// Two strategies: cheapest-insertion (greedy by per-customer best position)
+// and regret-2 (orders insertions by largest opportunity cost; harder
+// customers go first). Both operators are candidate-restricted via the
+// `candidates` vector to keep per-step cost manageable on large n.
+// route_cap (FILO2-inspired) is an optional hard upper bound on per-route
+// customer count; only set by `lkh_v21_minsum_cap`.
+
 #include "00_types.hpp"
 #include "02_distance.hpp"
 #include "05_route_list.hpp"

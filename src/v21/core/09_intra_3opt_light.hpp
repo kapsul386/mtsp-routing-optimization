@@ -1,5 +1,10 @@
 #pragma once
 
+// Light intra-route 3-opt-like moves (or-opt with segment lengths 1..3).
+// Cheaper than full 3-opt but addresses the move classes 2-opt cannot reach
+// — relocating a short segment to a non-adjacent position. Used as a
+// complementary pass after 2-opt during selective LS.
+
 #include "00_types.hpp"
 #include "01_budget.hpp"
 #include "02_distance.hpp"

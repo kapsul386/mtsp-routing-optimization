@@ -1,5 +1,12 @@
 #pragma once
 
+// Deterministic parameter dispatcher: ResolveParamsForInstance(n, m, is_minmax)
+// returns a fixed AutoTuneParams struct based on instance size brackets and
+// objective. Single source of truth for k_NN, destroy sizes, SA cooling,
+// reheat thresholds, budget split between phases, PT replica count, and
+// related knobs. Numbers are empirically tuned (see comments inline) and
+// should change rarely; document any edit with a benchmark reference.
+
 #include <algorithm>
 #include <cmath>
 

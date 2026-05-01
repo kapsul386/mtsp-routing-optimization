@@ -1,0 +1,51 @@
+{
+  "instance_dir": "data/mtsp/generated_high_m_fixedgeo",
+  "instance_glob": "*.txt",
+  "instance_families": [
+    "uniform",
+    "clustered-center",
+    "clustered-offset-depot",
+    "mixed-outliers",
+    "outliers",
+    "mixed",
+    "high-m-stress"
+  ],
+  "allowed_node_counts": [
+    10000,
+    25000,
+    50000,
+    100000
+  ],
+  "allowed_salesman_counts": [
+    100
+  ],
+  "results_csv": "data/results/high_m_fixedgeo_m100_results.csv",
+  "summary_csv": "data/results/high_m_fixedgeo_m100_summary.csv",
+  "report_md": "data/results/high_m_fixedgeo_m100_report.md",
+  "solvers": [
+    {
+      "name": "lkh_v21_minsum",
+      "args": [
+        "--step",
+        "lkh_v21_minsum",
+        "--seed",
+        "1",
+        "--time-budget-ms",
+        "60000"
+      ]
+    },
+    {
+      "name": "lkh_v21_minsum_cap",
+      "args": [
+        "--step",
+        "lkh_v21_minsum_cap",
+        "--seed",
+        "1",
+        "--time-budget-ms",
+        "60000",
+        "--route-cap-slack",
+        "0.75"
+      ]
+    }
+  ]
+}

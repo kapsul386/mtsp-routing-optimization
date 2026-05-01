@@ -1,0 +1,42 @@
+{
+  "algorithm": "OR-Tools_GLS",
+  "status": "ok",
+  "source_instance": "data/mtsp/generated_multifamily/uniform_n1000_m5_r01.txt",
+  "n_vertices": 1000,
+  "n_customers": 999,
+  "m_requested": 5,
+  "capacity": 200,
+  "time_limit_seconds": 30,
+  "seed": 1,
+  "strategy": "GLS",
+  "first_solution_strategy": "PATH_CHEAPEST_ARC",
+  "local_search_metaheuristic": "GUIDED_LOCAL_SEARCH",
+  "elapsed_seconds": 30.0021812915802,
+  "postprocess": "exact-m",
+  "postprocess_actions": [],
+  "raw_metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 14332.994479532254,
+    "max_route_distance": 3557.332333290308,
+    "avg_route_distance": 2866.5988959064507,
+    "imbalance": 1.2409592211767875
+  },
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 14332.994479532254,
+    "max_route_distance": 3557.332333290308,
+    "avg_route_distance": 2866.5988959064507,
+    "imbalance": 1.2409592211767875
+  },
+  "routes_path": "data/results/baselines/ortools/smoke/uniform_n1000_m5_r01_m5_seed1_GLS_routes.json"
+}

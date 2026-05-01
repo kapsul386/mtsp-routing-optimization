@@ -1,5 +1,7 @@
-// v21 MIN-MAX solver. Self-contained.
-// Registered as "lkh_v21_minmax" in mtsp::SolverFactory.
+// MIN-MAX entry point for v21. Same v21 core as the MINSUM solver, but
+// instantiated with MinmaxAccept (lexicographic max + λ·sum with a soft-α
+// schedule). Exposed as solver name "lkh_v21_minmax". The CLI surface
+// matches the MINSUM solver: --seed, --time-budget-ms, --threads.
 
 #include "../core/00_types.hpp"
 #include "../core/01_budget.hpp"
@@ -65,6 +67,8 @@ public:
 
         DistanceOracle d(inst);
         SanitizeRoutes(out, inst);
+        EnsureClosedDepot(out);
+        RebalanceEmptyRoutes(out, d);
         EnsureClosedDepot(out);
         meta.Set("validation_ok", ValidateRoutes(out, n) ? "true" : "false");
         meta.SetDouble("final_minsum", RouteSumLength(out, d));

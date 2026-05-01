@@ -1,5 +1,10 @@
 #pragma once
 
+// AcceptPolicy plug-in for MINSUM. Scalar cost is the sum of all route
+// lengths; cross-route move delta is the trivial sum of per-route deltas.
+// No load-balancing penalties (those live in MinmaxAccept). Dropped into
+// `RunPipeline<AcceptPolicy>` to specialize the templated search to MINSUM.
+
 #include "../core/02_distance.hpp"
 #include "../core/05_route_list.hpp"
 #include "../core/11_validation.hpp"
@@ -8,7 +13,6 @@
 
 namespace mtsp::v21 {
 
-// MINSUM acceptance policy: scalar = sum of route lengths.
 class MinsumAccept {
 public:
     bool IsMinMax() const { return false; }

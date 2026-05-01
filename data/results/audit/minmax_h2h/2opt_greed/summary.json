@@ -1,0 +1,102 @@
+{
+  "tag": "minmax_2opt+greed",
+  "solver": "2opt+greed",
+  "executable": "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\build\\src\\Release\\mtsp.exe",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "budget_by_n": "10000:60000",
+  "instances": [
+    {
+      "instance": "clustered-offset-depot_n10000_m100_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 100,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        29470.09353605051,
+        29470.09353605051,
+        29470.09353605051,
+        29470.09353605051,
+        29470.09353605051
+      ],
+      "times": [
+        0.736076,
+        0.740976,
+        0.766609,
+        0.742246,
+        0.756503
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 29470.093536050514,
+      "std_objective": 0.0,
+      "min_objective": 29470.09353605051,
+      "max_objective": 29470.09353605051,
+      "cv_percent": 0.0,
+      "mean_time_seconds": 0.748482
+    },
+    {
+      "instance": "mixed-outliers_n10000_m100_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 100,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        28094.026283456395,
+        28094.026283456395,
+        28094.026283456395,
+        28094.026283456395,
+        28094.026283456395
+      ],
+      "times": [
+        0.755651,
+        0.743306,
+        0.766272,
+        0.756498,
+        0.742828
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 28094.0262834564,
+      "std_objective": 0.0,
+      "min_objective": 28094.026283456395,
+      "max_objective": 28094.026283456395,
+      "cv_percent": 0.0,
+      "mean_time_seconds": 0.752911
+    }
+  ],
+  "started_at": 1777546770.4024308,
+  "wall_time_seconds": 8.189259799997672,
+  "finished_at": 1777546778.591701
+}

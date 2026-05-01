@@ -1,0 +1,102 @@
+{
+  "tag": "v21_cap_msweep",
+  "solver": "lkh_v21_minsum_cap",
+  "executable": "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\build\\src\\Release\\mtsp.exe",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "budget_by_n": "10000:60000",
+  "instances": [
+    {
+      "instance": "uniform_n10000_m3_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 3,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        397458.16459824523,
+        397598.39205802063,
+        395842.32778460253,
+        396560.1254214528,
+        397160.7880898462
+      ],
+      "times": [
+        33.993378,
+        34.600668,
+        33.993537,
+        36.842796,
+        35.115901
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 396923.9595904335,
+      "std_objective": 724.3315103845603,
+      "min_objective": 395842.32778460253,
+      "max_objective": 397598.39205802063,
+      "cv_percent": 0.1824862150251556,
+      "mean_time_seconds": 34.909256
+    },
+    {
+      "instance": "uniform_n10000_m5_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 5,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        415284.90902582766,
+        412919.3333760915,
+        413566.93115077005,
+        410380.6015562049,
+        414977.48337369814
+      ],
+      "times": [
+        32.276443,
+        32.47345,
+        33.534324,
+        32.571704,
+        32.484541
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 413425.8516965184,
+      "std_objective": 1963.0122040951182,
+      "min_objective": 410380.6015562049,
+      "max_objective": 415284.90902582766,
+      "cv_percent": 0.47481602711581217,
+      "mean_time_seconds": 32.6680924
+    }
+  ],
+  "started_at": 1777541588.6602657,
+  "wall_time_seconds": 338.4896510000108,
+  "finished_at": 1777541927.149931
+}

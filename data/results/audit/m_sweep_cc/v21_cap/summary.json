@@ -1,0 +1,312 @@
+{
+  "tag": "v21_cap_msweep_cc",
+  "solver": "lkh_v21_minsum_cap",
+  "executable": "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\build\\src\\Release\\mtsp.exe",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "budget_by_n": "10000:60000",
+  "instances": [
+    {
+      "instance": "clustered-center_n10000_m3_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 3,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        95701.61854823305,
+        95589.44552312724,
+        95429.0046519126,
+        95273.09326950193,
+        95726.23809604086
+      ],
+      "times": [
+        37.485212,
+        39.984576,
+        37.49955,
+        38.590738,
+        38.550756
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 95543.88001776315,
+      "std_objective": 191.52933241426163,
+      "min_objective": 95273.09326950193,
+      "max_objective": 95726.23809604086,
+      "cv_percent": 0.20046216709919384,
+      "mean_time_seconds": 38.422166399999995
+    },
+    {
+      "instance": "clustered-center_n10000_m5_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 5,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        96283.46100446864,
+        96957.89727925476,
+        96886.56759793867,
+        97272.22867492496,
+        97412.97227043714
+      ],
+      "times": [
+        34.777918,
+        32.251285,
+        32.237186,
+        32.440673,
+        32.404535
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 96962.62536540483,
+      "std_objective": 437.532259409074,
+      "min_objective": 96283.46100446864,
+      "max_objective": 97412.97227043714,
+      "cv_percent": 0.4512380494651711,
+      "mean_time_seconds": 32.822319400000005
+    },
+    {
+      "instance": "clustered-center_n10000_m10_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 10,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        6300.3902744908255,
+        6197.107860570566,
+        6081.611290036122,
+        6094.664193774081,
+        6003.712751697376
+      ],
+      "times": [
+        31.503223,
+        31.589861,
+        31.37294,
+        31.522865,
+        31.334864
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 6135.497274113794,
+      "std_objective": 115.02582972473951,
+      "min_objective": 6003.712751697376,
+      "max_objective": 6300.3902744908255,
+      "cv_percent": 1.874759690792198,
+      "mean_time_seconds": 31.464750600000002
+    },
+    {
+      "instance": "clustered-center_n10000_m30_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 30,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        7467.491545025244,
+        7540.172191421459,
+        7583.577396286932,
+        7574.855497740818,
+        7600.082585884056
+      ],
+      "times": [
+        30.7748,
+        31.117474,
+        30.911151,
+        31.004383,
+        30.925475
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 7553.235843271701,
+      "std_objective": 52.69103404178468,
+      "min_objective": 7467.491545025244,
+      "max_objective": 7600.082585884056,
+      "cv_percent": 0.697595509197836,
+      "mean_time_seconds": 30.9466566
+    },
+    {
+      "instance": "clustered-center_n10000_m50_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 50,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        10589.931616212143,
+        10236.485572573207,
+        10154.048829251402,
+        10457.69233533643,
+        10451.543319483419
+      ],
+      "times": [
+        31.027765,
+        31.106646,
+        30.809153,
+        30.752969,
+        30.846479
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 10377.94033457132,
+      "std_objective": 178.08350594039382,
+      "min_objective": 10154.048829251402,
+      "max_objective": 10589.931616212143,
+      "cv_percent": 1.7159812082090746,
+      "mean_time_seconds": 30.9086024
+    },
+    {
+      "instance": "clustered-center_n10000_m80_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 80,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        10525.40100856549,
+        10893.109493315822,
+        11288.52647317511,
+        11063.538537333643,
+        11703.72607999813
+      ],
+      "times": [
+        30.889827,
+        30.930602,
+        31.027272,
+        30.938505,
+        31.322261
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 11094.86031847764,
+      "std_objective": 439.9410330090728,
+      "min_objective": 10525.40100856549,
+      "max_objective": 11703.72607999813,
+      "cv_percent": 3.9652687855509514,
+      "mean_time_seconds": 31.021693399999997
+    },
+    {
+      "instance": "clustered-center_n10000_m100_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 100,
+      "budget_ms": 60000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        13277.965907637483,
+        13888.231906344596,
+        14288.417252921283,
+        13816.959862146654,
+        13555.844702589033
+      ],
+      "times": [
+        31.404619,
+        31.326935,
+        31.359419,
+        31.502308,
+        31.497649
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 13765.483926327808,
+      "std_objective": 378.4172714432713,
+      "min_objective": 13277.965907637483,
+      "max_objective": 14288.417252921283,
+      "cv_percent": 2.749029917644319,
+      "mean_time_seconds": 31.418186
+    }
+  ],
+  "started_at": 1777543250.6037385,
+  "wall_time_seconds": 1137.2424264,
+  "finished_at": 1777544387.8461776
+}

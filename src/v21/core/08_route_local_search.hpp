@@ -1,5 +1,10 @@
 #pragma once
 
+// Single-route local search: Exhaustive2Opt (O(L^2) to a true local optimum)
+// and NeighborList2Opt (O(L*k) candidate-restricted with don't-look bits).
+// Used by the seed polish phase, by selective LS inside the ALNS loop, and
+// by IteratedLocalSearchSingleRoute (perturbation + 2-opt restart).
+
 #include "00_types.hpp"
 #include "01_budget.hpp"
 #include "02_distance.hpp"

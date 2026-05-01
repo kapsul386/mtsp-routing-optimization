@@ -1,0 +1,50 @@
+{
+  "tag": "n50k_uniform_m5_90s",
+  "solver": "lkh_v21_minsum_cap",
+  "executable": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/build/src/Release/mtsp.exe",
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "budget_by_n": "50000:90000",
+  "instances": [
+    {
+      "instance": "uniform_n50000_m5_r01.txt",
+      "node_count": 50000,
+      "salesman_count": 5,
+      "budget_ms": 90000,
+      "seeds": [
+        1,
+        2,
+        3
+      ],
+      "valid": [
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        4569420.445854915,
+        4571757.969032476,
+        4566934.051104573
+      ],
+      "times": [
+        78.257583,
+        79.110529,
+        81.988761
+      ],
+      "valid_count": 3,
+      "total_count": 3,
+      "mean_objective": 4569370.821997321,
+      "std_objective": 2412.3417956869584,
+      "min_objective": 4566934.051104573,
+      "max_objective": 4571757.969032476,
+      "cv_percent": 0.0527937409691888,
+      "mean_time_seconds": 79.78562433333333
+    }
+  ],
+  "started_at": 1777566965.3154671,
+  "wall_time_seconds": 240.075849049,
+  "finished_at": 1777567205.3913212
+}

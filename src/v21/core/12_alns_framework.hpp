@@ -1,5 +1,13 @@
 #pragma once
 
+// Adaptive Large Neighborhood Search framework (Ropke--Pisinger style).
+// Operator registry (destroy/repair) + adaptive weights based on per-segment
+// reward. Operators are registered as type-erased lambdas; the framework
+// itself is agnostic to AcceptPolicy and to the concrete move semantics. The
+// ALNS loop in 17_pipeline.hpp drives this: PickDestroy + PickRepair sample
+// proportional to weights, RunDestroy + RunRepair execute, Reward feeds the
+// weight update, EndSegment normalizes weights for the next segment.
+
 #include "00_types.hpp"
 #include "01_budget.hpp"
 #include "05_route_list.hpp"

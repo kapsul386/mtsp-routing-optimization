@@ -1,5 +1,13 @@
 #pragma once
 
+// Destroy operators for the ALNS pipeline. Each operator removes K customers
+// from the current solution and returns them in DestroyResult.removed; the
+// repair stage then re-inserts them. The mix is: Random (uniform sampling),
+// ClusterBfs (spatial cluster around a seed), Expensive (worst-edge-driven),
+// Zone (KDTree radius around a seed), and CriticalRoute (min-max biased,
+// removes from the longest route). Different operators give the search
+// access to different escape moves; ALNS adaptive weights pick which to use.
+
 #include "00_types.hpp"
 #include "02_distance.hpp"
 #include "03_kdtree.hpp"
@@ -12,8 +20,8 @@
 
 namespace mtsp::v21 {
 
-// Bind destroy operators to a runtime context (oracle + KDTree). Since
-// AlnsFramework uses std::function, capture by reference.
+// Per-replica context shared by every destroy operator (captured by reference
+// in the type-erased std::function passed to AlnsFramework).
 struct DestroyContext {
     DistanceOracle& d;
     const KDTree2D& kdtree;

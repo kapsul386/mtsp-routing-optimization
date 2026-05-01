@@ -1,5 +1,13 @@
 #pragma once
 
+// Simulated Annealing engine. Holds the temperature, cooling schedule, and
+// reheat state; does not own the solution or the move logic. The pipeline
+// asks SaEngine.Accept(delta) at each step and SaEngine tells it whether
+// to accept a non-improving move. Initial T is set via Ben-Ameur's pilot
+// formula (AutoTuneT0). Reheat fires on stagnation; the iter-count and
+// wall-time triggers cover the two regimes (fast iters / slow iters
+// respectively) with one mechanism.
+
 #include "00_types.hpp"
 #include <algorithm>
 #include <chrono>

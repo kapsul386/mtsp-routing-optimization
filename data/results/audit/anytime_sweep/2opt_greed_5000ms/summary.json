@@ -1,0 +1,60 @@
+{
+  "tag": "any_2opt+greed_5000",
+  "solver": "2opt+greed",
+  "executable": "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\build\\src\\Release\\mtsp.exe",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "budget_by_n": "10000:5000",
+  "instances": [
+    {
+      "instance": "clustered-offset-depot_n10000_m100_r01.txt",
+      "node_count": 10000,
+      "salesman_count": 100,
+      "budget_ms": 5000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        29470.09353605051,
+        29470.09353605051,
+        29470.09353605051,
+        29470.09353605051,
+        29470.09353605051
+      ],
+      "times": [
+        0.799551,
+        0.799887,
+        0.799492,
+        0.811634,
+        0.795249
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 29470.093536050514,
+      "std_objective": 0.0,
+      "min_objective": 29470.09353605051,
+      "max_objective": 29470.09353605051,
+      "cv_percent": 0.0,
+      "mean_time_seconds": 0.8011626
+    }
+  ],
+  "started_at": 1777540569.3163435,
+  "wall_time_seconds": 4.296087700000498,
+  "finished_at": 1777540573.6124396
+}

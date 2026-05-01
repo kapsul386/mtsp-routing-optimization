@@ -1,5 +1,27 @@
 #pragma once
 
+// Top-level pipeline driving the v21 search. Templated on AcceptPolicy so the
+// same code services both `MinsumAccept` and `MinmaxAccept`. RunPipeline
+// orchestrates six phases under one wall-clock SearchBudget:
+//
+//   1. Candidate set construction (k-NN via KDTree2D, optionally augmented by
+//      POPMUSIC-lite tour edges). Built once.
+//   2. Multi-seed portfolio (round-robin NN, fast NN, polar sweep, optionally
+//      k-means and savings); PickBestSeed picks the lowest-cost seed.
+//   3. Parallel polish: ParallelFinal2Opt + ParallelPolish (intra-route ILS
+//      under OpenMP), one OMP team across routes.
+//   4. (skipped — phase numbering predates this file; phases 3 & 4 are merged.)
+//   5. Main search: RunAlnsSaLoop in single-replica mode, or RunPtAlnsSaLoop
+//      with K replicas on a geometric T ladder when autotune enables PT. The
+//      ALNS body alternates destroy/repair/selective-LS and consults
+//      SaEngine for non-improving acceptance + reheat decisions.
+//   6. Final polish: ParallelFinal2Opt over the best solution; the budget
+//      reserve guarantees this phase actually runs.
+//
+// PipelineMetadata accumulates phase timings, operator stats, anytime trace,
+// and post-run scalars (final_minsum / final_max). All metadata is
+// string-typed so the C-side mtsp_main can hand it to JSON unmodified.
+
 #include "00_types.hpp"
 #include "01_budget.hpp"
 #include "02_distance.hpp"

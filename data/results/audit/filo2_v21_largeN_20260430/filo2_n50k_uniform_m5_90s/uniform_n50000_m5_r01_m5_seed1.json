@@ -1,0 +1,59 @@
+{
+  "algorithm": "FILO2_CVRP_adapter",
+  "status": "ok",
+  "source_instance": "data/mtsp/generated_multifamily/uniform_n50000_m5_r01.txt",
+  "converted_instance": "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n50000_m5_r01_m5.vrp",
+  "solution_source": "/mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5_90s/raw/uniform_n50000_m5_r01_m5_seed1/uniform_n50000_m5_r01_m5.vrp_seed-1.vrp.sol",
+  "routes_path": "/mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5_90s/uniform_n50000_m5_r01_m5_seed1_routes.json",
+  "n_vertices": 50000,
+  "n_customers": 49999,
+  "m_requested": 5,
+  "capacity": 10000,
+  "time_limit_seconds": 90,
+  "seed": 1,
+  "elapsed_seconds": 163.85750007629395,
+  "return_code": 0,
+  "peak_memory_mb": null,
+  "postprocess": "exact-m",
+  "postprocess_actions": [
+    "merge_best_pair"
+  ],
+  "raw_metrics": {
+    "routes_count": 6,
+    "m_requested": 5,
+    "exact_m": false,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 4591025.0567305805,
+    "max_route_distance": 875912.6636709459,
+    "avg_route_distance": 765170.84278843,
+    "imbalance": 1.1447282288997727
+  },
+  "metrics": {
+    "routes_count": 5,
+    "m_requested": 5,
+    "exact_m": true,
+    "valid_cover": true,
+    "duplicates_count": 0,
+    "missing_count": 0,
+    "total_distance": 4590615.337945974,
+    "max_route_distance": 1386462.1875584992,
+    "avg_route_distance": 918123.0675891949,
+    "imbalance": 1.5101049483475761
+  },
+  "stdout_tail": "Pre-processing the instance.\nProgress: 90%\nDone in 12 seconds.\n\nRunning CLARKE&WRIGHT to generate an initial solution.\nDone in 0 seconds.\nInitial solution: obj = 4.59081e+06, n. of routes = 6.\n\nSetting up MOVEGENERATORS data structures.\nDone in 0 seconds.\nUsing at most 1363596 move-generators out of 2500000000 total arcs (approx. 0.05454%)\n\nComputing a greedy upper bound on the n. of routes.\nDone in 0 milliseconds.\nAround 5 routes should do the job.\n\nRunning ROUTEMIN heuristic for at most 30 iterations.\nStarting solution: obj = 4.5908e+06, n. of routes = 6.\n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n   6      4590810        6      0.18   159.64     0.50 \n  10      4590810        6      0.15   186.76     0.67 \n  13      4590810        6      0.15   182.32     0.75 \n  16      4590810        6      0.14   187.25     0.80 \n  20      4590810        6      0.14   175.04     0.83 \n  23      4590810        6      0.14   171.46     0.86 \n  26      4590810        6      0.14   161.03     0.88 \n  33      4590810        6      0.17   126.02     0.80 \n  36      4590810        6      0.17   116.38     0.73 \n  40      4590810        6      0.17   110.85     0.67 \n  43      4590810        6      0.18   101.09     0.62 \n  46      4590810        6      0.18    95.94     0.64 \n  50      4590810        6      0.18    87.48     0.67 \n  53      4590810        6      0.18    81.57     0.69 \n  60      4590810        6      0.20    66.45     0.67 \n\n\u001b[1m   %    Objective   Routes    Iter/s   Eta (s)    % Inf  \u001b[0m\n                                                        \n  63      4590810        6      0.20    60.01     0.68 \n  66      4590810        6      0.21    53.36     0.70 \n  73      4590810        6      0.19    47.46     0.64 \n  76      4590810        6      0.19    41.39     0.61 \n  80      4590810        6      0.19    36.46     0.58 \n  83      4590810        6      0.20    30.48     0.60 \n  86      4590810        6      0.20    25.00     0.58 \n  90      4590810        6      0.20    19.56     0.56 \n  93      4590810        6      0.20    14.68     0.54 \n  96      4590810        6      0.21     9.66     0.52 \n 100      4590810        6      0.21     4.80     0.50 \nFinal solution: obj = 4590810, n. routes = 6\nDone in 150 seconds.\n\nShaking LB = 34.42350183\nShaking UB = 78.02660415\nSimulated annealing temperature goes from 1302.757336 to 13.02757336.\n\nRunning COREOPT for 0 seconds.\n\nBest solution found:\nobj = 4590810, n. routes = 6\n\nRun completed in 163 seconds \nResults stored in\n - /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5_90s/raw/uniform_n50000_m5_r01_m5_seed1/uniform_n50000_m5_r01_m5.vrp_seed-1.out\n - /mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5_90s/raw/uniform_n50000_m5_r01_m5_seed1/uniform_n50000_m5_r01_m5.vrp_seed-1.vrp.sol\n",
+  "stderr_tail": "",
+  "command": [
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/external/filo2/build/filo2",
+    "/mnt/c/Users/ddkup/coursework/mtsp-routing-optimization/data/cvrp_tmp/uniform_n50000_m5_r01_m5.vrp",
+    "--optimization-seconds",
+    "90",
+    "--seed",
+    "1",
+    "--outpath",
+    "/mnt/c/Users/ddkup/for_claude/filo2_probe/filo2_n50k_uniform_m5_90s/raw/uniform_n50000_m5_r01_m5_seed1",
+    "--routemin-iterations",
+    "30"
+  ]
+}
