@@ -13,8 +13,13 @@
 
 struct MtspCliOptions {
     std::string input_file;
+    bool emit_routes = true;
     std::vector<std::pair<std::string, std::unordered_map<std::string, std::string>>> steps;
 };
+
+inline bool ParseBoolFlag(const std::string& value) {
+    return value == "1" || value == "true" || value == "yes" || value == "on";
+}
 
 inline MtspCliOptions ParseMtspArguments(int argc, char** argv) {
     if ((argc - 1) % 2 != 0) {
@@ -38,6 +43,10 @@ inline MtspCliOptions ParseMtspArguments(int argc, char** argv) {
                 throw std::runtime_error("Path after --input-file must not be empty.");
             }
             options.input_file = val;
+            continue;
+        }
+        if (name == "emit-routes") {
+            options.emit_routes = ParseBoolFlag(val);
             continue;
         }
         if (name == "step") {
@@ -116,7 +125,11 @@ int main(int argc, char** argv) {
                            1e6;
 
         nlohmann::json output;
-        output["routes"] = routes;
+        if (options.emit_routes) {
+            output["routes"] = routes;
+        } else {
+            output["routes_omitted"] = true;
+        }
         output["time"] = real_time;
         output["objective"] = mtsp::ObjectiveMinsum(routes);
         output["valid"] = mtsp::ValidateRoutes(routes);

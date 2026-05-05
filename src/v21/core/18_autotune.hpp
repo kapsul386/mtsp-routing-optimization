@@ -9,6 +9,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace mtsp::v21 {
 
@@ -30,13 +35,52 @@ struct AutoTuneParams {
     int budget_polish_pct = 25;
     int budget_alns_pct = 53;
     int budget_final_pct = 10;
+    // Extra wall-clock allowance assigned directly to the main ALNS/improvement
+    // phase. Used for fair ablations when a solver adds a bounded post-process
+    // after the pipeline but we want the main improvement phase to keep its
+    // original useful time.
+    int extra_alns_ms = 0;
     // Min-max specific
     int pt_replicas = 1;
     double minmax_lambda = 1e-3;
     double minmax_soft_alpha_init = 0.05;
     double minmax_soft_alpha_final = 0.001;
+    bool use_classic_seeds = true;
     bool use_savings_seed = true;
     bool use_kmeans_seed = false;
+    // Depot-candidate first-step seeds for MINSUM.
+    // Bitmask: 1 = m depot candidates, 2 = 2m depot candidates, 3 = both.
+    // Uniform 100k/m10: 2m alone was better than m and the m+2m portfolio.
+    int depot_seed_mode = 2;
+    double depot_seed_spread_prob = 0.5;
+    // Optional portfolio for 2m depot seeds. Empty = use depot_seed_spread_prob once.
+    std::vector<double> depot_seed_spread_probs;
+    int depot_seed_restarts = 1;
+    // Extra fixed depot rings: ring=2 uses the 3rd m-nearest depot band, etc.
+    std::vector<int> depot_seed_rings;
+    // Metric-MINSUM exploratory seed: one fast TSP-like route plus empty routes.
+    bool use_single_route_seed = false;
+    double single_route_seed_min_gain = 0.0;
+    // If true, accepted single-route seeds are split into valid non-empty
+    // routes before entering the main search. The raw single-route cost still
+    // controls the gain gate so uniform instances can reject it.
+    bool single_route_rebalance_seed = false;
+    // Angular-sector depot seeds: agents start from different angular sectors,
+    // then continue with the same kNN round-robin fill. Rotations are evenly
+    // spaced within one sector; quantiles choose near/inner-sector anchors.
+    int angular_seed_rotations = 0;
+    int angular_seed_pool_multiplier = 8;
+    std::vector<double> angular_seed_quantiles;
+    // Optional pre-selection race: top constructive seeds get a short
+    // granular-only run, then the best post-race seed enters the full search.
+    int seed_race_count = 0;
+    int seed_race_ms = 0;
+    // Extra wall-clock allowance for the seed race. If this is lower than
+    // seed_race_ms, the remaining race time still comes from the main budget.
+    int seed_race_extra_ms = 0;
+    // false = race only ranks seeds, then the full search starts from the
+    // original winning seed; true = continue from the locally improved race result.
+    bool seed_race_start_from_raced = false;
     // Periodic route-pair re-optimization frequency (0 = disabled).
     // On very large n, the per-call cost (~6-10s) outweighs the gain since
     // routes are huge — keep it off.
@@ -49,6 +93,23 @@ struct AutoTuneParams {
     // neighbourhood of K_pop customers and re-stitches across routes.
     int popmusic_every = 0;
     int popmusic_K = 2500;
+    // FILO2-like granular inter-route pass (candidate-list relocate + swap).
+    // Strict-improve only; intended as a low-overhead large-n intensifier.
+    int granular_every = 0;
+    int granular_max_moves = 0;
+    int granular_scan_customers = 0;
+    // Experimental FILO2/LKH-style inter-route 2-opt* tail swaps.
+    int granular_2optstar_every = 0;
+    int granular_2optstar_max_moves = 0;
+    int granular_2optstar_scan_customers = 0;
+    // Experimental short inter-route Or-opt segments (len 2..max_len).
+    int granular_oropt_every = 0;
+    int granular_oropt_max_moves = 0;
+    int granular_oropt_scan_customers = 0;
+    int granular_oropt_max_len = 3;
+    // DualOpt-style spatial region re-optimization. Strict-improve only.
+    int region_reopt_every = 0;
+    int region_reopt_K = 0;
     // FILO2-inspired capacity cap for high-m MINSUM stabilization.
     // 0 = disabled (legacy MINSUM/MINMAX). >0 = max customers per route.
     // Set externally by `lkh_v21_minsum_cap` solver from instance (n,m);
@@ -84,6 +145,11 @@ inline AutoTuneParams ResolveParamsForInstance(int n, int m, bool is_minmax) {
         p.budget_alns_pct = 45;
         p.budget_final_pct = 15;
         p.use_savings_seed = true;
+        p.granular_every = 60;
+        p.granular_max_moves = 4;
+        p.granular_scan_customers = 96;
+        p.region_reopt_every = 180;
+        p.region_reopt_K = 250;
     } else if (n <= 12000) {
         p.k_NN = 22;
         p.K_destroy_init = 25;
@@ -99,6 +165,11 @@ inline AutoTuneParams ResolveParamsForInstance(int n, int m, bool is_minmax) {
         p.budget_alns_pct = 50;
         p.budget_final_pct = 10;
         p.use_savings_seed = (n <= 8000);
+        p.granular_every = 50;
+        p.granular_max_moves = 4;
+        p.granular_scan_customers = 192;
+        p.region_reopt_every = 160;
+        p.region_reopt_K = 500;
     } else if (n <= 60000) {
         p.k_NN = 20;
         p.K_destroy_init = 80;
@@ -114,6 +185,11 @@ inline AutoTuneParams ResolveParamsForInstance(int n, int m, bool is_minmax) {
         p.budget_alns_pct = 57;
         p.budget_final_pct = 10;
         p.use_savings_seed = false;
+        p.granular_every = 30;
+        p.granular_max_moves = 5;
+        p.granular_scan_customers = 512;
+        p.region_reopt_every = 100;
+        p.region_reopt_K = 1000;
     } else {
         p.k_NN = 18;
         p.K_destroy_init = 150;
@@ -150,15 +226,30 @@ inline AutoTuneParams ResolveParamsForInstance(int n, int m, bool is_minmax) {
         // (e.g. with pre-shaken instances or very different distributions).
         p.popmusic_every = 0;
         p.popmusic_K = 2000;
+        // New v21 large-n intensifiers. The granular pass is cheap because it
+        // pre-indexes positions once and then evaluates only candidate-list
+        // neighbours. Region reopt is more aggressive than the first safe
+        // hook, but throttled: it tries several centres and loosens route
+        // boundaries without starving the granular relocate loop.
+        p.granular_every = 8;
+        p.granular_max_moves = 6;
+        p.granular_scan_customers = 1024;
+        p.region_reopt_every = 24;
+        p.region_reopt_K = 1800;
     }
 
     // m-dependent tweaks
     if (m >= 50) {
         p.k_NN = std::max(14, p.k_NN - 2);
+        p.granular_scan_customers = std::max(64, p.granular_scan_customers / 2);
+        p.region_reopt_K = std::max(200, p.region_reopt_K / 2);
     }
     if (m >= 100) {
         p.k_NN = std::max(12, p.k_NN - 2);
         p.ils_rounds = std::max(2, p.ils_rounds - 1);
+        p.granular_max_moves = std::max(2, p.granular_max_moves - 1);
+        p.granular_scan_customers = std::max(64, p.granular_scan_customers / 2);
+        p.region_reopt_K = std::max(200, p.region_reopt_K / 2);
     }
 
     // Min-max specifics

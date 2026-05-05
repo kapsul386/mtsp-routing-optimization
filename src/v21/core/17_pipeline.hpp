@@ -42,11 +42,14 @@
 #include "19_gls.hpp"
 #include "20_route_pair_reopt.hpp"
 #include "21_popmusic.hpp"
+#include "22_region_granular_ops.hpp"
 
 #include <mtsp_instance.h>
 #include <mtsp_solver.h>
 #include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <cstdint>
 #include <random>
 #include <string>
 #include <unordered_map>
@@ -123,6 +126,155 @@ RouteSet PickBestSeed(std::vector<RouteSet>& seeds, DistanceOracle& d, AcceptPol
         if (c < best_cost) { best_cost = c; best = s; }
     }
     return best;
+}
+
+// Pick a constructive seed, optionally after a short granular-only seed race.
+template <typename AcceptPolicy>
+RouteSet PickBestSeedWithGranularRace(std::vector<RouteSet>& seeds,
+                                      DistanceOracle& d,
+                                      AcceptPolicy& accept,
+                                      const CandidateSets& candidates,
+                                      SearchBudget& budget,
+                                      unsigned base_seed,
+                                      const AutoTuneParams& params,
+                                      int n_total,
+                                      int m_total,
+                                      PipelineMetadata& meta) {
+    struct RankedSeed {
+        double cost = std::numeric_limits<double>::max();
+        int idx = -1;
+    };
+
+    std::vector<RankedSeed> ranked;
+    ranked.reserve(seeds.size());
+    for (int i = 0; i < static_cast<int>(seeds.size()); ++i) {
+        if (seeds[static_cast<size_t>(i)].empty()) continue;
+        ranked.push_back({accept.ScalarCostOfRoutes(seeds[static_cast<size_t>(i)], d), i});
+    }
+    if (ranked.empty()) return {};
+    std::sort(ranked.begin(), ranked.end(), [](const RankedSeed& a, const RankedSeed& b) {
+        return a.cost < b.cost;
+    });
+
+    meta.SetDouble("seed_construct_best_cost", ranked.front().cost);
+    if (params.seed_race_count <= 1 || params.seed_race_ms <= 0 ||
+        static_cast<int>(ranked.size()) <= 1) {
+        meta.SetInt("seed_race_contenders", 0);
+        meta.SetInt("seed_chosen_index", ranked.front().idx);
+        return seeds[static_cast<size_t>(ranked.front().idx)];
+    }
+
+    const int contenders = std::min<int>(params.seed_race_count, static_cast<int>(ranked.size()));
+    SearchBudget race_budget = budget.SubBudget(params.seed_race_ms);
+    RouteSet best_routes = seeds[static_cast<size_t>(ranked.front().idx)];
+    double best_cost = ranked.front().cost;
+    int best_rank = 0;
+    int best_seed_idx = ranked.front().idx;
+    int total_relocate_moves = 0;
+    int total_two_optstar_moves = 0;
+    int total_oropt_moves = 0;
+    const int race_granular_max_moves = std::min(params.granular_max_moves, 4);
+    const int race_granular_scan = std::min(params.granular_scan_customers, 512);
+    const int race_two_optstar_max_moves = std::min(params.granular_2optstar_max_moves, 1);
+    const int race_two_optstar_scan = std::min(params.granular_2optstar_scan_customers, 256);
+    const int race_oropt_max_moves = std::min(params.granular_oropt_max_moves, 1);
+    const int race_oropt_scan = std::min(params.granular_oropt_scan_customers, 256);
+    DistanceOracle race_d(d.GetInstance());
+
+    for (int rank = 0; rank < contenders && !race_budget.ForceCheck(); ++rank) {
+        const int remaining = std::max(1, contenders - rank);
+        SearchBudget one_budget = race_budget.SubBudget(std::max(100, race_budget.RemainingMs() / remaining));
+        std::seed_seq race_seq{
+            static_cast<uint32_t>(base_seed),
+            static_cast<uint32_t>(0xA511E9B3u),
+            static_cast<uint32_t>(rank * 1009 + 17),
+            static_cast<uint32_t>(ranked[static_cast<size_t>(rank)].idx * 9176 + 31),
+            static_cast<uint32_t>(n_total),
+            static_cast<uint32_t>(m_total)
+        };
+        std::mt19937 race_rng(race_seq);
+
+        RouteList rl(n_total, m_total);
+        rl.LoadFrom(seeds[static_cast<size_t>(ranked[static_cast<size_t>(rank)].idx)], race_d);
+        GranularMoveStats stats;
+        int local_relocate = 0;
+        int local_two_optstar = 0;
+        int local_oropt = 0;
+
+        while (!one_budget.ForceCheck()) {
+            bool moved_any = false;
+            if (race_granular_max_moves > 0 && race_granular_scan > 0) {
+                SearchBudget pass_budget = one_budget.SubBudget(std::max(50, one_budget.RemainingMs() / 8));
+                const int moved = TryGranularInterRoutePass(rl, accept, race_d, candidates, pass_budget,
+                                                            race_rng, race_granular_max_moves,
+                                                            race_granular_scan,
+                                                            params.route_cap, &stats);
+                local_relocate += moved;
+                moved_any = moved_any || moved > 0;
+            }
+            if (race_two_optstar_max_moves > 0 && race_two_optstar_scan > 0) {
+                SearchBudget pass_budget = one_budget.SubBudget(std::max(50, one_budget.RemainingMs() / 8));
+                const int moved = TryGranularTwoOptStarPass(rl, accept, race_d, candidates, pass_budget,
+                                                            race_rng, race_two_optstar_max_moves,
+                                                            race_two_optstar_scan,
+                                                            &stats);
+                local_two_optstar += moved;
+                moved_any = moved_any || moved > 0;
+            }
+            if (race_oropt_max_moves > 0 && race_oropt_scan > 0) {
+                SearchBudget pass_budget = one_budget.SubBudget(std::max(50, one_budget.RemainingMs() / 8));
+                const int moved = TryGranularOrOptPass(rl, accept, race_d, candidates, pass_budget,
+                                                       race_rng, race_oropt_max_moves,
+                                                       race_oropt_scan,
+                                                       params.route_cap,
+                                                       params.granular_oropt_max_len,
+                                                       &stats);
+                local_oropt += moved;
+                moved_any = moved_any || moved > 0;
+            }
+            if (!moved_any) break;
+        }
+
+        RouteSet raced;
+        rl.StoreTo(raced);
+        EnsureClosedDepot(raced);
+        const double race_cost = accept.ScalarCostOfRoutes(raced, race_d);
+        total_relocate_moves += local_relocate;
+        total_two_optstar_moves += local_two_optstar;
+        total_oropt_moves += local_oropt;
+        meta.SetDouble("seed_race_rank" + std::to_string(rank) + "_initial", ranked[static_cast<size_t>(rank)].cost);
+        meta.SetDouble("seed_race_rank" + std::to_string(rank) + "_cost", race_cost);
+        meta.SetInt("seed_race_rank" + std::to_string(rank) + "_seed_index",
+                    ranked[static_cast<size_t>(rank)].idx);
+        meta.SetInt("seed_race_rank" + std::to_string(rank) + "_moves", local_relocate);
+        meta.SetInt("seed_race_rank" + std::to_string(rank) + "_2optstar", local_two_optstar);
+        meta.SetInt("seed_race_rank" + std::to_string(rank) + "_oropt", local_oropt);
+
+        if (race_cost < best_cost - kEps) {
+            best_cost = race_cost;
+            best_routes = std::move(raced);
+            best_rank = rank;
+            best_seed_idx = ranked[static_cast<size_t>(rank)].idx;
+        }
+    }
+
+    meta.SetInt("seed_race_contenders", contenders);
+    meta.SetInt("seed_race_budget_ms", params.seed_race_ms);
+    meta.SetInt("seed_race_start_from_raced", params.seed_race_start_from_raced ? 1 : 0);
+    meta.SetInt("seed_race_granular_scan", race_granular_scan);
+    meta.SetInt("seed_race_2optstar_scan", race_two_optstar_scan);
+    meta.SetInt("seed_race_oropt_scan", race_oropt_scan);
+    meta.SetDouble("seed_race_best_cost", best_cost);
+    meta.SetInt("seed_race_best_rank", best_rank);
+    meta.SetInt("seed_race_best_seed_index", best_seed_idx);
+    meta.SetInt("seed_chosen_index", best_seed_idx);
+    meta.SetInt("seed_race_moves", total_relocate_moves);
+    meta.SetInt("seed_race_2optstar_moves", total_two_optstar_moves);
+    meta.SetInt("seed_race_oropt_moves", total_oropt_moves);
+    if (!params.seed_race_start_from_raced) {
+        return seeds[static_cast<size_t>(best_seed_idx)];
+    }
+    return best_routes;
 }
 
 // Stateless distance functor — safe to share across OpenMP threads (no cache).
@@ -451,6 +603,12 @@ void RunAlnsSaLoop(RouteList& rl, AlnsFramework& alns, AcceptPolicy& accept,
     int gls_penalize_calls = 0;
     int pair_reopt_calls = 0, pair_reopt_accepts = 0, pair_reopt_best_updates = 0;
     int popmusic_calls = 0, popmusic_accepts = 0, popmusic_best_updates = 0;
+    int granular_calls = 0, granular_moves = 0, granular_best_updates = 0;
+    int granular_2optstar_calls = 0, granular_2optstar_moves = 0, granular_2optstar_best_updates = 0;
+    int granular_oropt_calls = 0, granular_oropt_moves = 0, granular_oropt_best_updates = 0;
+    int granular_short_passes = 0;
+    int region_reopt_calls = 0, region_reopt_accepts = 0, region_reopt_best_updates = 0;
+    GranularMoveStats granular_stats;
     const int seg_size = 100;
     const int gls_penalize_after = params.gls_penalize_after;
     const int gls_penalize_K = 3;
@@ -458,6 +616,18 @@ void RunAlnsSaLoop(RouteList& rl, AlnsFramework& alns, AcceptPolicy& accept,
     const int pair_reopt_every = params.pair_reopt_every;
     const int popmusic_every = params.popmusic_every;
     const int popmusic_K = params.popmusic_K;
+    const int granular_every = params.granular_every;
+    const int granular_max_moves = params.granular_max_moves;
+    const int granular_scan_customers = params.granular_scan_customers;
+    const int granular_2optstar_every = params.granular_2optstar_every;
+    const int granular_2optstar_max_moves = params.granular_2optstar_max_moves;
+    const int granular_2optstar_scan_customers = params.granular_2optstar_scan_customers;
+    const int granular_oropt_every = params.granular_oropt_every;
+    const int granular_oropt_max_moves = params.granular_oropt_max_moves;
+    const int granular_oropt_scan_customers = params.granular_oropt_scan_customers;
+    const int granular_oropt_max_len = params.granular_oropt_max_len;
+    const int region_reopt_every = params.region_reopt_every;
+    const int region_reopt_K = params.region_reopt_K;
     while (!budget.ForceCheck()) {
         const double pre_real = accept.ScalarCost(rl);
         const double pre_pen = (gls ? gls->TotalPenalty(rl) : 0.0);
@@ -545,6 +715,137 @@ void RunAlnsSaLoop(RouteList& rl, AlnsFramework& alns, AcceptPolicy& accept,
             }
         }
 
+        // ---- FILO2-like granular inter-route moves ----
+        // Candidate-list relocate/swap moves are cheap enough to run
+        // frequently on n=100k, and strict-accept means they only ratchet
+        // current cost down.
+        if (granular_every > 0 && granular_max_moves > 0 && granular_scan_customers > 0 &&
+            iters > 0 && (iters % granular_every) == 0 && rl.RouteCount() >= 2 &&
+            !budget.ForceCheck()) {
+            ++granular_calls;
+            SearchBudget granular_budget = budget.SubBudget(std::max(50, budget.RemainingMs() / 120));
+            const int moved = TryGranularInterRoutePass(rl, accept, d, candidates, granular_budget,
+                                                        rng, granular_max_moves,
+                                                        granular_scan_customers,
+                                                        params.route_cap,
+                                                        &granular_stats);
+            if (moved < granular_max_moves) ++granular_short_passes;
+            else granular_short_passes = 0;
+            if (moved > 0) {
+                granular_moves += moved;
+                sa.NoteImprovement();
+                const double new_real = accept.ScalarCost(rl);
+                if (new_real + kEps < best_cost) {
+                    rl.StoreTo(best_routes);
+                    best_cost = new_real;
+                    ++best_updates;
+                    ++granular_best_updates;
+                    iters_since_best = 0;
+                    meta.EmitAnytimeBest(best_cost);
+                    sa.NoteBestUpdate();
+                }
+            }
+        }
+
+        // ---- FILO2-like short segment relocate (Or-opt) ----
+        // Moves len-2/3 consecutive customer blocks across routes using only
+        // candidate-neighbour insertion gaps. This catches improvements that
+        // single-customer relocate needs several lucky accepted steps to make.
+        if (granular_oropt_every > 0 &&
+            granular_oropt_max_moves > 0 &&
+            granular_oropt_scan_customers > 0 &&
+            iters > 0 && (iters % granular_oropt_every) == 0 &&
+            rl.RouteCount() >= 2 && !budget.ForceCheck()) {
+            ++granular_oropt_calls;
+            SearchBudget oropt_budget = budget.SubBudget(std::max(100, budget.RemainingMs() / 110));
+            const int moved = TryGranularOrOptPass(rl, accept, d, candidates, oropt_budget,
+                                                   rng, granular_oropt_max_moves,
+                                                   granular_oropt_scan_customers,
+                                                   params.route_cap,
+                                                   granular_oropt_max_len,
+                                                   &granular_stats);
+            if (moved > 0) {
+                granular_oropt_moves += moved;
+                sa.NoteImprovement();
+                const double new_real = accept.ScalarCost(rl);
+                if (new_real + kEps < best_cost) {
+                    rl.StoreTo(best_routes);
+                    best_cost = new_real;
+                    ++best_updates;
+                    ++granular_oropt_best_updates;
+                    granular_short_passes = 0;
+                    iters_since_best = 0;
+                    meta.EmitAnytimeBest(best_cost);
+                    sa.NoteBestUpdate();
+                }
+            }
+        }
+
+        // ---- LKH/FILO2-style 2-opt* tail exchange ----
+        // This is heavier than single-customer granular relocate, so it is
+        // opt-in. It swaps route tails across two candidate-adjacent edges and
+        // accepts only strict MINSUM improvements.
+        if (!accept.IsMinMax() &&
+            granular_2optstar_every > 0 &&
+            granular_2optstar_max_moves > 0 &&
+            granular_2optstar_scan_customers > 0 &&
+            iters > 0 && (iters % granular_2optstar_every) == 0 &&
+            rl.RouteCount() >= 2 && !budget.ForceCheck()) {
+            ++granular_2optstar_calls;
+            SearchBudget star_budget = budget.SubBudget(std::max(100, budget.RemainingMs() / 100));
+            const int moved = TryGranularTwoOptStarPass(rl, accept, d, candidates, star_budget,
+                                                        rng, granular_2optstar_max_moves,
+                                                        granular_2optstar_scan_customers,
+                                                        &granular_stats);
+            if (moved > 0) {
+                granular_2optstar_moves += moved;
+                sa.NoteImprovement();
+                const double new_real = accept.ScalarCost(rl);
+                if (new_real + kEps < best_cost) {
+                    rl.StoreTo(best_routes);
+                    best_cost = new_real;
+                    ++best_updates;
+                    ++granular_2optstar_best_updates;
+                    granular_short_passes = 0;
+                    iters_since_best = 0;
+                    meta.EmitAnytimeBest(best_cost);
+                    sa.NoteBestUpdate();
+                }
+            }
+        }
+
+        // ---- DualOpt-style spatial region re-optimization ----
+        // On n>60k it fires on a real plateau, or earlier when granular
+        // passes stop filling their small move quota. This makes region
+        // aggressive when the cheap FILO2-like relocate loop is drying up,
+        // without starving it while it is still productive.
+        const bool region_ready = (iters_since_best >= 20) ||
+                                  (n_total > 60000 && granular_short_passes >= 2);
+        if (region_reopt_every > 0 && region_reopt_K > 0 &&
+            iters > 0 && (iters % region_reopt_every) == 0 &&
+            region_ready &&
+            rl.RouteCount() >= 2 && !budget.ForceCheck()) {
+            ++region_reopt_calls;
+            SearchBudget region_budget = budget.SubBudget(std::max(250, budget.RemainingMs() / 60));
+            if (TryDualOptRegionReopt(rl, accept, dctx.kdtree, d, candidates, region_budget,
+                                      rng, region_reopt_K, params.route_cap,
+                                      &granular_stats)) {
+                ++region_reopt_accepts;
+                sa.NoteImprovement();
+                const double new_real = accept.ScalarCost(rl);
+                if (new_real + kEps < best_cost) {
+                    rl.StoreTo(best_routes);
+                    best_cost = new_real;
+                    ++best_updates;
+                    ++region_reopt_best_updates;
+                    granular_short_passes = 0;
+                    iters_since_best = 0;
+                    meta.EmitAnytimeBest(best_cost);
+                    sa.NoteBestUpdate();
+                }
+            }
+        }
+
         // ---- Periodic route-pair re-optimization ----
         if (pair_reopt_every > 0 && iters > 0 && (iters % pair_reopt_every) == 0 &&
             rl.RouteCount() >= 2 && !budget.ForceCheck()) {
@@ -611,6 +912,34 @@ void RunAlnsSaLoop(RouteList& rl, AlnsFramework& alns, AcceptPolicy& accept,
     meta.SetInt("popmusic_accepts", popmusic_accepts);
     meta.SetInt("popmusic_best_updates", popmusic_best_updates);
     meta.SetInt("popmusic_K", popmusic_K);
+    meta.SetInt("granular_calls", granular_calls);
+    meta.SetInt("granular_moves", granular_moves);
+    meta.SetInt("granular_relocate_accepts", granular_stats.relocate_accepts);
+    meta.SetInt("granular_swap_accepts", granular_stats.swap_accepts);
+    meta.SetInt("granular_2optstar_accepts", granular_stats.two_optstar_accepts);
+    meta.SetInt("granular_oropt_accepts", granular_stats.oropt_accepts);
+    meta.SetInt("granular_best_updates", granular_best_updates);
+    meta.SetInt("granular_short_passes", granular_short_passes);
+    meta.SetInt("granular_every", granular_every);
+    meta.SetInt("granular_scan_customers", granular_scan_customers);
+    meta.SetInt("granular_max_moves", granular_max_moves);
+    meta.SetInt("granular_2optstar_calls", granular_2optstar_calls);
+    meta.SetInt("granular_2optstar_moves", granular_2optstar_moves);
+    meta.SetInt("granular_2optstar_best_updates", granular_2optstar_best_updates);
+    meta.SetInt("granular_2optstar_every", granular_2optstar_every);
+    meta.SetInt("granular_2optstar_scan_customers", granular_2optstar_scan_customers);
+    meta.SetInt("granular_2optstar_max_moves", granular_2optstar_max_moves);
+    meta.SetInt("granular_oropt_calls", granular_oropt_calls);
+    meta.SetInt("granular_oropt_moves", granular_oropt_moves);
+    meta.SetInt("granular_oropt_best_updates", granular_oropt_best_updates);
+    meta.SetInt("granular_oropt_every", granular_oropt_every);
+    meta.SetInt("granular_oropt_scan_customers", granular_oropt_scan_customers);
+    meta.SetInt("granular_oropt_max_moves", granular_oropt_max_moves);
+    meta.SetInt("granular_oropt_max_len", granular_oropt_max_len);
+    meta.SetInt("region_reopt_calls", region_reopt_calls);
+    meta.SetInt("region_reopt_accepts", region_reopt_accepts);
+    meta.SetInt("region_reopt_best_updates", region_reopt_best_updates);
+    meta.SetInt("region_reopt_K", region_reopt_K);
     // Per-operator stats
     for (size_t i = 0; i < alns.DestroyNames().size(); ++i) {
         meta.SetInt("destroy_" + alns.DestroyNames()[i] + "_calls", alns.DestroyStats()[i].calls);
@@ -801,16 +1130,25 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
     const int n = inst.GetNodeCount();
     const int m = std::max(1, inst.GetSalesmanCount());
 
-    // Effective budget (small reserve for final cleanup)
+    const bool seed_race_enabled = params.seed_race_count > 1 && params.seed_race_ms > 0;
+    const int seed_race_extra_ms = seed_race_enabled ? std::max(0, params.seed_race_extra_ms) : 0;
+    const int extra_alns_ms = std::max(0, params.extra_alns_ms);
+    const int effective_time_budget_ms = (time_budget_ms > 0)
+                                      ? time_budget_ms + seed_race_extra_ms + extra_alns_ms
+                                      : time_budget_ms;
+
+    // Effective budget (small reserve for final cleanup). The optional seed
+    // race can receive an extra wall-clock allowance without shrinking the
+    // normal phase budgets used by the main search.
     const int reserve_ms = std::max(200, time_budget_ms / 50);
-    SearchBudget budget(time_budget_ms, reserve_ms);
+    SearchBudget budget(effective_time_budget_ms, reserve_ms);
 
     // Resolve sub-budgets in ms
     const int total_ms = (time_budget_ms > 0) ? (time_budget_ms - reserve_ms) : 60000;
     const int seed_ms = std::max(50, total_ms * params.budget_seed_pct / 100);
     const int cand_ms = std::max(50, total_ms * params.budget_cand_pct / 100);
     const int polish_ms = std::max(100, total_ms * params.budget_polish_pct / 100);
-    const int alns_ms = std::max(100, total_ms * params.budget_alns_pct / 100);
+    const int alns_ms = std::max(100, total_ms * params.budget_alns_pct / 100) + extra_alns_ms;
     const int final_ms = std::max(100, total_ms * params.budget_final_pct / 100);
 
 #ifdef _OPENMP
@@ -823,6 +1161,9 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
     meta.SetInt("salesman_count", m);
     meta.SetInt("seed", seed);
     meta.SetInt("budget_ms", time_budget_ms);
+    meta.SetInt("budget_effective_ms", effective_time_budget_ms);
+    meta.SetInt("budget_seed_race_extra_ms", seed_race_extra_ms);
+    meta.SetInt("budget_extra_alns_ms", extra_alns_ms);
     meta.SetInt("budget_seed_ms", seed_ms);
     meta.SetInt("budget_cand_ms", cand_ms);
     meta.SetInt("budget_polish_ms", polish_ms);
@@ -845,6 +1186,7 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
     const auto t_phase2 = std::chrono::steady_clock::now();
     SearchBudget seed_budget = budget.SubBudget(seed_ms);
     std::vector<RouteSet> seeds;
+    if (params.use_classic_seeds) {
     // Full O(n*L) round-robin NN — strongest seed for euclidean instances.
     seeds.push_back(BuildRoundRobinNN(inst));
     EnsureClosedDepot(seeds.back());
@@ -861,10 +1203,172 @@ void RunPipeline(const mtsp::Instance& inst, AcceptPolicy& accept,
         seeds.push_back(BuildSavingsSeed(inst, global, seed_budget));
         EnsureClosedDepot(seeds.back());
     }
-    RouteSet current = PickBestSeed(seeds, d, accept);
+    }
+    auto make_depot_rng = [&](int multiplier, int variant) {
+        std::seed_seq seq{
+            static_cast<uint32_t>(seed),
+            static_cast<uint32_t>(0x9E3779B9u),
+            static_cast<uint32_t>(multiplier * 1009),
+            static_cast<uint32_t>(variant * 9176 + 17)
+        };
+        return std::mt19937(seq);
+    };
+    if (!accept.IsMinMax() && (params.depot_seed_mode & 1) != 0) {
+        auto depot_rng = make_depot_rng(1, 0);
+        RouteSet depot_seed = BuildDepotCandidateNNSeed(inst, global, 1, 0.0, depot_rng);
+        EnsureClosedDepot(depot_seed);
+        const double cost = accept.ScalarCostOfRoutes(depot_seed, d);
+        meta.SetDouble("seed_depot_m_cost", cost);
+        seeds.push_back(std::move(depot_seed));
+    }
+    if (!accept.IsMinMax() && (params.depot_seed_mode & 2) != 0) {
+        int depot_2m_count = 0;
+        double depot_2m_best = std::numeric_limits<double>::max();
+        std::string spread_meta;
+        auto add_depot_2m_seed = [&](double spread, std::mt19937& seed_rng) {
+            RouteSet depot_seed = BuildDepotCandidateNNSeed(inst, global, 2, spread, seed_rng);
+            EnsureClosedDepot(depot_seed);
+            const double cost = accept.ScalarCostOfRoutes(depot_seed, d);
+            if (cost < depot_2m_best) depot_2m_best = cost;
+            seeds.push_back(std::move(depot_seed));
+            ++depot_2m_count;
+        };
+
+        if (params.depot_seed_spread_probs.empty()) {
+            std::mt19937 legacy_rng(seed);
+            const double spread = std::clamp(params.depot_seed_spread_prob, 0.0, 1.0);
+            add_depot_2m_seed(spread, legacy_rng);
+            if (!spread_meta.empty()) spread_meta += ",";
+            spread_meta += std::to_string(spread);
+        } else {
+            std::mt19937 legacy_rng(seed);
+            const double legacy_spread = std::clamp(params.depot_seed_spread_prob, 0.0, 1.0);
+            add_depot_2m_seed(legacy_spread, legacy_rng);
+            spread_meta += "legacy:";
+            spread_meta += std::to_string(legacy_spread);
+
+            const auto& spreads = params.depot_seed_spread_probs;
+            for (size_t pi = 0; pi < spreads.size(); ++pi) {
+                const double spread = std::clamp(spreads[pi], 0.0, 1.0);
+                const int restarts = (spread <= 0.0 || spread >= 1.0)
+                                   ? 1
+                                   : std::max(1, params.depot_seed_restarts);
+                spread_meta += ",";
+                spread_meta += std::to_string(spread);
+                for (int restart = 0; restart < restarts; ++restart) {
+                    auto depot_rng = make_depot_rng(2, static_cast<int>(pi) * 31 + restart);
+                    add_depot_2m_seed(spread, depot_rng);
+                }
+            }
+        }
+        if (depot_2m_count > 0) {
+            meta.SetDouble("seed_depot_2m_cost", depot_2m_best);
+            meta.SetInt("seed_depot_2m_count", depot_2m_count);
+            meta.Set("seed_depot_2m_spreads", spread_meta);
+            meta.SetInt("seed_depot_2m_restarts", params.depot_seed_restarts);
+        }
+    }
+    if (!accept.IsMinMax() && !params.depot_seed_rings.empty()) {
+        int ring_count = 0;
+        double ring_best = std::numeric_limits<double>::max();
+        std::string ring_meta;
+        meta.SetInt("seed_depot_ring_start_index", static_cast<long long>(seeds.size()));
+        for (int raw_ring : params.depot_seed_rings) {
+            const int ring = std::max(1, raw_ring);
+            auto depot_rng = make_depot_rng(ring + 1, ring * 41);
+            RouteSet ring_seed = BuildDepotCandidateNNSeed(inst, global, ring + 1, 0.0,
+                                                           depot_rng, ring);
+            EnsureClosedDepot(ring_seed);
+            const double cost = accept.ScalarCostOfRoutes(ring_seed, d);
+            if (cost < ring_best) ring_best = cost;
+            seeds.push_back(std::move(ring_seed));
+            if (!ring_meta.empty()) ring_meta += ",";
+            ring_meta += std::to_string(ring);
+            ++ring_count;
+        }
+        meta.SetDouble("seed_depot_ring_best_cost", ring_best);
+        meta.SetInt("seed_depot_ring_count", ring_count);
+        meta.Set("seed_depot_rings", ring_meta);
+    }
+    if (!accept.IsMinMax() && params.use_single_route_seed) {
+        double best_before_single = std::numeric_limits<double>::max();
+        for (const auto& seed_routes : seeds) {
+            if (seed_routes.empty()) continue;
+            const double cost = accept.ScalarCostOfRoutes(seed_routes, d);
+            if (cost < best_before_single) best_before_single = cost;
+        }
+        RouteSet single_seed = BuildSingleRouteNNSeed(inst, global);
+        EnsureClosedDepot(single_seed);
+        const double cost = accept.ScalarCostOfRoutes(single_seed, d);
+        const int raw_empty = CountEmptyRoutes(single_seed);
+        meta.SetDouble("seed_single_route_cost", cost);
+        meta.SetInt("seed_single_route_empty_routes", raw_empty);
+        meta.SetDouble("seed_single_route_best_before", best_before_single);
+        const double gain = (best_before_single > 0.0 && std::isfinite(best_before_single))
+                          ? (best_before_single - cost) / best_before_single
+                          : 0.0;
+        meta.SetDouble("seed_single_route_gain", gain);
+        if (gain + kEps >= std::max(0.0, params.single_route_seed_min_gain)) {
+            if (params.single_route_rebalance_seed) {
+                RebalanceEmptyRoutes(single_seed, d);
+                EnsureClosedDepot(single_seed);
+                meta.SetDouble("seed_single_route_rebalanced_cost",
+                               accept.ScalarCostOfRoutes(single_seed, d));
+                meta.SetInt("seed_single_route_rebalanced_empty_routes",
+                            CountEmptyRoutes(single_seed));
+            }
+            meta.SetInt("seed_single_route_rebalance_seed", params.single_route_rebalance_seed ? 1 : 0);
+            meta.SetInt("seed_single_route_index", static_cast<long long>(seeds.size()));
+            meta.SetInt("seed_single_route_accepted", 1);
+            seeds.push_back(std::move(single_seed));
+        } else {
+            meta.SetInt("seed_single_route_rebalance_seed", params.single_route_rebalance_seed ? 1 : 0);
+            meta.SetInt("seed_single_route_index", -1);
+            meta.SetInt("seed_single_route_accepted", 0);
+        }
+    }
+    if (!accept.IsMinMax() && params.angular_seed_rotations > 0 &&
+        !params.angular_seed_quantiles.empty()) {
+        int angular_count = 0;
+        double angular_best = std::numeric_limits<double>::max();
+        std::string angular_meta;
+        meta.SetInt("seed_angular_start_index", static_cast<long long>(seeds.size()));
+        const int rotations = std::max(1, params.angular_seed_rotations);
+        for (int rot = 0; rot < rotations; ++rot) {
+            const double rotation = static_cast<double>(rot) / static_cast<double>(rotations);
+            for (double raw_q : params.angular_seed_quantiles) {
+                const double q = std::clamp(raw_q, 0.0, 1.0);
+                auto angular_rng = make_depot_rng(11 + rot, static_cast<int>(q * 1000.0));
+                RouteSet angular_seed = BuildAngularSectorNNSeed(inst, global,
+                                                                  params.angular_seed_pool_multiplier,
+                                                                  rotation, q, angular_rng);
+                EnsureClosedDepot(angular_seed);
+                const double cost = accept.ScalarCostOfRoutes(angular_seed, d);
+                if (cost < angular_best) angular_best = cost;
+                seeds.push_back(std::move(angular_seed));
+                if (!angular_meta.empty()) angular_meta += ",";
+                angular_meta += "r";
+                angular_meta += std::to_string(rot);
+                angular_meta += ":q";
+                angular_meta += std::to_string(q);
+                ++angular_count;
+            }
+        }
+        meta.SetDouble("seed_angular_best_cost", angular_best);
+        meta.SetInt("seed_angular_count", angular_count);
+        meta.SetInt("seed_angular_pool_multiplier", params.angular_seed_pool_multiplier);
+        meta.Set("seed_angular_configs", angular_meta);
+    }
+    if (seeds.empty()) {
+        seeds.push_back(BuildRoundRobinNNFast(inst, global));
+        EnsureClosedDepot(seeds.back());
+    }
+    RouteSet current = PickBestSeedWithGranularRace(seeds, d, accept, global, budget,
+                                                    seed, params, n, m, meta);
     if (current.empty()) current = seeds.front();
     EnsureClosedDepot(current);
     meta.SetDouble("seed_chosen_cost", accept.ScalarCostOfRoutes(current, d));
+    meta.SetInt("seed_count", static_cast<long long>(seeds.size()));
     meta.SetInt("phase2_ms", ElapsedMs(t_phase2));
 
     // ---- Phase 3 & 4: per-route polish + intra ILS (combined) ----

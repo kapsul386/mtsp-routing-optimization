@@ -105,6 +105,296 @@ inline RouteSet BuildRoundRobinNNFast(const mtsp::Instance& inst,
     return routes;
 }
 
+// Depot-candidate seeded NN. First, take K nearest customers to the depot
+// (K = m or 2m). Each agent makes its first step into this depot neighbourhood:
+// with multiplier=1, agent s gets the s-th nearest available depot candidate;
+// with multiplier=2, it may jump to the second ring (s+m) with probability
+// `spread_probability`. After that, continue the same kNN-accelerated
+// round-robin NN fill. This keeps empty routes allowed when n-1 < m.
+inline RouteSet BuildDepotCandidateNNSeed(const mtsp::Instance& inst,
+                                           const CandidateSets& candidates,
+                                           int candidate_multiplier,
+                                           double spread_probability,
+                                           std::mt19937& rng,
+                                           int forced_ring = -1) {
+    const int m = std::max(1, inst.GetSalesmanCount());
+    const int n = inst.GetNodeCount();
+    RouteSet routes(static_cast<size_t>(m), std::vector<int>{0});
+    std::vector<int> cur(static_cast<size_t>(m), 0);
+    std::vector<char> visited(static_cast<size_t>(n), 0);
+    visited[0] = 1;
+    int remaining = n - 1;
+    if (remaining <= 0) {
+        for (auto& r : routes) r.push_back(0);
+        return routes;
+    }
+
+    const int mult = std::max(1, candidate_multiplier);
+    const int pool_size = std::min(n - 1, std::max(m, mult * m));
+    KDTree2D tree(inst.GetCoords());
+    std::vector<int> depot_pool;
+    tree.Knn(0, pool_size + 4, depot_pool);
+    depot_pool.erase(std::remove(depot_pool.begin(), depot_pool.end(), 0), depot_pool.end());
+    if (static_cast<int>(depot_pool.size()) > pool_size) depot_pool.resize(static_cast<size_t>(pool_size));
+
+    std::bernoulli_distribution spread(std::clamp(spread_probability, 0.0, 1.0));
+    std::vector<char> picked(static_cast<size_t>(n), 0);
+    for (int s = 0; s < m && remaining > 0; ++s) {
+        int desired = s;
+        if (forced_ring >= 0) {
+            const int ring = std::min(mult - 1, forced_ring);
+            if (s + ring * m < static_cast<int>(depot_pool.size())) {
+                desired = s + ring * m;
+            }
+        } else if (mult >= 2 && s + m < static_cast<int>(depot_pool.size()) && spread(rng)) {
+            desired = s + m;
+        }
+        int chosen = -1;
+        if (desired < static_cast<int>(depot_pool.size())) {
+            const int c = depot_pool[static_cast<size_t>(desired)];
+            if (c > 0 && !visited[static_cast<size_t>(c)] && !picked[static_cast<size_t>(c)]) chosen = c;
+        }
+        if (chosen < 0) {
+            for (int c : depot_pool) {
+                if (c > 0 && !visited[static_cast<size_t>(c)] && !picked[static_cast<size_t>(c)]) {
+                    chosen = c;
+                    break;
+                }
+            }
+        }
+        if (chosen < 0) break;
+        routes[static_cast<size_t>(s)].push_back(chosen);
+        cur[static_cast<size_t>(s)] = chosen;
+        visited[static_cast<size_t>(chosen)] = 1;
+        picked[static_cast<size_t>(chosen)] = 1;
+        --remaining;
+    }
+
+    while (remaining > 0) {
+        bool any = false;
+        for (int s = 0; s < m && remaining > 0; ++s) {
+            int from = cur[static_cast<size_t>(s)];
+            int best = -1;
+            double bd = std::numeric_limits<double>::max();
+            for (int j : candidates[static_cast<size_t>(from)]) {
+                if (j == 0) continue;
+                if (!visited[static_cast<size_t>(j)]) {
+                    const double dd = inst.Distance(from, j);
+                    if (dd < bd) { bd = dd; best = j; }
+                }
+            }
+            if (best == -1) {
+                for (int c = 1; c < n; ++c) {
+                    if (!visited[static_cast<size_t>(c)]) {
+                        const double dd = inst.Distance(from, c);
+                        if (dd < bd) { bd = dd; best = c; }
+                    }
+                }
+            }
+            if (best == -1) continue;
+            routes[static_cast<size_t>(s)].push_back(best);
+            cur[static_cast<size_t>(s)] = best;
+            visited[static_cast<size_t>(best)] = 1;
+            --remaining;
+            any = true;
+        }
+        if (!any) break;
+    }
+    for (auto& r : routes) r.push_back(0);
+    return routes;
+}
+
+// Angular-sector depot seed. Unlike the depot-2m seed, first steps are spread
+// by direction from the depot, so routes start with a genuinely different
+// geometric decomposition before the same kNN round-robin fill takes over.
+inline RouteSet BuildAngularSectorNNSeed(const mtsp::Instance& inst,
+                                         const CandidateSets& candidates,
+                                         int pool_multiplier,
+                                         double rotation_fraction,
+                                         double radial_quantile,
+                                         std::mt19937& rng) {
+    constexpr double kPi = 3.141592653589793238462643383279502884;
+    const int m = std::max(1, inst.GetSalesmanCount());
+    const int n = inst.GetNodeCount();
+    const auto& coords = inst.GetCoords();
+    RouteSet routes(static_cast<size_t>(m), std::vector<int>{0});
+    std::vector<int> cur(static_cast<size_t>(m), 0);
+    std::vector<char> visited(static_cast<size_t>(n), 0);
+    visited[0] = 1;
+    int remaining = n - 1;
+    if (remaining <= 0) {
+        for (auto& r : routes) r.push_back(0);
+        return routes;
+    }
+
+    struct SectorCity {
+        int city = -1;
+        double r2 = 0.0;
+    };
+    std::vector<std::vector<SectorCity>> sectors(static_cast<size_t>(m));
+    const double x0 = coords[0].first;
+    const double y0 = coords[0].second;
+    const double full = 2.0 * kPi;
+    const double sector_width = full / static_cast<double>(m);
+    const double shift = std::clamp(rotation_fraction, 0.0, 1.0) * sector_width;
+    const int mult = std::max(1, pool_multiplier);
+    const int pool_size = std::min(n - 1, std::max(m, mult * m));
+    KDTree2D tree(inst.GetCoords());
+    std::vector<int> depot_pool;
+    tree.Knn(0, pool_size + 8, depot_pool);
+    depot_pool.erase(std::remove(depot_pool.begin(), depot_pool.end(), 0), depot_pool.end());
+    if (static_cast<int>(depot_pool.size()) > pool_size) depot_pool.resize(static_cast<size_t>(pool_size));
+
+    for (int city : depot_pool) {
+        const double dx = coords[static_cast<size_t>(city)].first - x0;
+        const double dy = coords[static_cast<size_t>(city)].second - y0;
+        double angle = std::atan2(dy, dx) - shift;
+        while (angle < 0.0) angle += full;
+        while (angle >= full) angle -= full;
+        int sector = static_cast<int>(angle / sector_width);
+        if (sector >= m) sector = m - 1;
+        sectors[static_cast<size_t>(sector)].push_back({city, dx * dx + dy * dy});
+    }
+
+    std::vector<int> fallback = depot_pool;
+    std::sort(fallback.begin(), fallback.end(), [&](int a, int b) {
+        const double ax = coords[static_cast<size_t>(a)].first - x0;
+        const double ay = coords[static_cast<size_t>(a)].second - y0;
+        const double bx = coords[static_cast<size_t>(b)].first - x0;
+        const double by = coords[static_cast<size_t>(b)].second - y0;
+        return ax * ax + ay * ay < bx * bx + by * by;
+    });
+
+    (void)rng;
+    const double q = std::clamp(radial_quantile, 0.0, 1.0);
+    for (int s = 0; s < m && remaining > 0; ++s) {
+        auto& sector = sectors[static_cast<size_t>(s)];
+        std::sort(sector.begin(), sector.end(), [](const SectorCity& a, const SectorCity& b) {
+            if (std::abs(a.r2 - b.r2) > 1e-12) return a.r2 < b.r2;
+            return a.city < b.city;
+        });
+
+        int chosen = -1;
+        if (!sector.empty()) {
+            const int pos = std::clamp(static_cast<int>(q * static_cast<double>(sector.size() - 1)),
+                                       0, static_cast<int>(sector.size()) - 1);
+            for (int delta = 0; delta < static_cast<int>(sector.size()); ++delta) {
+                const int left = pos - delta;
+                const int right = pos + delta;
+                if (left >= 0) {
+                    const int c = sector[static_cast<size_t>(left)].city;
+                    if (!visited[static_cast<size_t>(c)]) { chosen = c; break; }
+                }
+                if (right < static_cast<int>(sector.size())) {
+                    const int c = sector[static_cast<size_t>(right)].city;
+                    if (!visited[static_cast<size_t>(c)]) { chosen = c; break; }
+                }
+            }
+        }
+        if (chosen < 0) {
+            for (int c : fallback) {
+                if (!visited[static_cast<size_t>(c)]) { chosen = c; break; }
+            }
+        }
+        if (chosen < 0) break;
+        routes[static_cast<size_t>(s)].push_back(chosen);
+        cur[static_cast<size_t>(s)] = chosen;
+        visited[static_cast<size_t>(chosen)] = 1;
+        --remaining;
+    }
+
+    while (remaining > 0) {
+        bool any = false;
+        for (int s = 0; s < m && remaining > 0; ++s) {
+            const int from = cur[static_cast<size_t>(s)];
+            int best = -1;
+            double bd = std::numeric_limits<double>::max();
+            for (int j : candidates[static_cast<size_t>(from)]) {
+                if (j == 0) continue;
+                if (!visited[static_cast<size_t>(j)]) {
+                    const double dd = inst.Distance(from, j);
+                    if (dd < bd) { bd = dd; best = j; }
+                }
+            }
+            if (best == -1) {
+                for (int c = 1; c < n; ++c) {
+                    if (!visited[static_cast<size_t>(c)]) {
+                        const double dd = inst.Distance(from, c);
+                        if (dd < bd) { bd = dd; best = c; }
+                    }
+                }
+            }
+            if (best == -1) continue;
+            routes[static_cast<size_t>(s)].push_back(best);
+            cur[static_cast<size_t>(s)] = best;
+            visited[static_cast<size_t>(best)] = 1;
+            --remaining;
+            any = true;
+        }
+        if (!any) break;
+    }
+    for (auto& r : routes) r.push_back(0);
+    return routes;
+}
+
+// Fast single-route seed for metric MINSUM with empty routes allowed. It builds
+// one TSP-like NN chain and leaves the remaining salesmen empty.
+inline RouteSet BuildSingleRouteNNSeed(const mtsp::Instance& inst,
+                                       const CandidateSets& candidates) {
+    const int m = std::max(1, inst.GetSalesmanCount());
+    const int n = inst.GetNodeCount();
+    RouteSet routes(static_cast<size_t>(m), std::vector<int>{0, 0});
+    if (n <= 1) return routes;
+
+    std::vector<int> main_route;
+    main_route.reserve(static_cast<size_t>(n + 1));
+    main_route.push_back(0);
+    std::vector<char> visited(static_cast<size_t>(n), 0);
+    visited[0] = 1;
+    KDTree2D tree(inst.GetCoords());
+    int cur = 0;
+    int remaining = n - 1;
+    std::vector<int> near;
+
+    while (remaining > 0) {
+        int best = -1;
+        double bd = std::numeric_limits<double>::max();
+        if (cur >= 0 && cur < static_cast<int>(candidates.size())) {
+            for (int nb : candidates[static_cast<size_t>(cur)]) {
+                if (nb == 0 || visited[static_cast<size_t>(nb)]) continue;
+                const double dd = inst.Distance(cur, nb);
+                if (dd < bd) { bd = dd; best = nb; }
+            }
+        }
+
+        for (int k = 64; best < 0 && k <= 4096 && k < n; k *= 2) {
+            tree.Knn(cur, std::min(k, n - 1), near);
+            for (int nb : near) {
+                if (nb == 0 || visited[static_cast<size_t>(nb)]) continue;
+                best = nb;
+                break;
+            }
+        }
+
+        if (best < 0) {
+            for (int c = 1; c < n; ++c) {
+                if (visited[static_cast<size_t>(c)]) continue;
+                const double dd = inst.Distance(cur, c);
+                if (dd < bd) { bd = dd; best = c; }
+            }
+        }
+        if (best < 0) break;
+        main_route.push_back(best);
+        visited[static_cast<size_t>(best)] = 1;
+        cur = best;
+        --remaining;
+    }
+    main_route.push_back(0);
+    routes[0] = std::move(main_route);
+    EnsureClosedDepot(routes);
+    return routes;
+}
+
 // Polar sweep: sort cities by angle from depot, then assign in equal arcs.
 inline RouteSet BuildPolarSweep(const mtsp::Instance& inst) {
     const int n = inst.GetNodeCount();

@@ -1,7 +1,8 @@
 // MINSUM entry point for v21. Wires the v21 core (ALNS+SA+PT pipeline) to
 // MinsumAccept, exposes it as solver name "lkh_v21_minsum" through the
-// SolverFactory, and accepts CLI options (seed, time-budget-ms, threads) via
-// Configure. Self-contained: includes the entire v21 core (header-only).
+// SolverFactory, and accepts CLI options (seed, time-budget-ms, threads plus
+// v21 operator overrides) via Configure. Self-contained: includes the entire
+// v21 core (header-only).
 
 #include "../core/00_types.hpp"
 #include "../core/01_budget.hpp"
@@ -35,6 +36,10 @@
 
 namespace mtsp::v21 {
 
+inline bool ParseBoolOptionV21Minsum(const std::string& v) {
+    return v == "1" || v == "true" || v == "yes" || v == "on";
+}
+
 class LkhWrapperSolverV21Minsum : public mtsp::Solver {
 public:
     void Configure(const std::unordered_map<std::string, std::string>& opts) override {
@@ -42,6 +47,15 @@ public:
             if (k == "seed") seed_ = static_cast<unsigned>(std::stoul(v));
             else if (k == "time-budget-ms") time_budget_ms_ = std::stoi(v);
             else if (k == "threads") threads_override_ = std::stoi(v);
+            else if (k == "granular-every") granular_every_override_ = std::stoi(v);
+            else if (k == "granular-max-moves") granular_max_moves_override_ = std::stoi(v);
+            else if (k == "granular-scan-customers") granular_scan_customers_override_ = std::stoi(v);
+            else if (k == "region-reopt-every") region_reopt_every_override_ = std::stoi(v);
+            else if (k == "region-reopt-k") region_reopt_k_override_ = std::stoi(v);
+            else if (k == "classic-seeds") classic_seeds_override_ = ParseBoolOptionV21Minsum(v) ? 1 : 0;
+            else if (k == "depot-seed-mode") depot_seed_mode_override_ = std::stoi(v);
+            else if (k == "depot-seed-spread-prob") depot_seed_spread_prob_override_ = std::stod(v);
+            else if (k == "rebalance-empty-routes") rebalance_empty_routes_ = ParseBoolOptionV21Minsum(v);
         }
     }
 
@@ -55,6 +69,14 @@ public:
         const int m = std::max(1, inst.GetSalesmanCount());
         AutoTuneParams params = ResolveParamsForInstance(n, m, /*is_minmax=*/false);
         if (threads_override_ > 0) params.num_threads = threads_override_;
+        if (granular_every_override_ >= 0) params.granular_every = granular_every_override_;
+        if (granular_max_moves_override_ >= 0) params.granular_max_moves = granular_max_moves_override_;
+        if (granular_scan_customers_override_ >= 0) params.granular_scan_customers = granular_scan_customers_override_;
+        if (region_reopt_every_override_ >= 0) params.region_reopt_every = region_reopt_every_override_;
+        if (region_reopt_k_override_ >= 0) params.region_reopt_K = region_reopt_k_override_;
+        if (classic_seeds_override_ >= 0) params.use_classic_seeds = (classic_seeds_override_ != 0);
+        if (depot_seed_mode_override_ >= 0) params.depot_seed_mode = depot_seed_mode_override_;
+        if (depot_seed_spread_prob_override_ >= 0.0) params.depot_seed_spread_prob = depot_seed_spread_prob_override_;
 
         MinsumAccept accept;
         PipelineMetadata meta;
@@ -65,8 +87,18 @@ public:
         DistanceOracle d(inst);
         SanitizeRoutes(out, inst);
         EnsureClosedDepot(out);
-        RebalanceEmptyRoutes(out, d);
-        EnsureClosedDepot(out);
+        const auto count_empty = [](const RouteSet& routes) {
+            int empty = 0;
+            for (const auto& route : routes) if (route.size() <= 2) ++empty;
+            return empty;
+        };
+        meta.SetInt("empty_routes_before_rebalance", count_empty(out));
+        meta.Set("rebalance_empty_routes", rebalance_empty_routes_ ? "true" : "false");
+        if (rebalance_empty_routes_) {
+            RebalanceEmptyRoutes(out, d);
+            EnsureClosedDepot(out);
+        }
+        meta.SetInt("empty_routes_final", count_empty(out));
         meta.Set("validation_ok", ValidateRoutes(out, n) ? "true" : "false");
         meta.SetDouble("final_minsum", RouteSumLength(out, d));
         meta.SetDouble("final_max", MaxRouteLength(out, d));
@@ -77,6 +109,15 @@ private:
     unsigned seed_ = 1u;
     int time_budget_ms_ = 0;
     int threads_override_ = 0;
+    int granular_every_override_ = -1;
+    int granular_max_moves_override_ = -1;
+    int granular_scan_customers_override_ = -1;
+    int region_reopt_every_override_ = -1;
+    int region_reopt_k_override_ = -1;
+    int classic_seeds_override_ = -1;
+    int depot_seed_mode_override_ = -1;
+    double depot_seed_spread_prob_override_ = -1.0;
+    bool rebalance_empty_routes_ = false;
     std::unordered_map<std::string, std::string> last_metadata_;
 };
 
