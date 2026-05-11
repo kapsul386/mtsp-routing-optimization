@@ -13,13 +13,20 @@
 
 namespace mtsp::v21 {
 
+// AcceptPolicy implementation for MINSUM mTSP. Scalar cost is the sum of all
+// route lengths; no max-route penalty or λ tie-breaker. Plugs into
+// `RunPipeline<AcceptPolicy>` to specialize the templated search to MINSUM.
 class MinsumAccept {
 public:
+    // Returns false — identifies this object as a MINSUM (not MINMAX) policy.
     bool IsMinMax() const { return false; }
+    // Always returns 0.0 — MINSUM has no λ tie-breaker coefficient.
     double Lambda() const { return 0.0; }
 
+    // Scalar cost of the current solution: total route length from RouteList cache.
     double ScalarCost(const RouteList& rl) const { return rl.TotalLength(); }
 
+    // Scalar cost computed directly from a raw RouteSet (used before RouteList is built).
     double ScalarCostOfRoutes(const RouteSet& routes, DistanceOracle& d) const {
         return RouteSumLength(routes, d);
     }

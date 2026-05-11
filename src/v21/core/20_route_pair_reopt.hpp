@@ -36,6 +36,8 @@ namespace mtsp::v21 {
 // Cheapness: for ~2k+2k=4k customers, the wipe+insert+2opt costs ~10ms. Even
 // called every 100 iterations the overhead is well under budget.
 
+// Compute the (x, y) centroid of all non-depot customers in `route`.
+// Returns (0, 0) for routes with no interior customers.
 inline std::pair<double, double> ComputeRouteCentroid(const std::vector<int>& route,
                                                       const std::vector<Coord>& coords) {
     double sx = 0.0, sy = 0.0;
@@ -50,6 +52,8 @@ inline std::pair<double, double> ComputeRouteCentroid(const std::vector<int>& ro
     return {sx / count, sy / count};
 }
 
+// Return the index of the non-`r_target` route whose centroid is closest to
+// `r_target`'s centroid. Returns -1 when no eligible partner route exists.
 inline int PickClosestRoute(const RouteList& rl, int r_target, const std::vector<Coord>& coords) {
     if (rl.RouteCount() < 2) return -1;
     const auto target_centroid = ComputeRouteCentroid(rl.Route(r_target), coords);

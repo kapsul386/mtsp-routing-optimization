@@ -12,6 +12,8 @@
 
 namespace mtsp::v21 {
 
+// Allocate position and seen arrays for a problem of `node_count` nodes.
+// All positions start as -1 (not in index) and the version stamp starts at 1.
 struct RouteIndex {
     explicit RouteIndex(int node_count)
         : position(static_cast<size_t>(node_count), -1),

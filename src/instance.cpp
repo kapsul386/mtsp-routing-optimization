@@ -15,17 +15,24 @@ namespace tsp {
 
 namespace {
 
+// Global singleton instance. Created on first access and reset via Reset().
 std::unique_ptr<Instance> g_instance;
+// Threshold above which the dense distance matrix is not built (lazy on-demand mode).
 constexpr long long kMaxPrecomputedDistances = 4'000'000LL;
 constexpr double kEarthRadiusKm = 6371.0;
 constexpr double kDegToRad = 3.14159265358979323846 / 180.0;
 
+// Reads stdin to EOF into a string. Used to receive the JSON instance
+// when the binary is launched via a cmd-pipe (stdin → JSON payload).
 std::string ReadAllStdin() {
     std::ostringstream ss;
     ss << std::cin.rdbuf();
     return ss.str();
 }
 
+// Parses the metric name from a config string.
+// Supports: "euclidean" / "great-circle" / "latlon" / "geo" (the latter three are synonyms).
+// Case and underscores are normalized.
 Instance::MetricType ParseMetricName(const std::string& metric_name_raw) {
     std::string metric_name = metric_name_raw;
     for (char& ch : metric_name) {
@@ -45,6 +52,8 @@ Instance::MetricType ParseMetricName(const std::string& metric_name_raw) {
     throw std::runtime_error("Unsupported TSP metric: " + metric_name_raw);
 }
 
+// Great-circle distance between two (lat, lon) points, in kilometers.
+// Used for geographic instances (e.g., GPS coordinates of couriers).
 double GreatCircleDistanceKm(const std::pair<double, double>& lhs, const std::pair<double, double>& rhs) {
     const double lat_a = lhs.first * kDegToRad;
     const double lon_a = lhs.second * kDegToRad;
@@ -57,12 +66,19 @@ double GreatCircleDistanceKm(const std::pair<double, double>& lhs, const std::pa
     return kEarthRadiusKm * 2.0 * std::atan2(std::sqrt(h), std::sqrt(1.0 - h));
 }
 
+// Standard Euclidean distance between two points in the plane.
+// Used by default for synthetic instances in the thesis.
 double EuclideanDistance(const std::pair<double, double>& lhs, const std::pair<double, double>& rhs) {
     const double dx = lhs.first - rhs.first;
     const double dy = lhs.second - rhs.second;
     return std::sqrt(dx * dx + dy * dy);
 }
 
+// Parses the JSON payload describing an instance.
+// Supports two coordinate formats:
+//   "latlon": [[lat..], [lon..]]  — geographic mode, default metric is great-circle;
+//   "coords": [[x, y], ...]       — Cartesian mode, default metric is euclidean (can be overridden via "metric").
+// Returns (node_count, metric, coordinates).
 std::tuple<int, Instance::MetricType, std::vector<std::pair<double, double>>> ParseJsonPayload(const std::string& payload) {
     const auto input = nlohmann::json::parse(payload);
     const int node_count = input.at("n").get<int>();
@@ -114,6 +130,9 @@ std::tuple<int, Instance::MetricType, std::vector<std::pair<double, double>>> Pa
     throw std::runtime_error("TSP input must contain either latlon or coords.");
 }
 
+// Parses the text format of an instance (used in the main experiment grid).
+// Format: first line "n [metric]", then n coordinate pairs "x y".
+// Correctly strips the UTF-8 BOM if present.
 std::tuple<int, Instance::MetricType, std::vector<std::pair<double, double>>> ParseTextInstance(std::istream& stream,
                                                                                                  const std::string& source) {
     std::string header_line;
@@ -156,6 +175,8 @@ std::tuple<int, Instance::MetricType, std::vector<std::pair<double, double>>> Pa
 
 } // namespace
 
+// Access to the global singleton instance. On first call, creates the instance
+// from stdin (JSON payload).
 Instance& Instance::GetInstance() {
     if (!g_instance) {
         g_instance = std::unique_ptr<Instance>(new Instance());
@@ -163,6 +184,7 @@ Instance& Instance::GetInstance() {
     return *g_instance;
 }
 
+// Loads an instance from a text file and replaces the global singleton.
 void Instance::LoadFromFile(const std::string& path) {
     std::ifstream stream(path);
     if (!stream.is_open()) {
@@ -172,11 +194,14 @@ void Instance::LoadFromFile(const std::string& path) {
     g_instance = std::unique_ptr<Instance>(new Instance(node_count, metric, std::move(coords)));
 }
 
+// Loads an instance from a pre-built JSON string (for tests and embedded scenarios).
 void Instance::LoadFromJsonString(const std::string& payload) {
     auto [node_count, metric, coords] = ParseJsonPayload(payload);
     g_instance = std::unique_ptr<Instance>(new Instance(node_count, metric, std::move(coords)));
 }
 
+// Reset the global singleton. Needed for repeated runs within one process
+// (e.g., when Instance is used in gtest fixtures).
 void Instance::Reset() {
     g_instance.reset();
 }
@@ -194,6 +219,9 @@ Instance::Instance(int node_count, MetricType metric, std::vector<std::pair<doub
     BuildDistanceStorage();
 }
 
+// Distance storage strategy: when n^2 <= 4'000'000 (n <= ~2000), a dense distance
+// matrix is built; otherwise, on-demand mode is used (computed on the fly).
+// This matters for large instances: the matrix for n=100K would weigh 80 GB.
 void Instance::BuildDistanceStorage() {
     const long long pair_count = static_cast<long long>(n) * static_cast<long long>(n);
     if (pair_count > kMaxPrecomputedDistances) {
@@ -216,10 +244,13 @@ void Instance::BuildDistanceStorage() {
     }
 }
 
+// Number of vertices in the instance.
 int Instance::GetN() const {
     return n;
 }
 
+// Distance between two vertices. On small instances, looked up from the dense matrix in O(1);
+// on large instances, computed on the fly from coordinates in O(1) with a couple of sqrt calls.
 double Instance::Distance(int i, int j) const {
     if (!mat.empty()) {
         return mat[static_cast<size_t>(i)][static_cast<size_t>(j)];

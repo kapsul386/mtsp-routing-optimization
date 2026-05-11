@@ -59,20 +59,25 @@ inline void SanitizeRoutes(RouteSet& routes, const mtsp::Instance& inst) {
     }
 }
 
+// Returns the number of routes that contain no customers (only depot endpoints).
 inline int CountEmptyRoutes(const RouteSet& routes) {
     int empty = 0;
     for (const auto& route : routes) if (route.size() <= 2) ++empty;
     return empty;
 }
 
+// Returns the number of non-depot customers in `route` (route.size() - 2, clamped to 0).
 inline int RouteCustomerCount(const std::vector<int>& route) {
     return std::max(0, static_cast<int>(route.size()) - 2);
 }
 
+// Cache-free distance helper for rebalance: returns 0.0 for self-distances.
 inline double RebalanceRawDistance(DistanceOracle& d, int a, int b) {
     return (a == b) ? 0.0 : d.Raw(a, b);
 }
 
+// Ensure every route in `routes` has depot (0) at both ends. Repairs empty
+// routes and missing bookends in-place; does not add customers.
 inline void CloseRoutesForValidation(RouteSet& routes) {
     for (auto& route : routes) {
         if (route.empty()) {
@@ -84,6 +89,8 @@ inline void CloseRoutesForValidation(RouteSet& routes) {
     }
 }
 
+// Total edge length of all routes, computed via Raw (cache-free) distance.
+// Used during rebalance where a fresh DistanceOracle cache is undesirable.
 inline double RouteSumLengthForRebalance(const RouteSet& routes, DistanceOracle& d) {
     double total = 0.0;
     for (const auto& route : routes) {
@@ -307,6 +314,11 @@ inline bool FillEmptyRoutesByCircularBestCuts(RouteSet& routes, DistanceOracle& 
     return CountEmptyRoutes(routes) == 0;
 }
 
+// Interval-DP empty-route filler: selects up to `need` non-overlapping contiguous
+// sub-sequences from the longest donor route to assign to empty routes, minimising
+// total endpoint-depot connection cost. `endpoint_pool` controls how many candidate
+// sub-sequence boundary positions are scored; `interval_cap` limits the DP heap size.
+// Falls back gracefully if the DP cannot find `need` non-overlapping intervals.
 inline bool FillEmptyRoutesByIntervalDp(RouteSet& routes, DistanceOracle& d,
                                         int endpoint_pool = 3072,
                                         int interval_cap = 60000) {
@@ -505,6 +517,114 @@ inline bool FillEmptyRoutesByIntervalDp(RouteSet& routes, DistanceOracle& d,
     return CountEmptyRoutes(routes) == 0;
 }
 
+// After a split repair, route boundaries can be slightly off: one or two
+// endpoint customers may belong more naturally to a neighbouring salesman.
+// This bounded pass tries only prefix/suffix blocks and only accepts strict
+// MINSUM improvements, so it stays a cheap repair refinement rather than a new
+// time-consuming search phase.
+inline int ImproveRouteEndpointBoundaryShifts(RouteSet& routes,
+                                              DistanceOracle& d,
+                                              int max_block_len = 6,
+                                              int max_passes = 3) {
+    CloseRoutesForValidation(routes);
+    if (CountEmptyRoutes(routes) != 0) return 0;
+
+    struct Move {
+        int src = -1;
+        int dst = -1;
+        int take = 0;
+        bool prefix = true;
+        bool to_front = true;
+        double delta = 0.0;
+    };
+
+    const int m = static_cast<int>(routes.size());
+    int applied = 0;
+    for (int pass = 0; pass < max_passes; ++pass) {
+        Move best;
+        best.delta = -kEps;
+
+        for (int a = 0; a < m; ++a) {
+            const auto& ra = routes[static_cast<size_t>(a)];
+            const int ca = ra.size() >= 2 ? static_cast<int>(ra.size()) - 2 : 0;
+            if (ca <= 1) continue;
+            const int max_take = std::min(max_block_len, ca - 1);
+
+            for (int b = 0; b < m; ++b) {
+                if (a == b) continue;
+                const auto& rb = routes[static_cast<size_t>(b)];
+                const int cb = rb.size() >= 2 ? static_cast<int>(rb.size()) - 2 : 0;
+                if (cb <= 0) continue;
+                const int b_first = rb[1];
+                const int b_last = rb[static_cast<size_t>(cb)];
+
+                for (int take = 1; take <= max_take; ++take) {
+                    {
+                        const int first = ra[1];
+                        const int last = ra[static_cast<size_t>(take)];
+                        const int after = ra[static_cast<size_t>(take + 1)];
+                        const double to_front =
+                            d(0, after) - d(last, after) +
+                            d(last, b_first) - d(0, b_first);
+                        if (to_front < best.delta) {
+                            best = {a, b, take, true, true, to_front};
+                        }
+                        const double to_back =
+                            d(0, after) - d(0, first) - d(last, after) +
+                            d(b_last, first) + d(last, 0) - d(b_last, 0);
+                        if (to_back < best.delta) {
+                            best = {a, b, take, true, false, to_back};
+                        }
+                    }
+                    {
+                        const int first_idx = ca - take + 1;
+                        const int first = ra[static_cast<size_t>(first_idx)];
+                        const int last = ra[static_cast<size_t>(ca)];
+                        const int before = ra[static_cast<size_t>(first_idx - 1)];
+                        const double to_front =
+                            d(before, 0) - d(before, first) - d(last, 0) +
+                            d(0, first) + d(last, b_first) - d(0, b_first);
+                        if (to_front < best.delta) {
+                            best = {a, b, take, false, true, to_front};
+                        }
+                        const double to_back =
+                            d(before, 0) - d(before, first) +
+                            d(b_last, first) - d(b_last, 0);
+                        if (to_back < best.delta) {
+                            best = {a, b, take, false, false, to_back};
+                        }
+                    }
+                }
+            }
+        }
+
+        if (best.src < 0 || best.delta >= -kEps) break;
+
+        auto& src = routes[static_cast<size_t>(best.src)];
+        auto& dst = routes[static_cast<size_t>(best.dst)];
+        std::vector<int> block;
+        block.reserve(static_cast<size_t>(best.take));
+        if (best.prefix) {
+            auto first = src.begin() + 1;
+            auto last = first + best.take;
+            block.assign(first, last);
+            src.erase(first, last);
+        } else {
+            auto first = src.end() - 1 - best.take;
+            auto last = src.end() - 1;
+            block.assign(first, last);
+            src.erase(first, last);
+        }
+        if (best.to_front) {
+            dst.insert(dst.begin() + 1, block.begin(), block.end());
+        } else {
+            dst.insert(dst.end() - 1, block.begin(), block.end());
+        }
+        ++applied;
+    }
+    return applied;
+}
+
 // Post-process empty routes by trying several cheap valid repairs and keeping
 // the best MINSUM result. This is intentionally deterministic and bounded: the
 // heavy search stays in the main pipeline, while this fixes the MINSUM tendency
@@ -542,9 +662,14 @@ inline void RebalanceEmptyRoutes(RouteSet& routes, DistanceOracle& d, int max_se
         RouteSet candidate = routes;
         if (FillEmptyRoutesByIntervalDp(candidate, d)) consider(std::move(candidate));
     }
-    if (have_best) routes = std::move(best);
+    if (have_best) {
+        ImproveRouteEndpointBoundaryShifts(best, d);
+        routes = std::move(best);
+    }
 }
 
+// Returns true iff `routes` is a valid mTSP solution: every route starts and ends
+// at depot 0, every customer in 1..n-1 appears exactly once across all routes.
 inline bool ValidateRoutes(const RouteSet& routes, int n) {
     std::vector<int> seen(static_cast<size_t>(n), 0);
     seen[0] = 1;
@@ -561,12 +686,14 @@ inline bool ValidateRoutes(const RouteSet& routes, int n) {
     return true;
 }
 
+// Total (sum-of-all-routes) length — the MINSUM objective. Uses the caching DistanceOracle.
 inline double RouteSumLength(const RouteSet& routes, DistanceOracle& d) {
     double total = 0.0;
     for (const auto& r : routes) for (size_t i = 1; i < r.size(); ++i) total += d(r[i - 1], r[i]);
     return total;
 }
 
+// Maximum single-route length across all routes — the MINMAX objective.
 inline double MaxRouteLength(const RouteSet& routes, DistanceOracle& d) {
     double best = 0.0;
     for (const auto& r : routes) {
@@ -577,7 +704,9 @@ inline double MaxRouteLength(const RouteSet& routes, DistanceOracle& d) {
     return best;
 }
 
-// Lexicographic cost (max, λ·sum).
+// Lexicographic (max, λ·sum) cost used by the MINMAX accept policy.
+// Primary objective is max-route length; λ·sum breaks ties in favour of
+// shorter total travel. Scalarized() collapses both into one number for SA.
 struct LexCost {
     double max = 0.0;
     double sum = 0.0;
@@ -591,6 +720,7 @@ struct LexCost {
     }
 };
 
+// Compute the LexCost (max and sum) of `routes` in one pass.
 inline LexCost ComputeLexCost(const RouteSet& routes, DistanceOracle& d, double lambda) {
     LexCost c; c.lambda = lambda;
     for (const auto& r : routes) {

@@ -1,7 +1,0 @@
-﻿"instance","step","status","valid","objective","time","cluster_seed_sum","fast_seed_sum","cluster_seed_selected"
-"clustered-center_n10000_m5_r01.txt","v10-before","ok","True","161850.895897036","30.128459","325815.271631","2388967.982703","true"
-"clustered-offset-depot_n10000_m5_r01.txt","v10-before","ok","True","175738.444301697","30.139259","323153.68214","1636632.155598","true"
-"high-m-stress_n10000_m5_r01.txt","v10-before","ok","True","279643.587433342","30.166551","763000.845895","1796190.974795","true"
-"mixed_n10000_m5_r01.txt","v10-before","ok","True","290750.350218279","30.156287","620537.202","2441004.349309","true"
-"outliers_n10000_m5_r01.txt","v10-before","ok","True","286993.742308109","30.089005","719783.392851","2540829.363014","true"
-"uniform_n10000_m5_r01.txt","v10-before","ok","True","534185.011953353","29.321813","1541251.192451","6144242.079593","true"

@@ -11,11 +11,18 @@
 #include <instance.h>
 #include <solver.h>
 
+// Command-line argument description for the TSP harness.
+// Supports a chain of steps: --step <solver1> --opt1 ... --step <solver2> --opt2 ...
+// This allows, for example, running rand+nn first and then 2-opt on top of the result.
 struct TspCliOptions {
-    std::string input_file;
+    std::string input_file;  // path to the .txt instance file
+    // List of (solver_name, option_set) pairs in order of application.
     std::vector<std::pair<std::string, std::unordered_map<std::string, std::string>>> steps;
 };
 
+// CLI argument parser for --key value pairs.
+// --step <name> pairs group subsequent --key value entries until the next --step.
+// Throws std::runtime_error on malformed input.
 inline TspCliOptions ParseArguments(int argc, char** argv) {
     if ((argc - 1) % 2 != 0) {
         throw std::runtime_error("Arguments must be passed as --key value pairs.");
@@ -67,6 +74,7 @@ inline TspCliOptions ParseArguments(int argc, char** argv) {
     return options;
 }
 
+// Computes the total route length as the sum of distances over consecutive vertex pairs.
 inline double CalculateRouteLength(const std::vector<int>& route) {
     const tsp::Instance& inst = tsp::Instance::GetInstance();
     double len = 0.0;
@@ -76,6 +84,8 @@ inline double CalculateRouteLength(const std::vector<int>& route) {
     return len;
 }
 
+// Entry point for the classical TSP CLI harness. Runs the chain of --step solvers,
+// measures the time of each step, and outputs JSON with the final route, length, and timings.
 int main(int argc, char** argv) {
     try {
         auto options = ParseArguments(argc, argv);

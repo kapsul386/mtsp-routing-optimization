@@ -8,9 +8,12 @@
 
 namespace tsp {
 
+// Genetic algorithm for the classical TSP. Registered as "genetic".
+// Uses the standard scheme: tournament parent selection, crossover,
+// mutation (swap/inversion), and elitism. Default parameters are tuned for n ~ 3000.
 class Genetic : public Solver {
 public:
-    // ===== Tuned defaults for n ~ 3000 =====
+    // ===== Parameters tuned for n ~ 3000 =====
     int start = 0;
 
     int populationSize = 900;

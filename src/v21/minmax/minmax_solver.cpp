@@ -1,7 +1,9 @@
-// MIN-MAX entry point for v21. Same v21 core as the MINSUM solver, but
-// instantiated with MinmaxAccept (lexicographic max + λ·sum with a soft-α
-// schedule). Exposed as solver name "lkh_v21_minmax". The CLI surface
-// matches the MINSUM solver: --seed, --time-budget-ms, --threads.
+// MINMAX entry point for ALNS-mTSP. Uses the same core (src/v21/core/)
+// as the MINSUM variant, but with a MinmaxAccept criterion: lexicographic comparison of
+// (max-route-length, lambda * sum) with a soft-alpha schedule.
+// Registered as "lkh_v21_minmax" (reported as alns_minmax).
+// CLI matches the MINSUM solver: --seed, --time-budget-ms, --threads,
+// plus the MINMAX-specific --minmax-soft-alpha.
 
 #include "../core/00_types.hpp"
 #include "../core/01_budget.hpp"
@@ -35,8 +37,15 @@
 
 namespace mtsp::v21 {
 
+// MINMAX variant of ALNS-mTSP. Minimises max(route lengths) with a soft-alpha schedule:
+// at the start of the run MINSUM is prioritised; by the end MINMAX takes over (smooth transition).
 class LkhWrapperSolverV21Minmax : public mtsp::Solver {
 public:
+    // CLI parameters:
+    //   seed              — random number generator seed;
+    //   time-budget-ms    — time limit in milliseconds;
+    //   threads           — thread count for multi-start ensemble (0 = autotune);
+    //   minmax-soft-alpha — initial alpha value in soft acceptance (overrides autotune).
     void Configure(const std::unordered_map<std::string, std::string>& opts) override {
         for (const auto& [k, v] : opts) {
             if (k == "seed") seed_ = static_cast<unsigned>(std::stoul(v));
@@ -46,10 +55,13 @@ public:
         }
     }
 
+    // Status/Message/Metadata accessors. The MINMAX variant never returns errors.
     std::string GetLastStatus() const override { return "ok"; }
     std::string GetLastMessage() const override { return ""; }
     std::unordered_map<std::string, std::string> GetLastMetadata() const override { return last_metadata_; }
 
+    // Main MINMAX loop: resolves parameters via autotune, initialises the MinmaxAccept
+    // criterion, runs the shared pipeline, and validates the result.
     void Solve(mtsp::RouteSet& out) override {
         const auto& inst = mtsp::Instance::GetInstance();
         const int n = inst.GetNodeCount();
@@ -88,6 +100,7 @@ private:
 
 namespace mtsp {
 
+// Register the solver in SolverFactory as "lkh_v21_minmax" (reported as alns_minmax).
 static const bool reg_lkh_v21_minmax = ([]() {
     SolverFactory::RegisterSolver("lkh_v21_minmax", []() {
         return std::make_unique<v21::LkhWrapperSolverV21Minmax>();

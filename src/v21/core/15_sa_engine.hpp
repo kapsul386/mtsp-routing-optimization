@@ -16,6 +16,7 @@
 
 namespace mtsp::v21 {
 
+// Tunable knobs for SaEngine. See AutoTuneParams for the per-instance defaults.
 struct SaConfig {
     double T_frac_init = 0.05;
     double cooling = 0.995;
@@ -37,6 +38,8 @@ struct SaConfig {
 
 class SaEngine {
 public:
+    // Construct the engine with the given config. Must call InitFromBaseline or
+    // ForceInit before the first Accept call.
     SaEngine(SaConfig cfg, std::mt19937& rng) : cfg_(cfg), rng_(rng) {}
 
     // Initialize T from a baseline cost (e.g. current sum / max).
@@ -84,12 +87,14 @@ public:
         return u(rng_) < std::exp(-delta / T_);
     }
 
+    // Multiply T by the cooling factor. Call once per accepted ALNS iteration.
     void Cooldown() {
         T_ *= cfg_.cooling;
         if (T_ < 1e-12) T_ = 1e-12;
         ++cooldowns_;
     }
 
+    // Reset T to T_init_ * reheat_factor and restart the stagnation counters.
     void Reheat() {
         T_ = T_init_ * cfg_.reheat_factor;
         no_improve_streak_ = 0;
@@ -126,10 +131,15 @@ public:
         return false;
     }
 
+    // Returns the current temperature T.
     double Temperature() const { return T_; }
+    // Returns the initial temperature T_init set by the last Init* call.
     double InitialTemperature() const { return T_init_; }
+    // Total number of reheats performed so far.
     int Reheats() const { return reheats_; }
+    // Total number of Cooldown() calls so far.
     int Cooldowns() const { return cooldowns_; }
+    // Iterations since the last NoteImprovement() call (iter-count stagnation measure).
     int NoImproveStreak() const { return no_improve_streak_; }
 
 private:

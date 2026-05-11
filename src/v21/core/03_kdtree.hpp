@@ -20,6 +20,7 @@ public:
     struct Item { double d2; int idx; bool operator<(const Item& o) const { return d2 < o.d2; } };
 
     KDTree2D() = default;
+    // Construct and immediately build over `coords` (convenience wrapper over Build).
     explicit KDTree2D(const std::vector<Coord>& coords) { Build(coords); }
 
     // Build/rebuild over the given coord array. The array must outlive the tree.
@@ -43,6 +44,7 @@ public:
         std::reverse(out.begin(), out.end());
     }
 
+    // Convenience overload: returns the k-NN list by value.
     std::vector<int> Knn(int node, int k) const {
         std::vector<int> r; Knn(node, k, r); return r;
     }

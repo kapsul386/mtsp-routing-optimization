@@ -1,0 +1,66 @@
+{
+  "instance_dir": "data/mtsp/stratum1_small",
+  "instance_glob": "*.txt",
+  "allowed_node_counts": [500, 1000],
+  "results_csv": "data/results/stratum1_modular_n500_1000_results.csv",
+  "summary_csv": "data/results/stratum1_modular_n500_1000_summary.csv",
+  "report_md": "data/results/stratum1_modular_n500_1000_report.md",
+  "solvers": [
+    {
+      "name": "2opt+greed",
+      "args": ["--step", "2opt+greed"]
+    },
+    {
+      "name": "lkh3-baseline",
+      "args": [
+        "--step", "lkh3-baseline",
+        "--objective", "minsum",
+        "--time-budget-ms", "30000"
+      ]
+    },
+    {
+      "name": "lkh3-baseline-minmax",
+      "args": [
+        "--step", "lkh3-baseline",
+        "--objective", "minmax",
+        "--time-budget-ms", "30000"
+      ]
+    },
+    {
+      "name": "lkh-wrapper-v21",
+      "args": [
+        "--step", "lkh-wrapper-v21",
+        "--seed", "42",
+        "--time-budget-ms", "30000"
+      ]
+    },
+    {
+      "name": "lkh_v21_minsum",
+      "args": [
+        "--step", "lkh_v21_minsum",
+        "--time-budget-ms", "30000"
+      ]
+    },
+    {
+      "name": "lkh_v21_minsum_cap",
+      "args": [
+        "--step", "lkh_v21_minsum_cap",
+        "--time-budget-ms", "30000"
+      ]
+    },
+    {
+      "name": "lkh_v21_minsum_depot2m_plus",
+      "args": [
+        "--step", "lkh_v21_minsum_depot2m_plus",
+        "--time-budget-ms", "30000"
+      ]
+    },
+    {
+      "name": "lkh_v21_minmax",
+      "args": [
+        "--step", "lkh_v21_minmax",
+        "--time-budget-ms", "30000"
+      ]
+    }
+  ]
+}

@@ -27,6 +27,7 @@ public:
                                route_length_(static_cast<size_t>(m), 0.0),
                                dirty_(static_cast<size_t>(m), 0) {}
 
+    // Overwrite the entire state from an external RouteSet, rebuilding all caches.
     void LoadFrom(const RouteSet& routes, DistanceOracle& d) {
         routes_ = routes;
         if (static_cast<int>(routes_.size()) != m_) {
@@ -45,14 +46,20 @@ public:
         }
     }
 
+    // Copy all routes into `out` (cheap copy of m vectors).
     void StoreTo(RouteSet& out) const { out = routes_; }
 
+    // Returns the route id that `city` currently belongs to, or -1 if unplaced.
     int RouteOf(int city) const { return route_of_[static_cast<size_t>(city)]; }
 
+    // Read-only view of route `r` (includes depot bookends at front and back).
     const std::vector<int>& Route(int r) const { return routes_[static_cast<size_t>(r)]; }
+    // Mutable reference to route `r`; marks it dirty automatically.
     std::vector<int>& MutableRoute(int r) { dirty_[static_cast<size_t>(r)] = 1; return routes_[static_cast<size_t>(r)]; }
 
+    // Returns the number of routes (salesmen).
     int RouteCount() const { return m_; }
+    // Returns the total node count including the depot.
     int NodeCount() const { return n_; }
 
     // Number of customers in route r (excluding the two depot endpoints).
@@ -63,17 +70,21 @@ public:
         return route.size() >= 2 ? static_cast<int>(route.size()) - 2 : 0;
     }
 
+    // Cached length of route `r` (incrementally maintained). O(1).
     double RouteLength(int r) const { return route_length_[static_cast<size_t>(r)]; }
+    // Sum of all cached route lengths (MINSUM objective). O(m).
     double TotalLength() const {
         double s = 0.0;
         for (int r = 0; r < m_; ++r) s += route_length_[static_cast<size_t>(r)];
         return s;
     }
+    // Maximum cached route length (MINMAX objective). O(m).
     double MaxLength() const {
         double m = 0.0;
         for (int r = 0; r < m_; ++r) m = std::max(m, route_length_[static_cast<size_t>(r)]);
         return m;
     }
+    // Index of the route with the highest cached length. O(m).
     int LongestRoute() const {
         int best = 0; double bm = -1.0;
         for (int r = 0; r < m_; ++r) {
@@ -82,10 +93,12 @@ public:
         return best;
     }
 
+    // Recompute all route-length caches from scratch (use after bulk edits).
     void RecomputeAllLengths(DistanceOracle& d) {
         for (int r = 0; r < m_; ++r)
             route_length_[static_cast<size_t>(r)] = ComputeLength(routes_[static_cast<size_t>(r)], d);
     }
+    // Recompute the length cache for a single route (after in-place edits via MutableRoute).
     void RecomputeLength(int r, DistanceOracle& d) {
         route_length_[static_cast<size_t>(r)] = ComputeLength(routes_[static_cast<size_t>(r)], d);
     }
@@ -155,9 +168,13 @@ public:
         return removed;
     }
 
+    // Reset all dirty flags (call after a selective-LS sweep has processed them).
     void ClearDirty() { std::fill(dirty_.begin(), dirty_.end(), 0); }
+    // Manually flag route `r` as dirty (touched by an operator outside RouteList).
     void MarkDirty(int r) { dirty_[static_cast<size_t>(r)] = 1; }
+    // Returns true if route `r` was modified since the last ClearDirty call.
     bool IsDirty(int r) const { return dirty_[static_cast<size_t>(r)] != 0; }
+    // Read-only access to the dirty bitmap (size m), used by selective-LS loops.
     const std::vector<char>& DirtyMask() const { return dirty_; }
 
     // O(1) swap of state with another RouteList — used by Parallel Tempering

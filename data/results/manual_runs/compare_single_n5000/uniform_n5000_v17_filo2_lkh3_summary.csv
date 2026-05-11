@@ -1,4 +1,0 @@
-﻿"instance","solver","status","valid","objective","elapsed_seconds","note","artifact"
-"uniform_n5000_m5_r01.txt","lkh3-baseline","ok","True","127022.56132772","56.732267","time_budget_ms=30000; WSL LKH3","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\lkh3_single_n5000\lkh3_uniform_n5000_m5_r01.raw.json"
-"uniform_n5000_m5_r01.txt","FILO2_CVRP_adapter","ok","True","142527.326625647","116.935581922531","requested time_limit=30s; actual FILO2 elapsed from adapter","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\filo2_single_n5000\uniform_n5000_m5_r01_m5_seed42.json"
-"uniform_n5000_m5_r01.txt","lkh-wrapper-v17","ok","True","142952.006010901","30.917467","time_budget_ms=30000","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\v17_single_n5000\v17_uniform_n5000_m5_r01_20260428_203150.raw.json"

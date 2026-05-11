@@ -25,6 +25,8 @@ struct DestroyResult {
     std::vector<char> dirty_routes;  // size m
 };
 
+// Per-operator lifetime counters and current adaptive weight.
+// Updated by AlnsFramework::Reward and AlnsFramework::EndSegment.
 struct OperatorStats {
     int calls = 0;
     int accepts = 0;
@@ -39,6 +41,7 @@ public:
     using DestroyFn = std::function<DestroyResult(RouteList&, std::mt19937&, int K)>;
     using RepairFn = std::function<void(RouteList&, std::vector<int>& removed, std::mt19937&)>;
 
+    // Register a named destroy operator with initial weight `w0`.
     void RegisterDestroy(std::string name, DestroyFn fn, double w0) {
         destroy_names_.push_back(std::move(name));
         destroy_fns_.push_back(std::move(fn));
@@ -46,6 +49,7 @@ public:
         destroy_stats_.push_back(s);
     }
 
+    // Register a named repair operator with initial weight `w0`.
     void RegisterRepair(std::string name, RepairFn fn, double w0) {
         repair_names_.push_back(std::move(name));
         repair_fns_.push_back(std::move(fn));
@@ -53,19 +57,23 @@ public:
         repair_stats_.push_back(s);
     }
 
+    // Sample a destroy operator index proportional to current weights (roulette wheel).
     int PickDestroy(std::mt19937& rng) {
         return Roulette(destroy_stats_, rng);
     }
+    // Sample a repair operator index proportional to current weights (roulette wheel).
     int PickRepair(std::mt19937& rng) {
         return Roulette(repair_stats_, rng);
     }
 
+    // Execute the destroy operator at `idx`, incrementing its call counters.
     DestroyResult RunDestroy(int idx, RouteList& rl, std::mt19937& rng, int K) {
         ++destroy_stats_[static_cast<size_t>(idx)].calls;
         ++destroy_stats_[static_cast<size_t>(idx)].seg_calls;
         return destroy_fns_[static_cast<size_t>(idx)](rl, rng, K);
     }
 
+    // Execute the repair operator at `idx`, incrementing its call counters.
     void RunRepair(int idx, RouteList& rl, std::vector<int>& removed, std::mt19937& rng) {
         ++repair_stats_[static_cast<size_t>(idx)].calls;
         ++repair_stats_[static_cast<size_t>(idx)].seg_calls;
@@ -110,9 +118,12 @@ public:
         }
     }
 
+    // Returns the number of registered destroy operators.
     int DestroyCount() const { return static_cast<int>(destroy_fns_.size()); }
+    // Returns the number of registered repair operators.
     int RepairCount() const { return static_cast<int>(repair_fns_.size()); }
 
+    // Read-only access to per-operator statistics and names for metadata reporting.
     const std::vector<OperatorStats>& DestroyStats() const { return destroy_stats_; }
     const std::vector<OperatorStats>& RepairStats() const { return repair_stats_; }
     const std::vector<std::string>& DestroyNames() const { return destroy_names_; }

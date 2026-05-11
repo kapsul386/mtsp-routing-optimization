@@ -1,0 +1,4 @@
+instance,n_seeds,alns_iters,alns_accepts,iter_rate,budget_total_ms,wall_total_s,budget_seed_pct,budget_cand_pct,budget_polish_pct,budget_alns_pct,budget_final_pct,alns_improvement_pct,candidate_count_avg
+uniform_n100000_m5_r01,10,171.7,121.6,0.46296126901345463,380000,370.873357,3.0,6.0,16.0,65.0,10.0,1.443989193413594,18.0
+uniform_n10000_m5_r01,10,828.7,689.3,25.434102849833987,60000,32.5822383,4.0,8.0,28.0,50.0,10.0,6.335489412297438,22.0
+uniform_n50000_m5_r01,10,1211.5,801.4,8.711958714517364,180000,139.0617242,3.0,8.0,22.0,57.0,10.0,2.140223834072702,20.0

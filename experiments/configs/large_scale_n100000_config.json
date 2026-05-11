@@ -1,0 +1,19 @@
+{
+  "instance_dir": "data/mtsp/generated_multifamily",
+  "instance_glob": "*.txt",
+  "allowed_node_counts": [100000],
+  "allowed_salesman_counts": [5, 7],
+  "instance_families": ["uniform", "clustered-center", "clustered-offset-depot"],
+  "results_csv": "data/results/large_scale_n100000_results.csv",
+  "summary_csv": "data/results/large_scale_n100000_summary.csv",
+  "report_md": "data/results/large_scale_n100000_report.md",
+  "solvers": [
+    {"name": "2opt+greed", "args": ["--step", "2opt+greed"]},
+    {"name": "lkh3-baseline", "args": ["--step", "lkh3-baseline", "--objective", "minsum", "--time-budget-ms", "350000"]},
+    {"name": "lkh-wrapper-v21", "args": ["--step", "lkh-wrapper-v21", "--seed", "42", "--time-budget-ms", "350000"]},
+    {"name": "lkh_v21_minsum", "args": ["--step", "lkh_v21_minsum", "--time-budget-ms", "350000"]},
+    {"name": "lkh_v21_minsum_cap", "args": ["--step", "lkh_v21_minsum_cap", "--time-budget-ms", "350000"]},
+    {"name": "lkh_v21_minsum_depot2m_plus", "args": ["--step", "lkh_v21_minsum_depot2m_plus", "--time-budget-ms", "350000"]},
+    {"name": "lkh_v21_minmax", "args": ["--step", "lkh_v21_minmax", "--time-budget-ms", "350000"]}
+  ]
+}

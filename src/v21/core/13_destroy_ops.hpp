@@ -20,8 +20,9 @@
 
 namespace mtsp::v21 {
 
-// Per-replica context shared by every destroy operator (captured by reference
-// in the type-erased std::function passed to AlnsFramework).
+// Immutable references to the shared oracle, spatial index, and node count.
+// Captured by reference in the type-erased destroy lambdas registered with AlnsFramework;
+// the referenced objects must outlive the AlnsFramework.
 struct DestroyContext {
     DistanceOracle& d;
     const KDTree2D& kdtree;

@@ -1,7 +1,0 @@
-instance_family,node_count,salesman_count,solver,runs,avg_objective,avg_time_seconds,avg_step_time_seconds,valid_runs
-uniform,5000,5,lkh-wrapper-v4,1,172353.974864,33.86274,33.861782,1
-uniform,5000,5,lkh-wrapper-v5,1,1318013.036873,31.133632,31.132409,1
-uniform,5000,5,lkh-wrapper-v6,1,159230.674637,27.53938,27.538946,1
-uniform,10000,5,lkh-wrapper-v4,1,9393560.834334,34.993892,34.992869,1
-uniform,10000,5,lkh-wrapper-v5,1,10255636.212109,37.978318,37.976573,1
-uniform,10000,5,lkh-wrapper-v6,1,915704.194891,28.271144,28.270114,1

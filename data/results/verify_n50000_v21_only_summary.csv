@@ -1,0 +1,9 @@
+instance_family,node_count,salesman_count,solver,runs,avg_objective,avg_time_seconds,avg_step_time_seconds,valid_runs
+uniform,50000,5,lkh-wrapper-v21,1,4646685.933649,250.342111,250.338556,1
+uniform,50000,5,lkh_v21_minsum,1,4526396.981414,161.366049,161.365446,1
+uniform,50000,5,lkh_v21_minsum_cap,1,4512978.149916,163.100404,163.099955,1
+uniform,50000,5,lkh_v21_minsum_depot2m_plus,1,4615081.47026,291.593058,291.592127,1
+uniform,50000,7,lkh-wrapper-v21,1,5050382.941041,437.7539,437.752904,1
+uniform,50000,7,lkh_v21_minsum,1,4834298.572445,154.540362,154.539698,1
+uniform,50000,7,lkh_v21_minsum_cap,1,4828935.633734,157.083603,157.082893,1
+uniform,50000,7,lkh_v21_minsum_depot2m_plus,1,4765697.81087,284.367371,284.366229,1

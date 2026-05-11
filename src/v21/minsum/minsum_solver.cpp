@@ -1,8 +1,9 @@
-// MINSUM entry point for v21. Wires the v21 core (ALNS+SA+PT pipeline) to
-// MinsumAccept, exposes it as solver name "lkh_v21_minsum" through the
-// SolverFactory, and accepts CLI options (seed, time-budget-ms, threads plus
-// v21 operator overrides) via Configure. Self-contained: includes the entire
-// v21 core (header-only).
+// MINSUM entry point for the modular ALNS-mTSP architecture.
+// Wires the ALNS+SA+PT pipeline core (src/v21/core/) to the MinsumAccept
+// criterion, registers the solver in SolverFactory under the name
+// "lkh_v21_minsum" (referred to as `alns_minsum` in the report), and parses
+// CLI overrides (seed, time-budget-ms, threads, per-operator knobs) via
+// Configure(). Self-contained: pulls in the full header-only ALNS-mTSP core.
 
 #include "../core/00_types.hpp"
 #include "../core/01_budget.hpp"
@@ -36,12 +37,20 @@
 
 namespace mtsp::v21 {
 
+// Boolean CLI option parser: accepts 1/true/yes/on as true.
 inline bool ParseBoolOptionV21Minsum(const std::string& v) {
     return v == "1" || v == "true" || v == "yes" || v == "on";
 }
 
+// Baseline ALNS-mTSP solver for MINSUM. Reuses the shared pipeline from
+// core/17_pipeline.hpp with the MinsumAccept criterion and default
+// parameters from 18_autotune.hpp. Every CLI parameter is an optional
+// override; whatever is not set falls back to the autotuned defaults.
 class LkhWrapperSolverV21Minsum : public mtsp::Solver {
 public:
+    // CLI parsing. Supports a wide set of per-operator override flags
+    // (granular-*, route-pair-*, region-reopt-*, classic-seeds, depot-seed-mode).
+    // A value of -1 means "not set — use the autotuned value".
     void Configure(const std::unordered_map<std::string, std::string>& opts) override {
         for (const auto& [k, v] : opts) {
             if (k == "seed") seed_ = static_cast<unsigned>(std::stoul(v));
@@ -50,6 +59,18 @@ public:
             else if (k == "granular-every") granular_every_override_ = std::stoi(v);
             else if (k == "granular-max-moves") granular_max_moves_override_ = std::stoi(v);
             else if (k == "granular-scan-customers") granular_scan_customers_override_ = std::stoi(v);
+            else if (k == "granular-endpoint-bias-depth") granular_endpoint_bias_depth_override_ = std::stoi(v);
+            else if (k == "granular-2optstar-every") granular_2optstar_every_override_ = std::stoi(v);
+            else if (k == "granular-2optstar-max-moves") granular_2optstar_max_moves_override_ = std::stoi(v);
+            else if (k == "granular-2optstar-scan-customers") granular_2optstar_scan_override_ = std::stoi(v);
+            else if (k == "granular-oropt-every") granular_oropt_every_override_ = std::stoi(v);
+            else if (k == "granular-oropt-max-moves") granular_oropt_max_moves_override_ = std::stoi(v);
+            else if (k == "granular-oropt-scan-customers") granular_oropt_scan_override_ = std::stoi(v);
+            else if (k == "granular-oropt-max-len") granular_oropt_max_len_override_ = std::stoi(v);
+            else if (k == "route-pair-2optstar-every") route_pair_every_override_ = std::stoi(v);
+            else if (k == "route-pair-2optstar-max-moves") route_pair_max_moves_override_ = std::stoi(v);
+            else if (k == "route-pair-2optstar-k") route_pair_k_override_ = std::stoi(v);
+            else if (k == "route-pair-2optstar-window") route_pair_window_override_ = std::stoi(v);
             else if (k == "region-reopt-every") region_reopt_every_override_ = std::stoi(v);
             else if (k == "region-reopt-k") region_reopt_k_override_ = std::stoi(v);
             else if (k == "classic-seeds") classic_seeds_override_ = ParseBoolOptionV21Minsum(v) ? 1 : 0;
@@ -59,10 +80,15 @@ public:
         }
     }
 
+    // Status / message / metadata getters used by the JSON output wrapper.
+    // This solver never reports an error, so status is always "ok".
     std::string GetLastStatus() const override { return "ok"; }
     std::string GetLastMessage() const override { return ""; }
     std::unordered_map<std::string, std::string> GetLastMetadata() const override { return last_metadata_; }
 
+    // Main entry point: resolves parameters via autotune, applies the CLI
+    // overrides, runs RunPipeline (the shared ALNS+SA loop), then validates
+    // the result.
     void Solve(mtsp::RouteSet& out) override {
         const auto& inst = mtsp::Instance::GetInstance();
         const int n = inst.GetNodeCount();
@@ -74,16 +100,30 @@ public:
         if (granular_scan_customers_override_ >= 0) params.granular_scan_customers = granular_scan_customers_override_;
         if (region_reopt_every_override_ >= 0) params.region_reopt_every = region_reopt_every_override_;
         if (region_reopt_k_override_ >= 0) params.region_reopt_K = region_reopt_k_override_;
+        if (granular_endpoint_bias_depth_override_ >= 0) params.granular_endpoint_bias_depth = granular_endpoint_bias_depth_override_;
+        if (granular_2optstar_every_override_ >= 0) params.granular_2optstar_every = granular_2optstar_every_override_;
+        if (granular_2optstar_max_moves_override_ >= 0) params.granular_2optstar_max_moves = granular_2optstar_max_moves_override_;
+        if (granular_2optstar_scan_override_ >= 0) params.granular_2optstar_scan_customers = granular_2optstar_scan_override_;
+        if (granular_oropt_every_override_ >= 0) params.granular_oropt_every = granular_oropt_every_override_;
+        if (granular_oropt_max_moves_override_ >= 0) params.granular_oropt_max_moves = granular_oropt_max_moves_override_;
+        if (granular_oropt_scan_override_ >= 0) params.granular_oropt_scan_customers = granular_oropt_scan_override_;
+        if (granular_oropt_max_len_override_ >= 0) params.granular_oropt_max_len = granular_oropt_max_len_override_;
+        if (route_pair_every_override_ >= 0) params.route_pair_2optstar_every = route_pair_every_override_;
+        if (route_pair_max_moves_override_ >= 0) params.route_pair_2optstar_max_moves = route_pair_max_moves_override_;
+        if (route_pair_k_override_ >= 0) params.route_pair_2optstar_k = route_pair_k_override_;
+        if (route_pair_window_override_ >= 0) params.route_pair_2optstar_window = route_pair_window_override_;
         if (classic_seeds_override_ >= 0) params.use_classic_seeds = (classic_seeds_override_ != 0);
         if (depot_seed_mode_override_ >= 0) params.depot_seed_mode = depot_seed_mode_override_;
         if (depot_seed_spread_prob_override_ >= 0.0) params.depot_seed_spread_prob = depot_seed_spread_prob_override_;
 
+        // Run the main pipeline: seed construction → candidate set → polish → ALNS → final 2-opt.
+        // Default budget is 60 seconds, overridable via time-budget-ms.
         MinsumAccept accept;
         PipelineMetadata meta;
         const int budget_ms = (time_budget_ms_ > 0 ? time_budget_ms_ : 60'000);
         RunPipeline(inst, accept, params, budget_ms, seed_, out, meta);
 
-        // Sanitize: ensure exactly m routes with depot endpoints.
+        // Post-processing: exactly m routes, each closed back at the depot.
         DistanceOracle d(inst);
         SanitizeRoutes(out, inst);
         EnsureClosedDepot(out);
@@ -114,6 +154,18 @@ private:
     int granular_scan_customers_override_ = -1;
     int region_reopt_every_override_ = -1;
     int region_reopt_k_override_ = -1;
+    int granular_endpoint_bias_depth_override_ = -1;
+    int granular_2optstar_every_override_ = -1;
+    int granular_2optstar_max_moves_override_ = -1;
+    int granular_2optstar_scan_override_ = -1;
+    int granular_oropt_every_override_ = -1;
+    int granular_oropt_max_moves_override_ = -1;
+    int granular_oropt_scan_override_ = -1;
+    int granular_oropt_max_len_override_ = -1;
+    int route_pair_every_override_ = -1;
+    int route_pair_max_moves_override_ = -1;
+    int route_pair_k_override_ = -1;
+    int route_pair_window_override_ = -1;
     int classic_seeds_override_ = -1;
     int depot_seed_mode_override_ = -1;
     double depot_seed_spread_prob_override_ = -1.0;
@@ -125,6 +177,9 @@ private:
 
 namespace mtsp {
 
+// Register the solver in SolverFactory under the name "lkh_v21_minsum"
+// (matching the report notation `alns_minsum`). Registration happens when
+// the translation unit is loaded — classic IIFE pattern.
 static const bool reg_lkh_v21_minsum = ([]() {
     SolverFactory::RegisterSolver("lkh_v21_minsum", []() {
         return std::make_unique<v21::LkhWrapperSolverV21Minsum>();

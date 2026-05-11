@@ -34,18 +34,23 @@ namespace mtsp::v21 {
 // edge cost so penalty contribution stays in proportion.
 class EdgePenalties {
 public:
+    // Clear all accumulated penalties, resetting to the unaugmented cost function.
     void Reset() { p_.clear(); }
 
+    // Return the integer penalty for edge {a,b}, or 0 if it has never been penalized.
     int Get(int a, int b) const {
         const auto it = p_.find(PackEdgeKey(a, b));
         return it == p_.end() ? 0 : it->second;
     }
 
+    // Increment the penalty counter for edge {a,b} by `delta` (default 1).
     void Add(int a, int b, int delta = 1) {
         p_[PackEdgeKey(a, b)] += delta;
     }
 
+    // Set the scaling coefficient lambda that converts integer penalty counts to cost units.
     void SetLambda(double l) { lambda_ = std::max(0.0, l); }
+    // Return the current lambda coefficient.
     double Lambda() const { return lambda_; }
 
     // Sum of (lambda * p_e) over all edges in `routes` (route set).
@@ -109,6 +114,7 @@ public:
         }
     }
 
+    // Number of distinct edges currently carrying a positive penalty.
     size_t PenalizedEdgeCount() const {
         size_t n = 0;
         for (const auto& [_, v] : p_) if (v > 0) ++n;

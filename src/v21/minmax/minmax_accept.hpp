@@ -14,14 +14,21 @@
 
 namespace mtsp::v21 {
 
+// AcceptPolicy implementation for MINMAX mTSP. The scalar cost is a soft
+// α-blend: (1-α)·max + α·λ·sum + λ·sum/2. The trailing term provides a
+// tie-breaker so that moves with equal max prefer lower total distance.
 // effective_cost = (1 - alpha) * max + alpha * lambda * sum + (lambda * sum / 2)
 // The trailing tie-breaker term keeps Δmax=0 moves discriminable by Δsum.
 class MinmaxAccept {
 public:
+    // Construct the accept policy with a fixed lambda tie-breaker coefficient.
     explicit MinmaxAccept(double lambda) : lambda_(lambda) {}
 
+    // Returns true — identifies this object as a MINMAX accept policy.
     bool IsMinMax() const { return true; }
+    // The lambda coefficient used in the λ·sum tie-breaker term.
     double Lambda() const { return lambda_; }
+    // Set the soft-blend factor α ∈ [0, 1] that mixes max and sum objectives.
     void SetSoftAlpha(double a) { soft_alpha_ = std::clamp(a, 0.0, 1.0); }
 
     double ScalarCost(const RouteList& rl) const {
@@ -58,6 +65,7 @@ public:
         return (1.0 - soft_alpha_) * dM + soft_alpha_ * lambda_ * dS + lambda_ * dS * 0.5;
     }
 
+    // Strict acceptance: returns true iff `delta` is strictly negative by kEps.
     bool StrictAccept(double delta) const { return delta < -kEps; }
 
 private:

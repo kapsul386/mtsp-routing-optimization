@@ -11,16 +11,23 @@
 #include <mtsp_solver.h>
 #include <mtsp_utils.h>
 
+// CLI parameters for the main mTSP harness.
+// emit_routes=true — the final JSON includes the routes themselves (disabling is needed
+// for large instances where the route data can weigh several megabytes).
 struct MtspCliOptions {
     std::string input_file;
     bool emit_routes = true;
     std::vector<std::pair<std::string, std::unordered_map<std::string, std::string>>> steps;
 };
 
+// Boolean CLI flag parser: accepts "1"/"true"/"yes"/"on" as true.
 inline bool ParseBoolFlag(const std::string& value) {
     return value == "1" || value == "true" || value == "yes" || value == "on";
 }
 
+// CLI argument parser for --key value pairs for the main mTSP harness.
+// Supports a chain of steps via --step <solver>; --emit-routes controls
+// whether routes are included in the JSON output.
 inline MtspCliOptions ParseMtspArguments(int argc, char** argv) {
     if ((argc - 1) % 2 != 0) {
         throw std::runtime_error("Arguments must be passed as --key value pairs.");
@@ -76,6 +83,9 @@ inline MtspCliOptions ParseMtspArguments(int argc, char** argv) {
     return options;
 }
 
+// Entry point for the main mTSP harness (mtsp.exe).
+// Reads arguments, loads the instance, applies the solver chain in order,
+// measures the time of each step, and outputs the final JSON with all metadata.
 int main(int argc, char** argv) {
     try {
         auto options = ParseMtspArguments(argc, argv);
@@ -84,6 +94,7 @@ int main(int argc, char** argv) {
             mtsp::Instance::LoadFromFile(options.input_file);
         }
 
+        // Create solvers by name via SolverFactory; options are passed to Configure.
         std::vector<std::unique_ptr<mtsp::Solver>> solvers;
         std::vector<std::string> solver_names;
         for (const auto& [name, args] : options.steps) {

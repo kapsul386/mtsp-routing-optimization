@@ -11,12 +11,22 @@
 #include "02_distance.hpp"
 #include "03_kdtree.hpp"
 #include <mtsp_instance.h>
+#include <mtsp_solver.h>
 #include <algorithm>
 #include <random>
 #include <unordered_set>
 #include <vector>
 
 namespace mtsp::v21 {
+
+// Diagnostic counters returned by AugmentWithRouteBoundaryCandidates.
+// All fields are cumulative over a single augmentation call.
+struct CandidateAugmentStats {
+    int anchors = 0;
+    int endpoint_anchors = 0;
+    int expensive_anchors = 0;
+    int edges_added = 0;
+};
 
 // Build per-node k-NN candidate lists using the KDTree. The depot (0) is
 // excluded from neighbour lists for non-depot nodes.
@@ -56,6 +66,141 @@ inline void SymmetrizeCandidates(CandidateSets& cs) {
             }
         }
     }
+}
+
+// Add route-aware cross-route edges around route endpoints and expensive
+// intra-route links. kNN alone often spends all slots inside one large route;
+// this gives granular relocate/2-opt*/Or-opt a few explicit bridge candidates
+// without widening the global candidate graph for every city.
+inline CandidateAugmentStats AugmentWithRouteBoundaryCandidates(
+    const mtsp::Instance& inst,
+    const RouteSet& routes,
+    CandidateSets& candidates,
+    DistanceOracle& d,
+    int endpoint_depth,
+    int expensive_edges_per_route,
+    int knn_probe,
+    int per_anchor,
+    int max_extra_per_node) {
+    CandidateAugmentStats stats;
+    const int n = inst.GetNodeCount();
+    if (n <= 2 || routes.empty() || candidates.size() < static_cast<size_t>(n)) return stats;
+    endpoint_depth = std::max(0, endpoint_depth);
+    expensive_edges_per_route = std::max(0, expensive_edges_per_route);
+    knn_probe = std::max(8, knn_probe);
+    per_anchor = std::max(0, per_anchor);
+    max_extra_per_node = std::max(0, max_extra_per_node);
+    if (per_anchor == 0 || max_extra_per_node == 0) return stats;
+
+    std::vector<int> route_of(static_cast<size_t>(n), -1);
+    for (int r = 0; r < static_cast<int>(routes.size()); ++r) {
+        const auto& route = routes[static_cast<size_t>(r)];
+        for (size_t i = 1; i + 1 < route.size(); ++i) {
+            const int c = route[i];
+            if (c > 0 && c < n) route_of[static_cast<size_t>(c)] = r;
+        }
+    }
+
+    std::vector<int> anchors;
+    anchors.reserve(static_cast<size_t>(std::max(16, static_cast<int>(routes.size()) *
+                                                     (endpoint_depth * 2 + expensive_edges_per_route * 2))));
+    std::vector<unsigned char> seen(static_cast<size_t>(n), 0);
+    auto add_anchor = [&](int city, bool endpoint) {
+        if (city <= 0 || city >= n || route_of[static_cast<size_t>(city)] < 0) return;
+        if (seen[static_cast<size_t>(city)]) return;
+        seen[static_cast<size_t>(city)] = 1;
+        anchors.push_back(city);
+        if (endpoint) ++stats.endpoint_anchors;
+        else ++stats.expensive_anchors;
+    };
+
+    struct EdgeScore {
+        double score = 0.0;
+        int a = -1;
+        int b = -1;
+    };
+    for (const auto& route : routes) {
+        const int customers = route.size() >= 2 ? static_cast<int>(route.size()) - 2 : 0;
+        if (customers <= 0) continue;
+        const int depth = std::min(endpoint_depth, customers);
+        for (int i = 0; i < depth; ++i) {
+            add_anchor(route[static_cast<size_t>(1 + i)], true);
+            add_anchor(route[static_cast<size_t>(customers - i)], true);
+        }
+        if (expensive_edges_per_route <= 0) continue;
+        std::vector<EdgeScore> scored;
+        scored.reserve(static_cast<size_t>(std::max(0, static_cast<int>(route.size()) - 1)));
+        for (size_t i = 0; i + 1 < route.size(); ++i) {
+            const int a = route[i];
+            const int b = route[i + 1];
+            if (a == 0 && b == 0) continue;
+            const double score = d(a, b);
+            scored.push_back(EdgeScore{score, a, b});
+        }
+        const int take = std::min(expensive_edges_per_route, static_cast<int>(scored.size()));
+        if (take <= 0) continue;
+        if (take < static_cast<int>(scored.size())) {
+            std::nth_element(scored.begin(), scored.begin() + take, scored.end(),
+                             [](const EdgeScore& x, const EdgeScore& y) {
+                                 return x.score > y.score;
+                             });
+        }
+        for (int i = 0; i < take; ++i) {
+            add_anchor(scored[static_cast<size_t>(i)].a, false);
+            add_anchor(scored[static_cast<size_t>(i)].b, false);
+        }
+    }
+    stats.anchors = static_cast<int>(anchors.size());
+    if (anchors.empty()) return stats;
+
+    std::vector<int> added_per_node(static_cast<size_t>(n), 0);
+    auto add_directed = [&](int a, int b) {
+        if (a <= 0 || b <= 0 || a >= n || b >= n || a == b) return false;
+        if (added_per_node[static_cast<size_t>(a)] >= max_extra_per_node) return false;
+        auto& list = candidates[static_cast<size_t>(a)];
+        if (std::find(list.begin(), list.end(), b) != list.end()) return false;
+        list.push_back(b);
+        ++added_per_node[static_cast<size_t>(a)];
+        return true;
+    };
+    auto add_edge = [&](int a, int b) {
+        bool any = false;
+        any = add_directed(a, b) || any;
+        any = add_directed(b, a) || any;
+        if (any) ++stats.edges_added;
+    };
+
+    KDTree2D tree(inst.GetCoords());
+    std::vector<int> near;
+    near.reserve(static_cast<size_t>(knn_probe));
+    for (int city : anchors) {
+        if (added_per_node[static_cast<size_t>(city)] >= max_extra_per_node) continue;
+        const int r_city = route_of[static_cast<size_t>(city)];
+        int added_for_anchor = 0;
+        tree.Knn(city, std::min(knn_probe, n - 1), near);
+        for (int nb : near) {
+            if (nb <= 0 || nb == city || nb >= n) continue;
+            const int r_nb = route_of[static_cast<size_t>(nb)];
+            if (r_nb < 0 || r_nb == r_city) continue;
+            const int before = stats.edges_added;
+            add_edge(city, nb);
+            if (stats.edges_added > before) ++added_for_anchor;
+            if (added_for_anchor >= per_anchor ||
+                added_per_node[static_cast<size_t>(city)] >= max_extra_per_node) {
+                break;
+            }
+        }
+    }
+    return stats;
+}
+
+// Returns the average per-node candidate-list length across the whole set.
+// Useful as a diagnostic after augmentation to verify the graph did not grow too wide.
+inline double AverageCandidateListSize(const CandidateSets& candidates) {
+    if (candidates.empty()) return 0.0;
+    long long total = 0;
+    for (const auto& list : candidates) total += static_cast<long long>(list.size());
+    return static_cast<double>(total) / static_cast<double>(candidates.size());
 }
 
 // Augment KNN candidates with edges drawn from a few rough nearest-neighbour

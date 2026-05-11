@@ -1,0 +1,346 @@
+{
+  "time_limit_s": 30,
+  "seed": 1,
+  "results": [
+    {
+      "instance": "berlin52_m2.txt",
+      "n": 52,
+      "m": 2,
+      "seed": 1,
+      "time_s_actual": 40.00943636894226,
+      "time_s_budget": 30,
+      "hehao_fitness": 4110.21,
+      "makespan": 4110.213095823169,
+      "sum": 8217.94037994531,
+      "route_lengths": [
+        4110.213095823169,
+        4107.727284122142
+      ],
+      "n_routes": 2,
+      "recompute_diff_max": 0.0030958231691329274,
+      "last_line": "timeout: the monitored command dumped core",
+      "returncode": 0
+    },
+    {
+      "instance": "berlin52_m3.txt",
+      "n": 52,
+      "m": 3,
+      "seed": 1,
+      "time_s_actual": 30.210844039916992,
+      "time_s_budget": 30,
+      "hehao_fitness": 3069.59,
+      "makespan": 3069.5856949319477,
+      "sum": 9138.966359078719,
+      "route_lengths": [
+        3052.451615335741,
+        3016.92904881103,
+        3069.5856949319477
+      ],
+      "n_routes": 3,
+      "recompute_diff_max": 0.004305068052417482,
+      "last_line": "berlin52   ||   The best solution is   3069.59",
+      "returncode": 0
+    },
+    {
+      "instance": "berlin52_m5.txt",
+      "n": 52,
+      "m": 5,
+      "seed": 1,
+      "time_s_actual": 0.7786591053009033,
+      "time_s_budget": 30,
+      "hehao_fitness": 2440.92,
+      "makespan": 2440.921956966261,
+      "sum": 11980.891863304329,
+      "route_lengths": [
+        2399.01428491898,
+        2292.7231000937377,
+        2437.8100262207918,
+        2440.921956966261,
+        2410.4224951045576
+      ],
+      "n_routes": 5,
+      "recompute_diff_max": 0.0019569662608773797,
+      "last_line": "timeout: the monitored command dumped core",
+      "returncode": 0
+    },
+    {
+      "instance": "berlin52_m7.txt",
+      "n": 52,
+      "m": 7,
+      "seed": 1,
+      "time_s_actual": 0.4861030578613281,
+      "time_s_budget": 30,
+      "hehao_fitness": 2440.92,
+      "makespan": 2440.921956966261,
+      "sum": 15635.096711220642,
+      "route_lengths": [
+        2144.377113251304,
+        1900.5469775438792,
+        2345.6419160176965,
+        2235.909905749901,
+        2127.9265832385363,
+        2439.772258453063,
+        2440.921956966261
+      ],
+      "n_routes": 7,
+      "recompute_diff_max": 0.0019569662608773797,
+      "last_line": "timeout: the monitored command dumped core",
+      "returncode": 0
+    },
+    {
+      "instance": "eil51_m2.txt",
+      "n": 51,
+      "m": 2,
+      "seed": 1,
+      "time_s_actual": 30.195780277252197,
+      "time_s_budget": 30,
+      "hehao_fitness": 222.733,
+      "makespan": 222.73337033830651,
+      "sum": 444.3314290961178,
+      "route_lengths": [
+        221.5980587578113,
+        222.73337033830651
+      ],
+      "n_routes": 2,
+      "recompute_diff_max": 0.0003703383065101207,
+      "last_line": "eil51   ||   The best solution is   222.733",
+      "returncode": 0
+    },
+    {
+      "instance": "eil51_m3.txt",
+      "n": 51,
+      "m": 3,
+      "seed": 1,
+      "time_s_actual": 30.220558404922485,
+      "time_s_budget": 30,
+      "hehao_fitness": 159.572,
+      "makespan": 159.57150861783992,
+      "sum": 473.63980071694476,
+      "route_lengths": [
+        158.99353799167105,
+        155.0747541074338,
+        159.57150861783992
+      ],
+      "n_routes": 3,
+      "recompute_diff_max": 0.0004913821600780466,
+      "last_line": "eil51   ||   The best solution is   159.572",
+      "returncode": 0
+    },
+    {
+      "instance": "eil51_m5.txt",
+      "n": 51,
+      "m": 5,
+      "seed": 1,
+      "time_s_actual": 30.19899010658264,
+      "time_s_budget": 30,
+      "hehao_fitness": 118.134,
+      "makespan": 118.13375254600864,
+      "sum": 584.0034372419623,
+      "route_lengths": [
+        117.95515721426133,
+        112.39147740431332,
+        117.40747774137,
+        118.13375254600864,
+        118.11557233600902
+      ],
+      "n_routes": 5,
+      "recompute_diff_max": 0.0002474539913634999,
+      "last_line": "eil51   ||   The best solution is   118.134",
+      "returncode": 0
+    },
+    {
+      "instance": "eil51_m7.txt",
+      "n": 51,
+      "m": 7,
+      "seed": 1,
+      "time_s_actual": 0.29782772064208984,
+      "time_s_budget": 30,
+      "hehao_fitness": 112.071,
+      "makespan": 112.0714058089752,
+      "sum": 759.1776984222464,
+      "route_lengths": [
+        105.98487846165801,
+        101.42366606290662,
+        110.35548859273065,
+        109.91413298076817,
+        110.67352332400185,
+        112.0714058089752,
+        108.7546031912059
+      ],
+      "n_routes": 7,
+      "recompute_diff_max": 0.00040580897520214876,
+      "last_line": "eil51   ||   The best solution is   112.071",
+      "returncode": 0
+    },
+    {
+      "instance": "eil76_m2.txt",
+      "n": 76,
+      "m": 2,
+      "seed": 1,
+      "time_s_actual": 30.199143886566162,
+      "time_s_budget": 30,
+      "hehao_fitness": 280.854,
+      "makespan": 280.853940891332,
+      "sum": 561.4754169697953,
+      "route_lengths": [
+        280.853940891332,
+        280.6214760784634
+      ],
+      "n_routes": 2,
+      "recompute_diff_max": 5.9108667983309715e-05,
+      "last_line": "eil76   ||   The best solution is   280.854",
+      "returncode": 0
+    },
+    {
+      "instance": "eil76_m3.txt",
+      "n": 76,
+      "m": 3,
+      "seed": 1,
+      "time_s_actual": 30.248834371566772,
+      "time_s_budget": 30,
+      "hehao_fitness": 195.722,
+      "makespan": 195.72224898519588,
+      "sum": 584.9074647922782,
+      "route_lengths": [
+        195.72224898519588,
+        195.5716731473176,
+        193.61354265976482
+      ],
+      "n_routes": 3,
+      "recompute_diff_max": 0.0002489851958671352,
+      "last_line": "eil76   ||   The best solution is   195.722",
+      "returncode": 0
+    },
+    {
+      "instance": "eil76_m5.txt",
+      "n": 76,
+      "m": 5,
+      "seed": 1,
+      "time_s_actual": 30.299649953842163,
+      "time_s_budget": 30,
+      "hehao_fitness": 142.884,
+      "makespan": 142.88423798877685,
+      "sum": 712.5875980181005,
+      "route_lengths": [
+        142.5777896746682,
+        142.69570111237928,
+        142.88423798877685,
+        141.89549671859507,
+        142.5343725236811
+      ],
+      "n_routes": 5,
+      "recompute_diff_max": 0.0002379887768597655,
+      "last_line": "eil76   ||   The best solution is   142.884",
+      "returncode": 0
+    },
+    {
+      "instance": "eil76_m7.txt",
+      "n": 76,
+      "m": 7,
+      "seed": 1,
+      "time_s_actual": 30.256767511367798,
+      "time_s_budget": 30,
+      "hehao_fitness": 127.562,
+      "makespan": 127.56174975281579,
+      "sum": 878.9840893397707,
+      "route_lengths": [
+        127.13451977948465,
+        127.3187522608754,
+        126.51987805898965,
+        125.02014044512418,
+        122.00664866549354,
+        127.56174975281579,
+        123.4224003769874
+      ],
+      "n_routes": 7,
+      "recompute_diff_max": 0.00025024718421207126,
+      "last_line": "eil76   ||   The best solution is   127.562",
+      "returncode": 0
+    },
+    {
+      "instance": "rat99_m2.txt",
+      "n": 99,
+      "m": 2,
+      "seed": 1,
+      "time_s_actual": 30.217341661453247,
+      "time_s_budget": 30,
+      "hehao_fitness": 665.991,
+      "makespan": 665.9908970185238,
+      "sum": 1331.7559479812744,
+      "route_lengths": [
+        665.7650509627505,
+        665.9908970185238
+      ],
+      "n_routes": 2,
+      "recompute_diff_max": 0.00010298147617504583,
+      "last_line": "rat99   ||   The best solution is   665.991",
+      "returncode": 0
+    },
+    {
+      "instance": "rat99_m3.txt",
+      "n": 99,
+      "m": 3,
+      "seed": 1,
+      "time_s_actual": 30.1859872341156,
+      "time_s_budget": 30,
+      "hehao_fitness": 517.723,
+      "makespan": 517.7230176567439,
+      "sum": 1546.7431384088782,
+      "route_lengths": [
+        517.7230176567439,
+        514.844219008676,
+        514.1759017434583
+      ],
+      "n_routes": 3,
+      "recompute_diff_max": 1.765674392117944e-05,
+      "last_line": "rat99   ||   The best solution is   517.723",
+      "returncode": 0
+    },
+    {
+      "instance": "rat99_m5.txt",
+      "n": 99,
+      "m": 5,
+      "seed": 1,
+      "time_s_actual": 30.341070652008057,
+      "time_s_budget": 30,
+      "hehao_fitness": 450.274,
+      "makespan": 450.2744242747474,
+      "sum": 2249.248934761255,
+      "route_lengths": [
+        448.9225599501891,
+        450.2744242747474,
+        450.2549202587304,
+        449.83614542146574,
+        449.9608848561225
+      ],
+      "n_routes": 5,
+      "recompute_diff_max": 0.00042427474738815363,
+      "last_line": "rat99   ||   The best solution is   450.274",
+      "returncode": 0
+    },
+    {
+      "instance": "rat99_m7.txt",
+      "n": 99,
+      "m": 7,
+      "seed": 1,
+      "time_s_actual": 30.420202493667603,
+      "time_s_budget": 30,
+      "hehao_fitness": 437.513,
+      "makespan": 437.51347249183834,
+      "sum": 3053.72614462628,
+      "route_lengths": [
+        436.15892025549806,
+        432.28271643537494,
+        435.5940086738194,
+        437.4367919148729,
+        437.4516687408849,
+        437.28856611399164,
+        437.51347249183834
+      ],
+      "n_routes": 7,
+      "recompute_diff_max": 0.0004724918383658405,
+      "last_line": "rat99   ||   The best solution is   437.513",
+      "returncode": 0
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+instance_family,node_count,salesman_count,solver,runs,avg_objective,avg_time_seconds,avg_step_time_seconds,valid_runs
+uniform,100,3,ortools-GLS,3,892.866988,10.001143,10.001143,3
+uniform,100,5,ortools-GLS,3,981.297443,10.002804,10.002804,3
+uniform,100,7,ortools-GLS,3,1067.906267,10.000776,10.000776,3
+uniform,200,3,ortools-GLS,3,1203.772226,10.000724,10.000724,3
+uniform,200,5,ortools-GLS,3,1306.127681,10.003085,10.003085,3
+uniform,200,7,ortools-GLS,3,1435.128083,10.000999,10.000999,3
+clustered-center,100,3,ortools-GLS,3,579.456026,10.002652,10.002652,3
+clustered-center,100,5,ortools-GLS,3,731.581705,10.003343,10.003343,3
+clustered-center,100,7,ortools-GLS,3,826.209227,10.001642,10.001642,3
+clustered-center,200,3,ortools-GLS,3,750.750248,10.000765,10.000765,3
+clustered-center,200,5,ortools-GLS,3,879.398252,10.001182,10.001182,3
+clustered-center,200,7,ortools-GLS,3,952.671416,10.000687,10.000687,3

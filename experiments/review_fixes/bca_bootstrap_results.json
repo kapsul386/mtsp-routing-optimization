@@ -1,0 +1,76 @@
+{
+  "rng_seed": 20251205,
+  "n_resamples": 10000,
+  "rows": [
+    {
+      "table": "1а",
+      "comparison": "lkh_v21_minsum vs lkh3-baseline (default-MINSUM)",
+      "n_pairs": 60,
+      "mean": -3.4824034271982396,
+      "perc_lo": -5.1893055988052765,
+      "perc_hi": -1.8801606416853645,
+      "bca_lo": -5.322475626344394,
+      "bca_hi": -1.9745438548399181
+    },
+    {
+      "table": "1а",
+      "comparison": "lkh_v21_minsum_cap vs lkh3-baseline (default-MINSUM)",
+      "n_pairs": 60,
+      "mean": -1.0029721194667707,
+      "perc_lo": -2.7488145725781843,
+      "perc_hi": 0.5742268722997753,
+      "bca_lo": -2.9357243773856077,
+      "bca_hi": 0.453632749025858
+    },
+    {
+      "table": "1а",
+      "comparison": "lkh_v21_minsum_depot2m_plus vs lkh3-baseline (default-MINSUM)",
+      "n_pairs": 60,
+      "mean": 1.1789513026458522,
+      "perc_lo": 0.889376794982162,
+      "perc_hi": 1.4889571478835317,
+      "bca_lo": 0.9052694729164494,
+      "bca_hi": 1.5111521365900882
+    },
+    {
+      "table": "1а",
+      "comparison": "lkh-wrapper-v21 vs lkh3-baseline (default-MINSUM)",
+      "n_pairs": 60,
+      "mean": -0.3636173238798394,
+      "perc_lo": -2.7231952528915384,
+      "perc_hi": 1.9571741076681157,
+      "bca_lo": -2.754184857202527,
+      "bca_hi": 1.9142278199691358
+    },
+    {
+      "table": "4б",
+      "comparison": "lkh_v21_minsum vs LKH-3 (minsum_default)",
+      "n_pairs": 48,
+      "mean": -5.211986188801838,
+      "perc_lo": -7.1083909884521015,
+      "perc_hi": -3.48159257093966,
+      "bca_lo": -7.2970683641878775,
+      "bca_hi": -3.617015800399935
+    },
+    {
+      "table": "4б",
+      "comparison": "lkh_v21_minsum vs LKH-3 (minsum_balanced)",
+      "n_pairs": 48,
+      "mean": -13.382030949918915,
+      "perc_lo": -16.564541094510155,
+      "perc_hi": -10.387643828145972,
+      "bca_lo": -16.705646328854243,
+      "bca_hi": -10.562089014028118
+    },
+    {
+      "table": "4б",
+      "comparison": "lkh_v21_minsum vs LKH-3 (minmax_balanced)",
+      "n_pairs": 48,
+      "mean": -14.456388401902771,
+      "perc_lo": -17.204009812474105,
+      "perc_hi": -11.807306292757167,
+      "bca_lo": -17.333706015534624,
+      "bca_hi": -11.961629497049131
+    }
+  ]
+}

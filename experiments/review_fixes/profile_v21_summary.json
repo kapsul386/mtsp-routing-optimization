@@ -1,0 +1,50 @@
+[
+  {
+    "instance": "uniform_n100000_m5_r01",
+    "n_seeds": 10,
+    "alns_iters": 171.7,
+    "alns_accepts": 121.6,
+    "iter_rate": 0.46296126901345463,
+    "budget_total_ms": 380000,
+    "wall_total_s": 370.873357,
+    "budget_seed_pct": 3.0,
+    "budget_cand_pct": 6.0,
+    "budget_polish_pct": 16.0,
+    "budget_alns_pct": 65.0,
+    "budget_final_pct": 10.0,
+    "alns_improvement_pct": 1.443989193413594,
+    "candidate_count_avg": 18.0
+  },
+  {
+    "instance": "uniform_n10000_m5_r01",
+    "n_seeds": 10,
+    "alns_iters": 828.7,
+    "alns_accepts": 689.3,
+    "iter_rate": 25.434102849833987,
+    "budget_total_ms": 60000,
+    "wall_total_s": 32.5822383,
+    "budget_seed_pct": 4.0,
+    "budget_cand_pct": 8.0,
+    "budget_polish_pct": 28.0,
+    "budget_alns_pct": 50.0,
+    "budget_final_pct": 10.0,
+    "alns_improvement_pct": 6.335489412297438,
+    "candidate_count_avg": 22.0
+  },
+  {
+    "instance": "uniform_n50000_m5_r01",
+    "n_seeds": 10,
+    "alns_iters": 1211.5,
+    "alns_accepts": 801.4,
+    "iter_rate": 8.711958714517364,
+    "budget_total_ms": 180000,
+    "wall_total_s": 139.0617242,
+    "budget_seed_pct": 3.0,
+    "budget_cand_pct": 8.0,
+    "budget_polish_pct": 22.0,
+    "budget_alns_pct": 57.0,
+    "budget_final_pct": 10.0,
+    "alns_improvement_pct": 2.140223834072702,
+    "candidate_count_avg": 20.0
+  }
+]

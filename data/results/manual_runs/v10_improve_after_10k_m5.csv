@@ -1,7 +1,0 @@
-instance,status,valid,objective,time,first_budget_ms,improve_budget_ms,cluster_seed_restarts,route_anneal_ms,route_anneal_best_delta,route_anneal_raw_sum
-clustered-center_n10000_m5_r01.txt,ok,True,304121.42516220413,32.907649,19000,9500,2,,,304174.994119
-clustered-offset-depot_n10000_m5_r01.txt,ok,True,313297.373382942,30.26883,19000,9500,2,,,
-high-m-stress_n10000_m5_r01.txt,ok,True,683970.3034030716,33.132812,19000,9500,2,,,684064.582877
-mixed_n10000_m5_r01.txt,ok,True,584716.020347645,32.578332,19000,9500,2,,,
-outliers_n10000_m5_r01.txt,ok,True,634208.18039723,31.848692,19000,9500,2,,,634508.322741
-uniform_n10000_m5_r01.txt,ok,True,1459118.3996479777,30.993106,19000,9500,2,,,1459140.402519

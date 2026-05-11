@@ -1,3 +1,8 @@
+// C++ wrapper implementation around the LKH-3 binary.
+// Execution proceeds via WSL2 (Windows Subsystem for Linux): a temporary
+// directory is created with .tsp/.par files, the process wsl.exe LKH params.par is launched,
+// stdout/stderr are captured, and result.txt is parsed in MTSP format.
+
 #include "lkh3_baseline.h"
 
 #include <windows.h>
@@ -21,9 +26,13 @@ namespace mtsp::baselines {
 
 namespace {
 
+// Path to the WSL executable. Used to launch LKH-3 from Windows.
 constexpr std::wstring_view kWslExecutable = L"C:\\Windows\\System32\\wsl.exe";
+// Atomic run counter for uniquifying temporary directory names.
 std::atomic<unsigned long long> g_run_counter{0};
 
+// RAII wrapper over a WinAPI HANDLE. Ensures CloseHandle on destruction.
+// Non-copyable; movable to allow returning from factory methods.
 class UniqueHandle {
 public:
     UniqueHandle() = default;
@@ -68,6 +77,7 @@ private:
     HANDLE handle_ = INVALID_HANDLE_VALUE;
 };
 
+// Returns a copy of the string with leading and trailing whitespace removed.
 std::string TrimCopy(std::string value) {
     const auto not_space = [](unsigned char ch) { return !std::isspace(ch); };
     value.erase(value.begin(), std::find_if(value.begin(), value.end(), not_space));
@@ -75,6 +85,7 @@ std::string TrimCopy(std::string value) {
     return value;
 }
 
+// Returns a copy of the string converted to uppercase (ASCII-only).
 std::string ToUpperCopy(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
         return static_cast<char>(std::toupper(ch));
@@ -82,6 +93,7 @@ std::string ToUpperCopy(std::string value) {
     return value;
 }
 
+// Case-insensitive prefix check (used when parsing result.txt from LKH-3).
 bool StartsWithCaseInsensitive(const std::string& text, std::string_view prefix) {
     if (text.size() < prefix.size()) {
         return false;
@@ -95,6 +107,8 @@ bool StartsWithCaseInsensitive(const std::string& text, std::string_view prefix)
     return true;
 }
 
+// Read an environment variable with whitespace trimming; returns empty string if not set.
+// Used for parameters such as MTSP_LKH3_PATH (to override the binary path).
 std::string ReadEnvironmentVariable(const char* name) {
     const char* value = std::getenv(name);
     return value == nullptr ? std::string() : TrimCopy(value);

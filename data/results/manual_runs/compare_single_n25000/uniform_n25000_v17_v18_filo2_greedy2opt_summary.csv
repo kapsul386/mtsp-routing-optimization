@@ -1,5 +1,0 @@
-﻿"instance","solver","status","valid","objective","elapsed_seconds","note","artifact"
-"uniform_n25000_m5_r01.txt","2opt+greed","ok","True","1673508.88907633","12.988646","internal greedy+2opt baseline","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\greedy2opt_single_n25000\2opt_greed_uniform_n25000_m5_r01_20260428_222019.raw.json"
-"uniform_n25000_m5_r01.txt","lkh-wrapper-v18","ok","True","1841129.95456463","31.241353","time_budget_ms=30000","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\v18_single_n25000\lkh-wrapper-v18_uniform_n25000_m5_r01_20260428_222032.raw.json"
-"uniform_n25000_m5_r01.txt","lkh-wrapper-v17","ok","True","1841129.95456463","31.266953","time_budget_ms=30000","C:\Users\ddkup\coursework\mtsp-routing-optimization\data\results\manual_runs\v17_single_n25000\lkh-wrapper-v17_uniform_n25000_m5_r01_20260428_222104.raw.json"
-"uniform_n25000_m5_r01.txt","FILO2_CVRP_adapter","timeout_no_result","False",,"810","requested time_limit=30s; killed after ~13.5min without result JSON",""

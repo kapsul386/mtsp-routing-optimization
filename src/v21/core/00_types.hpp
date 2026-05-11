@@ -21,7 +21,9 @@ inline constexpr double kCoordEps = 1e-12;
 // instead of the full O(n^2) precomputed matrix (memory-driven).
 inline constexpr long long kLargeInstanceDistancePairs = 4'000'000LL;
 
-// Order-independent uint64 key for an edge {a, b}. Used by edge-level caches.
+// Order-independent uint64 key for an undirected edge {a, b}.
+// Normalises so a <= b, then packs both as 32-bit halves. Used by
+// edge-level caches (DistanceOracle, EdgePenalties).
 inline uint64_t PackEdgeKey(int a, int b) {
     if (a > b) std::swap(a, b);
     return (static_cast<uint64_t>(static_cast<uint32_t>(a)) << 32U) |

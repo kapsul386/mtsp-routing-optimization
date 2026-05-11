@@ -1,6 +1,0 @@
-"instance","solver","valid","status","objective","time","path"
-"uniform_n5000_m5_r01","v12","True","ok","145181.361440584","28.932271","data\results\manual_runs\n5000_v12_30s\v12_uniform_n5000_m5_r01.json"
-"mixed_n5000_m5_r01","v12","True","ok","74790.0787374371","29.032349","data\results\manual_runs\n5000_v12_30s\v12_mixed_n5000_m5_r01.json"
-"outliers_n5000_m5_r01","v12","True","ok","71533.7518202148","28.988389","data\results\manual_runs\n5000_v12_30s\v12_outliers_n5000_m5_r01.json"
-"clustered-center_n5000_m5_r01","v12","True","ok","32069.1789707271","28.897757","data\results\manual_runs\n5000_v12_30s\v12_clustered-center_n5000_m5_r01.json"
-"high-m-stress_n5000_m5_r01","v12","True","ok","75192.2161096593","28.993231","data\results\manual_runs\n5000_v12_30s\v12_high-m-stress_n5000_m5_r01.json"

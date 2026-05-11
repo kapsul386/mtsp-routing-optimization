@@ -337,10 +337,69 @@ inline RouteSet BuildAngularSectorNNSeed(const mtsp::Instance& inst,
     return routes;
 }
 
+// Pick a small deterministic set of non-depot starts for alternate NN chains.
+// These are intentionally radial/sector anchors: the raw route may be a little
+// longer than the depot-start chain, but after circular split/rebalance the
+// route order can cut into cleaner non-empty salesman tours.
+inline std::vector<int> PickSingleRouteNNStartVariants(const mtsp::Instance& inst,
+                                                       int max_starts) {
+    std::vector<int> starts;
+    if (max_starts <= 0) return starts;
+    const int n = inst.GetNodeCount();
+    if (n <= 2) return starts;
+
+    const auto& coords = inst.GetCoords();
+    const double x0 = coords[0].first;
+    const double y0 = coords[0].second;
+    const int sectors = std::max(1, max_starts);
+    std::vector<std::pair<double, int>> sector_best(static_cast<size_t>(sectors), {-1.0, -1});
+    std::vector<std::pair<double, int>> radial;
+    radial.reserve(static_cast<size_t>(n - 1));
+
+    constexpr double two_pi = 6.28318530717958647692;
+    for (int i = 1; i < n; ++i) {
+        const double dx = coords[static_cast<size_t>(i)].first - x0;
+        const double dy = coords[static_cast<size_t>(i)].second - y0;
+        const double r2 = dx * dx + dy * dy;
+        double angle = std::atan2(dy, dx) + 3.14159265358979323846;
+        if (angle < 0.0) angle += two_pi;
+        if (angle >= two_pi) angle -= two_pi;
+        int sector = static_cast<int>((angle / two_pi) * static_cast<double>(sectors));
+        if (sector >= sectors) sector = sectors - 1;
+        auto& best = sector_best[static_cast<size_t>(sector)];
+        if (r2 > best.first) best = {r2, i};
+        radial.emplace_back(r2, i);
+    }
+
+    auto add_unique = [&](int node) {
+        if (node <= 0) return;
+        if (std::find(starts.begin(), starts.end(), node) != starts.end()) return;
+        if (static_cast<int>(starts.size()) >= max_starts) return;
+        starts.push_back(node);
+    };
+
+    std::sort(radial.begin(), radial.end(),
+              [](const auto& a, const auto& b) { return a.first > b.first; });
+    if (!radial.empty()) add_unique(radial.front().second);
+    for (const auto& [dist2, node] : sector_best) {
+        (void)dist2;
+        add_unique(node);
+    }
+    for (const auto& [dist2, node] : radial) {
+        (void)dist2;
+        if (static_cast<int>(starts.size()) >= max_starts) break;
+        add_unique(node);
+    }
+    return starts;
+}
+
 // Fast single-route seed for metric MINSUM with empty routes allowed. It builds
-// one TSP-like NN chain and leaves the remaining salesmen empty.
-inline RouteSet BuildSingleRouteNNSeed(const mtsp::Instance& inst,
-                                       const CandidateSets& candidates) {
+// one TSP-like NN chain and leaves the remaining salesmen empty. If start_city
+// is a customer, the chain starts 0 -> start_city and then continues NN from
+// that anchor; start_city <= 0 preserves the original depot-start behaviour.
+inline RouteSet BuildSingleRouteNNSeedFromStart(const mtsp::Instance& inst,
+                                                const CandidateSets& candidates,
+                                                int start_city) {
     const int m = std::max(1, inst.GetSalesmanCount());
     const int n = inst.GetNodeCount();
     RouteSet routes(static_cast<size_t>(m), std::vector<int>{0, 0});
@@ -355,6 +414,12 @@ inline RouteSet BuildSingleRouteNNSeed(const mtsp::Instance& inst,
     int cur = 0;
     int remaining = n - 1;
     std::vector<int> near;
+    if (start_city > 0 && start_city < n) {
+        main_route.push_back(start_city);
+        visited[static_cast<size_t>(start_city)] = 1;
+        cur = start_city;
+        --remaining;
+    }
 
     while (remaining > 0) {
         int best = -1;
@@ -393,6 +458,12 @@ inline RouteSet BuildSingleRouteNNSeed(const mtsp::Instance& inst,
     routes[0] = std::move(main_route);
     EnsureClosedDepot(routes);
     return routes;
+}
+
+// Convenience wrapper: single-route NN seed starting from the depot.
+inline RouteSet BuildSingleRouteNNSeed(const mtsp::Instance& inst,
+                                       const CandidateSets& candidates) {
+    return BuildSingleRouteNNSeedFromStart(inst, candidates, 0);
 }
 
 // Polar sweep: sort cities by angle from depot, then assign in equal arcs.

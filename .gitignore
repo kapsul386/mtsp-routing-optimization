@@ -42,10 +42,9 @@
 
 # Build artifacts
 build/
-external/filo2/
-data/cvrp_tmp/
-data/results/baselines/filo2/raw/
-data/results/baselines/filo2*/raw/
+
+# External clones (HGS-CVRP, vroom, FILO2 — should be separate repos)
+external/
 
 # Python cache
 __pycache__/
@@ -53,5 +52,25 @@ __pycache__/
 
 # IDE
 .idea/
-.claude/worktrees/kind-antonelli-984a84/
-.claude/worktrees/quirky-germain-809e21/
+
+# Logs (overnight stdout, etc)
+*.log
+
+# LaTeX intermediate
+*.aux
+*.toc
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.xdv
+*.bbl
+*.blg
+*.lof
+*.lot
+*.nav
+*.snm
+
+# Reference PDFs are kept locally, not in the repo (see docs/materials/README.md)
+docs/materials/*.pdf
+docs/materials/*.extracted.txt

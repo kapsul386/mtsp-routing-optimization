@@ -1,0 +1,774 @@
+{
+  "tag": "stratum3_multiseed_5seeds",
+  "solver": "lkh_v21_minsum",
+  "executable": "C:\\Users\\ddkup\\coursework\\mtsp-routing-optimization\\build\\src\\Release\\mtsp.exe",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "budget_by_n": "25000:150000,50000:180000,100000:350000",
+  "instances": [
+    {
+      "instance": "uniform_n25000_m5_r01.txt",
+      "node_count": 25000,
+      "salesman_count": 5,
+      "budget_ms": 150000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        1612648.3583834283,
+        1620207.2630157638,
+        1623314.5929702432,
+        1624508.1840636025,
+        1622639.245111103
+      ],
+      "times": [
+        95.54633,
+        97.573545,
+        98.877775,
+        100.631491,
+        100.430141
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 1620663.5287088281,
+      "std_objective": 4747.739081531395,
+      "min_objective": 1612648.3583834283,
+      "max_objective": 1624508.1840636025,
+      "cv_percent": 0.2929503254333049,
+      "mean_time_seconds": 98.6118564
+    },
+    {
+      "instance": "uniform_n25000_m7_r01.txt",
+      "node_count": 25000,
+      "salesman_count": 7,
+      "budget_ms": 150000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        1707462.677450943,
+        1671704.5458442345,
+        1685189.4990541555,
+        1697524.6087233645,
+        1691784.6272696822
+      ],
+      "times": [
+        101.215233,
+        101.216715,
+        92.625929,
+        98.9049,
+        99.860057
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 1690733.1916684762,
+      "std_objective": 13415.722554983531,
+      "min_objective": 1671704.5458442345,
+      "max_objective": 1707462.677450943,
+      "cv_percent": 0.7934854902649906,
+      "mean_time_seconds": 98.7645668
+    },
+    {
+      "instance": "uniform_n50000_m5_r01.txt",
+      "node_count": 50000,
+      "salesman_count": 5,
+      "budget_ms": 180000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        4550126.35836533,
+        4543668.254567707,
+        4543673.680121728,
+        4561842.596885149,
+        4566119.593522858
+      ],
+      "times": [
+        128.312668,
+        126.771049,
+        128.285519,
+        141.972233,
+        165.035935
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 4553086.096692555,
+      "std_objective": 10399.491841015626,
+      "min_objective": 4543668.254567707,
+      "max_objective": 4566119.593522858,
+      "cv_percent": 0.2284053413479268,
+      "mean_time_seconds": 138.07548079999998
+    },
+    {
+      "instance": "uniform_n50000_m7_r01.txt",
+      "node_count": 50000,
+      "salesman_count": 7,
+      "budget_ms": 180000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        4881027.337553469,
+        4879604.796034351,
+        4857239.465319687,
+        4884668.048735542,
+        4882568.192125477
+      ],
+      "times": [
+        129.30741,
+        125.22062,
+        123.06958,
+        140.819209,
+        136.499916
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 4877021.567953705,
+      "std_objective": 11217.002162741215,
+      "min_objective": 4857239.465319687,
+      "max_objective": 4884668.048735542,
+      "cv_percent": 0.2299969767705504,
+      "mean_time_seconds": 130.983347
+    },
+    {
+      "instance": "uniform_n100000_m5_r01.txt",
+      "node_count": 100000,
+      "salesman_count": 5,
+      "budget_ms": 350000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        12918030.521941457,
+        12895161.292796578,
+        12898278.590124218,
+        12982866.542875063,
+        13021119.167176161
+      ],
+      "times": [
+        332.843833,
+        327.392006,
+        327.897598,
+        345.054789,
+        343.724108
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 12943091.222982695,
+      "std_objective": 56133.602137293456,
+      "min_objective": 12895161.292796578,
+      "max_objective": 13021119.167176161,
+      "cv_percent": 0.43369548410211733,
+      "mean_time_seconds": 335.38246680000003
+    },
+    {
+      "instance": "uniform_n100000_m7_r01.txt",
+      "node_count": 100000,
+      "salesman_count": 7,
+      "budget_ms": 350000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        12945677.284614958,
+        12966564.055968566,
+        12950521.35764481,
+        13036302.52251326,
+        13061253.662725007
+      ],
+      "times": [
+        304.478491,
+        307.436412,
+        310.868367,
+        343.382763,
+        343.430999
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 12992063.77669332,
+      "std_objective": 53084.88943564239,
+      "min_objective": 12945677.284614958,
+      "max_objective": 13061253.662725007,
+      "cv_percent": 0.4085947417443583,
+      "mean_time_seconds": 321.9194064
+    },
+    {
+      "instance": "clustered-center_n25000_m5_r01.txt",
+      "node_count": 25000,
+      "salesman_count": 5,
+      "budget_ms": 150000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        353989.5968301469,
+        355265.6519720782,
+        353269.2242495545,
+        355623.2480157443,
+        355423.23721663386
+      ],
+      "times": [
+        89.186834,
+        90.77157,
+        90.312229,
+        95.826743,
+        95.026409
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 354714.19165683154,
+      "std_objective": 1030.316215998531,
+      "min_objective": 353269.2242495545,
+      "max_objective": 355623.2480157443,
+      "cv_percent": 0.29046377061657325,
+      "mean_time_seconds": 92.224757
+    },
+    {
+      "instance": "clustered-center_n25000_m7_r01.txt",
+      "node_count": 25000,
+      "salesman_count": 7,
+      "budget_ms": 150000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        426744.00809634686,
+        423906.6020273552,
+        425988.1774356611,
+        428611.06745900225,
+        428681.2578575404
+      ],
+      "times": [
+        93.516428,
+        94.025122,
+        92.520431,
+        99.680991,
+        102.230978
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 426786.22257518116,
+      "std_objective": 1990.7341722208,
+      "min_objective": 423906.6020273552,
+      "max_objective": 428681.2578575404,
+      "cv_percent": 0.46644761871855395,
+      "mean_time_seconds": 96.39479
+    },
+    {
+      "instance": "clustered-center_n50000_m5_r01.txt",
+      "node_count": 50000,
+      "salesman_count": 5,
+      "budget_ms": 180000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        1140350.9458633855,
+        1139778.0739721982,
+        1141790.4760199282,
+        1143628.9828144757,
+        1141153.3011403529
+      ],
+      "times": [
+        121.503347,
+        122.799141,
+        124.40224,
+        139.733336,
+        132.501679
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 1141340.355962068,
+      "std_objective": 1491.2300125754405,
+      "min_objective": 1139778.0739721982,
+      "max_objective": 1143628.9828144757,
+      "cv_percent": 0.13065603128686715,
+      "mean_time_seconds": 128.1879486
+    },
+    {
+      "instance": "clustered-center_n50000_m7_r01.txt",
+      "node_count": 50000,
+      "salesman_count": 7,
+      "budget_ms": 180000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        1069642.9160343602,
+        1072375.750713529,
+        1069348.3633194035,
+        1075205.565963968,
+        1073704.9340743108
+      ],
+      "times": [
+        118.517913,
+        118.639811,
+        118.680969,
+        128.604236,
+        136.741781
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 1072055.5060211143,
+      "std_objective": 2544.3692372017695,
+      "min_objective": 1069348.3633194035,
+      "max_objective": 1075205.565963968,
+      "cv_percent": 0.23733558784144312,
+      "mean_time_seconds": 124.236942
+    },
+    {
+      "instance": "clustered-center_n100000_m5_r01.txt",
+      "node_count": 100000,
+      "salesman_count": 5,
+      "budget_ms": 350000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        3077860.992965366,
+        3039989.474286824,
+        3073481.210887791,
+        3080080.6272958973,
+        3083633.1389956856
+      ],
+      "times": [
+        318.717568,
+        317.609157,
+        316.476305,
+        343.374844,
+        343.338014
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 3071009.0888863127,
+      "std_objective": 17726.646022866847,
+      "min_objective": 3039989.474286824,
+      "max_objective": 3083633.1389956856,
+      "cv_percent": 0.577225449674437,
+      "mean_time_seconds": 327.9031776
+    },
+    {
+      "instance": "clustered-center_n100000_m7_r01.txt",
+      "node_count": 100000,
+      "salesman_count": 7,
+      "budget_ms": 350000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        2663696.355174361,
+        2684451.1287013385,
+        2680552.0710938033,
+        2690217.510950288,
+        2694368.49082919
+      ],
+      "times": [
+        304.134351,
+        295.838831,
+        299.661724,
+        330.205813,
+        333.304183
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 2682657.111349796,
+      "std_objective": 11847.7426004996,
+      "min_objective": 2663696.355174361,
+      "max_objective": 2694368.49082919,
+      "cv_percent": 0.44164207756459534,
+      "mean_time_seconds": 312.6289804
+    },
+    {
+      "instance": "clustered-offset-depot_n25000_m5_r01.txt",
+      "node_count": 25000,
+      "salesman_count": 5,
+      "budget_ms": 150000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        432339.53839369945,
+        432607.5622767302,
+        433808.6012660529,
+        432404.91268123384,
+        434855.810440897
+      ],
+      "times": [
+        90.004865,
+        90.237386,
+        90.645552,
+        92.832598,
+        93.263026
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 433203.2850117227,
+      "std_objective": 1099.498776380388,
+      "min_objective": 432339.53839369945,
+      "max_objective": 434855.810440897,
+      "cv_percent": 0.2538066571564976,
+      "mean_time_seconds": 91.3966854
+    },
+    {
+      "instance": "clustered-offset-depot_n25000_m7_r01.txt",
+      "node_count": 25000,
+      "salesman_count": 7,
+      "budget_ms": 150000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        400503.9628072386,
+        399515.2578699496,
+        400759.553695821,
+        402705.01920755865,
+        401475.4393661285
+      ],
+      "times": [
+        93.827967,
+        92.974819,
+        93.110526,
+        95.633775,
+        96.200244
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 400991.8465893393,
+      "std_objective": 1187.552863352203,
+      "min_objective": 399515.2578699496,
+      "max_objective": 402705.01920755865,
+      "cv_percent": 0.2961538678287368,
+      "mean_time_seconds": 94.3494662
+    },
+    {
+      "instance": "clustered-offset-depot_n50000_m5_r01.txt",
+      "node_count": 50000,
+      "salesman_count": 5,
+      "budget_ms": 180000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        944687.2851478823,
+        942130.9902039563,
+        942943.9261645711,
+        944348.7794120184,
+        946472.5139947241
+      ],
+      "times": [
+        127.808327,
+        124.905201,
+        122.665134,
+        134.502288,
+        135.338576
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 944116.6989846304,
+      "std_objective": 1676.8817568160816,
+      "min_objective": 942130.9902039563,
+      "max_objective": 946472.5139947241,
+      "cv_percent": 0.17761382238228796,
+      "mean_time_seconds": 129.04390519999998
+    },
+    {
+      "instance": "clustered-offset-depot_n50000_m7_r01.txt",
+      "node_count": 50000,
+      "salesman_count": 7,
+      "budget_ms": 180000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        1049420.5961568037,
+        1049892.9992970459,
+        1049089.1021210237,
+        1050321.9677921666,
+        1049455.2539467108
+      ],
+      "times": [
+        118.316292,
+        119.104418,
+        118.427907,
+        128.883766,
+        129.784038
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 1049635.9838627502,
+      "std_objective": 478.216920116311,
+      "min_objective": 1049089.1021210237,
+      "max_objective": 1050321.9677921666,
+      "cv_percent": 0.04556026350739537,
+      "mean_time_seconds": 122.9032842
+    },
+    {
+      "instance": "clustered-offset-depot_n100000_m5_r01.txt",
+      "node_count": 100000,
+      "salesman_count": 5,
+      "budget_ms": 350000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        2881844.710615532,
+        2883263.507490473,
+        2881113.8612767737,
+        2897311.7319274778,
+        2887293.3363025915
+      ],
+      "times": [
+        319.173012,
+        321.168284,
+        343.430882,
+        343.335678,
+        343.386729
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 2886165.4295225693,
+      "std_objective": 6673.086544134099,
+      "min_objective": 2881113.8612767737,
+      "max_objective": 2897311.7319274778,
+      "cv_percent": 0.23120942673192382,
+      "mean_time_seconds": 334.098917
+    },
+    {
+      "instance": "clustered-offset-depot_n100000_m7_r01.txt",
+      "node_count": 100000,
+      "salesman_count": 7,
+      "budget_ms": 350000,
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "valid": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "objectives": [
+        2785699.3893210143,
+        2805353.6856041383,
+        2778889.275641909,
+        2803314.0659573753,
+        2786664.203383861
+      ],
+      "times": [
+        343.445439,
+        343.519095,
+        343.435388,
+        332.324408,
+        334.470536
+      ],
+      "valid_count": 5,
+      "total_count": 5,
+      "mean_objective": 2791984.1239816593,
+      "std_objective": 11687.464022543667,
+      "min_objective": 2778889.275641909,
+      "max_objective": 2805353.6856041383,
+      "cv_percent": 0.4186078252435092,
+      "mean_time_seconds": 339.4389732
+    }
+  ],
+  "started_at": 1778189413.3024755,
+  "wall_time_seconds": 6908.786994899972,
+  "finished_at": 1778196322.0894837
+}

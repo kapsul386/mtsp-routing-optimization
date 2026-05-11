@@ -64,12 +64,22 @@
 
 namespace mtsp::v21 {
 
+// Boolean CLI parameter parser for the cap variant.
 inline bool ParseBoolOptionV21MinsumCap(const std::string& v) {
     return v == "1" || v == "true" || v == "yes" || v == "on";
 }
 
+// Capacity-aware variant of ALNS-mTSP. Identical to the base lkh_v21_minsum (alns_minsum)
+// except for one addition: a hard cap on route size.
+// Cap is computed as ceil(target_size * (1 + slack)), where target_size = ceil((n-1)/m).
+// Repair operators skip routes that have already reached the cap, forcing clients
+// into underloaded routes. The idea is borrowed from FILO2 (CVRP capacity check).
+// Registered as "lkh_v21_minsum_cap" (reported as alns_cap).
 class LkhWrapperSolverV21MinsumCap : public mtsp::Solver {
 public:
+    // CLI parameters (in addition to the standard seed/budget/threads/granular-* parameters):
+    //   route-cap        — absolute cap on route size (overrides slack computation);
+    //   route-cap-slack  — relative slack above target_size (default 0.25 → cap = 1.25 × target).
     void Configure(const std::unordered_map<std::string, std::string>& opts) override {
         for (const auto& [k, v] : opts) {
             if (k == "seed") seed_ = static_cast<unsigned>(std::stoul(v));
@@ -80,6 +90,18 @@ public:
             else if (k == "granular-every") granular_every_override_ = std::stoi(v);
             else if (k == "granular-max-moves") granular_max_moves_override_ = std::stoi(v);
             else if (k == "granular-scan-customers") granular_scan_customers_override_ = std::stoi(v);
+            else if (k == "granular-endpoint-bias-depth") granular_endpoint_bias_depth_override_ = std::stoi(v);
+            else if (k == "granular-2optstar-every") granular_2optstar_every_override_ = std::stoi(v);
+            else if (k == "granular-2optstar-max-moves") granular_2optstar_max_moves_override_ = std::stoi(v);
+            else if (k == "granular-2optstar-scan-customers") granular_2optstar_scan_override_ = std::stoi(v);
+            else if (k == "granular-oropt-every") granular_oropt_every_override_ = std::stoi(v);
+            else if (k == "granular-oropt-max-moves") granular_oropt_max_moves_override_ = std::stoi(v);
+            else if (k == "granular-oropt-scan-customers") granular_oropt_scan_override_ = std::stoi(v);
+            else if (k == "granular-oropt-max-len") granular_oropt_max_len_override_ = std::stoi(v);
+            else if (k == "route-pair-2optstar-every") route_pair_every_override_ = std::stoi(v);
+            else if (k == "route-pair-2optstar-max-moves") route_pair_max_moves_override_ = std::stoi(v);
+            else if (k == "route-pair-2optstar-k") route_pair_k_override_ = std::stoi(v);
+            else if (k == "route-pair-2optstar-window") route_pair_window_override_ = std::stoi(v);
             else if (k == "region-reopt-every") region_reopt_every_override_ = std::stoi(v);
             else if (k == "region-reopt-k") region_reopt_k_override_ = std::stoi(v);
             else if (k == "classic-seeds") classic_seeds_override_ = ParseBoolOptionV21MinsumCap(v) ? 1 : 0;
@@ -89,10 +111,13 @@ public:
         }
     }
 
+    // Status/Message/Metadata accessors. The cap variant never returns errors.
     std::string GetLastStatus() const override { return "ok"; }
     std::string GetLastMessage() const override { return ""; }
     std::unordered_map<std::string, std::string> GetLastMetadata() const override { return last_metadata_; }
 
+    // Main entry point: resolves parameters via autotune, computes route_cap,
+    // and runs RunPipeline with the route-size constraint enforced by the accept criterion.
     void Solve(mtsp::RouteSet& out) override {
         const auto& inst = mtsp::Instance::GetInstance();
         const int n = inst.GetNodeCount();
@@ -104,11 +129,24 @@ public:
         if (granular_scan_customers_override_ >= 0) params.granular_scan_customers = granular_scan_customers_override_;
         if (region_reopt_every_override_ >= 0) params.region_reopt_every = region_reopt_every_override_;
         if (region_reopt_k_override_ >= 0) params.region_reopt_K = region_reopt_k_override_;
+        if (granular_endpoint_bias_depth_override_ >= 0) params.granular_endpoint_bias_depth = granular_endpoint_bias_depth_override_;
+        if (granular_2optstar_every_override_ >= 0) params.granular_2optstar_every = granular_2optstar_every_override_;
+        if (granular_2optstar_max_moves_override_ >= 0) params.granular_2optstar_max_moves = granular_2optstar_max_moves_override_;
+        if (granular_2optstar_scan_override_ >= 0) params.granular_2optstar_scan_customers = granular_2optstar_scan_override_;
+        if (granular_oropt_every_override_ >= 0) params.granular_oropt_every = granular_oropt_every_override_;
+        if (granular_oropt_max_moves_override_ >= 0) params.granular_oropt_max_moves = granular_oropt_max_moves_override_;
+        if (granular_oropt_scan_override_ >= 0) params.granular_oropt_scan_customers = granular_oropt_scan_override_;
+        if (granular_oropt_max_len_override_ >= 0) params.granular_oropt_max_len = granular_oropt_max_len_override_;
+        if (route_pair_every_override_ >= 0) params.route_pair_2optstar_every = route_pair_every_override_;
+        if (route_pair_max_moves_override_ >= 0) params.route_pair_2optstar_max_moves = route_pair_max_moves_override_;
+        if (route_pair_k_override_ >= 0) params.route_pair_2optstar_k = route_pair_k_override_;
+        if (route_pair_window_override_ >= 0) params.route_pair_2optstar_window = route_pair_window_override_;
         if (classic_seeds_override_ >= 0) params.use_classic_seeds = (classic_seeds_override_ != 0);
         if (depot_seed_mode_override_ >= 0) params.depot_seed_mode = depot_seed_mode_override_;
         if (depot_seed_spread_prob_override_ >= 0.0) params.depot_seed_spread_prob = depot_seed_spread_prob_override_;
 
-        // Compute capacity. n-1 customers to distribute across m routes.
+        // Compute route-cap. Ideal target_size = ceil((n-1)/m); cap = target_size * (1 + slack).
+        // If route-cap-override is set, it is used directly (slack is ignored).
         const int customers = std::max(0, n - 1);
         const int target_size = (m > 0) ? (customers + m - 1) / m : customers;  // ceil((n-1)/m)
         int cap;
@@ -166,6 +204,18 @@ private:
     int granular_scan_customers_override_ = -1;
     int region_reopt_every_override_ = -1;
     int region_reopt_k_override_ = -1;
+    int granular_endpoint_bias_depth_override_ = -1;
+    int granular_2optstar_every_override_ = -1;
+    int granular_2optstar_max_moves_override_ = -1;
+    int granular_2optstar_scan_override_ = -1;
+    int granular_oropt_every_override_ = -1;
+    int granular_oropt_max_moves_override_ = -1;
+    int granular_oropt_scan_override_ = -1;
+    int granular_oropt_max_len_override_ = -1;
+    int route_pair_every_override_ = -1;
+    int route_pair_max_moves_override_ = -1;
+    int route_pair_k_override_ = -1;
+    int route_pair_window_override_ = -1;
     int classic_seeds_override_ = -1;
     int depot_seed_mode_override_ = -1;
     double depot_seed_spread_prob_override_ = -1.0;

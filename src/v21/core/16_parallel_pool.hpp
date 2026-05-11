@@ -27,12 +27,19 @@ namespace mtsp::v21 {
 // This is intentionally simple — for n=100k, the per-replica memory cost is
 // significant (each holds RouteList + DistanceOracle cache), so we keep
 // num_replicas low.
+// One completed replica: the final route set, its scalar cost, and a success flag.
+// `ok` is false if the replica aborted early (e.g. budget exhausted before
+// any valid solution was produced).
 struct ReplicaResult {
     RouteSet routes;
     double cost = 0.0;
     bool ok = false;
 };
 
+// Launch `num_replicas` independent worker invocations and collect their results.
+// Each replica receives a unique seed derived from `base_seed`. Parallelism is
+// via OpenMP `parallel for`; falls back to sequential when OpenMP is absent or
+// `num_replicas == 1`.
 template <typename WorkerFn>
 inline std::vector<ReplicaResult> RunReplicas(int num_replicas, unsigned base_seed, WorkerFn worker) {
     std::vector<ReplicaResult> results(static_cast<size_t>(num_replicas));
@@ -53,6 +60,8 @@ inline std::vector<ReplicaResult> RunReplicas(int num_replicas, unsigned base_se
     return results;
 }
 
+// Select the replica with the lowest scalar cost among all `ok` results.
+// Returns a default (ok=false) result if no replica succeeded.
 inline ReplicaResult PickBestReplica(const std::vector<ReplicaResult>& results) {
     ReplicaResult best;
     best.cost = std::numeric_limits<double>::max();

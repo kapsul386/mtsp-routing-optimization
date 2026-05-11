@@ -29,6 +29,10 @@
 
 namespace mtsp::v21 {
 
+// Per-pass counters returned by the granular / region / route-pair passes.
+// All fields are write-only from the perspective of the operator code; the
+// pipeline reads them after each call to attribute improvements to specific
+// operators in the ALNS metadata dump.
 struct GranularMoveStats {
     int relocate_accepts = 0;
     int swap_accepts = 0;
@@ -36,18 +40,53 @@ struct GranularMoveStats {
     int oropt_accepts = 0;
     int region_calls = 0;
     int region_accepts = 0;
+    // Endpoint-focused route-pair pass: independent counters so the existing
+    // granular 2-opt* metric is not polluted with endpoint-pair accepts.
+    int route_pair_calls = 0;
+    int route_pair_pairs = 0;
+    int route_pair_2optstar_accepts = 0;
 };
 
 namespace detail {
 
+// Picks up to `scan_limit` distinct customer ids to scan during one granular
+// pass. The sampling has three layers:
+//   1. If `endpoint_bias_depth > 0`, the first `endpoint_depth` head and tail
+//      customers of every route are added first (these are the depot-out /
+//      depot-in edges where MINSUM gains typically hide late in the run).
+//   2. Then a strided sweep through every route fills the remainder, starting
+//      from a route picked uniformly at random so consecutive passes do not
+//      revisit the same customers in the same order.
+//   3. Finally, if `scan_limit` is still not reached, a random offset is used
+//      to top up from the remaining customers.
+// The result is deduplicated by construction (the scan layer skips empties
+// and the random top-up only adds previously-unseen customers).
 inline std::vector<int> BuildSampledCustomers(const RouteList& rl, int scan_limit,
-                                              std::mt19937& rng) {
+                                              std::mt19937& rng,
+                                              int endpoint_bias_depth = 0) {
     std::vector<int> out;
     if (scan_limit <= 0 || rl.NodeCount() <= 1) return out;
     out.reserve(static_cast<size_t>(std::min(scan_limit, std::max(0, rl.NodeCount() - 1))));
 
     const int m = rl.RouteCount();
     if (m <= 0) return out;
+
+    if (endpoint_bias_depth > 0) {
+        const int endpoint_depth = std::min(endpoint_bias_depth,
+                                            std::max(1, scan_limit / std::max(1, 2 * m)));
+        for (int r = 0; r < m && static_cast<int>(out.size()) < scan_limit; ++r) {
+            const auto& route = rl.Route(r);
+            const int customers = static_cast<int>(route.size()) - 2;
+            if (customers <= 0) continue;
+            const int depth = std::min(endpoint_depth, customers);
+            for (int i = 0; i < depth && static_cast<int>(out.size()) < scan_limit; ++i) {
+                out.push_back(route[static_cast<size_t>(1 + i)]);
+                const int tail = route[static_cast<size_t>(customers - i)];
+                if (tail != out.back() && static_cast<int>(out.size()) < scan_limit) out.push_back(tail);
+            }
+        }
+    }
+
     const int route_offset = static_cast<int>(rng() % static_cast<unsigned>(m));
     for (int rr = 0; rr < m && static_cast<int>(out.size()) < scan_limit; ++rr) {
         const int r = (route_offset + rr) % m;
@@ -72,6 +111,10 @@ inline std::vector<int> BuildSampledCustomers(const RouteList& rl, int scan_limi
     return out;
 }
 
+// Linear search for `city` in an open-ended route (excluding the bookend
+// depots at positions 0 and back()). Returns the in-route index or -1 when
+// the customer is missing from this route. O(route.size()); callers that need
+// O(1) lookups should use BuildPositionIndex instead.
 inline int FindPos(const std::vector<int>& route, int city) {
     for (size_t i = 1; i + 1 < route.size(); ++i) {
         if (route[i] == city) return static_cast<int>(i);
@@ -79,6 +122,11 @@ inline int FindPos(const std::vector<int>& route, int city) {
     return -1;
 }
 
+// Builds a [city -> position-in-its-route] table for the whole RouteList.
+// Each entry stores the in-route index (excluding bookend depots) so
+// granular passes can look up a customer's current position in O(1) instead
+// of repeatedly scanning routes. Customers not present in any route map to
+// -1. Cost: O(N) one-shot per pass.
 inline std::vector<int> BuildPositionIndex(const RouteList& rl) {
     std::vector<int> pos(static_cast<size_t>(rl.NodeCount()), -1);
     for (int r = 0; r < rl.RouteCount(); ++r) {
@@ -91,10 +139,20 @@ inline std::vector<int> BuildPositionIndex(const RouteList& rl) {
     return pos;
 }
 
+// Helper that appends a candidate insertion position to `positions` only if
+// it is a valid interior edge (0 <= p < route_size - 1). Caller still has to
+// sort+unique the resulting vector if it needs strict uniqueness.
 inline void AddUniquePosition(std::vector<int>& positions, int p, int route_size) {
     if (p >= 0 && p + 1 < route_size) positions.push_back(p);
 }
 
+// Samples up to `samples` customers and returns the one with the largest
+// removal gain  d(prev, c) + d(c, next) - d(prev, next), i.e. the customer
+// that is most expensive to keep at its current spot. Used as the spatial
+// centre for region-reopt. Falls back to the first reachable customer if no
+// removal gain could be measured (e.g. all sampled customers turned out to
+// be at malformed positions). `pos_index`, if provided, is BuildPositionIndex
+// output and lets each probe be O(1) instead of O(route).
 inline int PickExpensiveSeed(const RouteList& rl, DistanceOracle& d, std::mt19937& rng,
                              int samples, const std::vector<int>* pos_index = nullptr) {
     if (rl.NodeCount() <= 1) return -1;
@@ -130,6 +188,14 @@ inline int PickExpensiveSeed(const RouteList& rl, DistanceOracle& d, std::mt1993
 
 }  // namespace detail
 
+// Granular cross-route relocate: pick a sampled customer, then for each of
+// its k-NN candidates that lives in a different route, evaluate inserting it
+// before/after that neighbour. Returns true iff a strictly-improving move
+// (under the AcceptPolicy's scalar cost) was applied. `route_cap > 0`
+// enforces an upper bound on the destination route's size; pass 0 to
+// disable. The accept policy decides how the per-route deltas combine into a
+// single scalar (MINSUM sums them, MINMAX takes a max-aware composition via
+// DeltaForCrossRouteMove).
 template <typename AcceptPolicy>
 inline bool TryGranularRelocateOnce(RouteList& rl,
                                     AcceptPolicy& accept,
@@ -137,7 +203,8 @@ inline bool TryGranularRelocateOnce(RouteList& rl,
                                     const CandidateSets& candidates,
                                     int scan_limit,
                                     int route_cap,
-                                    std::mt19937& rng) {
+                                    std::mt19937& rng,
+                                    int endpoint_bias_depth = 0) {
     struct Move {
         int city = -1;
         int from = -1;
@@ -149,7 +216,7 @@ inline bool TryGranularRelocateOnce(RouteList& rl,
 
     Move best;
     double best_delta = 0.0;
-    const auto sampled = detail::BuildSampledCustomers(rl, scan_limit, rng);
+    const auto sampled = detail::BuildSampledCustomers(rl, scan_limit, rng, endpoint_bias_depth);
     const auto pos_of = detail::BuildPositionIndex(rl);
     for (int city : sampled) {
         const int from = rl.RouteOf(city);
@@ -199,13 +266,20 @@ inline bool TryGranularRelocateOnce(RouteList& rl,
     return true;
 }
 
+// Granular cross-route swap: pick a sampled customer `a` and try swapping it
+// with one of its k-NN neighbours `b` from a different route. Evaluates the
+// combined delta under the AcceptPolicy and applies the best strictly-
+// improving swap, if any. Unlike relocate, swap does not change either
+// route's size, so it does not respect `route_cap`. Returns true iff a move
+// was applied.
 template <typename AcceptPolicy>
 inline bool TryGranularSwapOnce(RouteList& rl,
                                 AcceptPolicy& accept,
                                 DistanceOracle& d,
                                 const CandidateSets& candidates,
                                 int scan_limit,
-                                std::mt19937& rng) {
+                                std::mt19937& rng,
+                                int endpoint_bias_depth = 0) {
     struct Move {
         int a_city = -1;
         int b_city = -1;
@@ -218,7 +292,7 @@ inline bool TryGranularSwapOnce(RouteList& rl,
 
     Move best;
     double best_delta = 0.0;
-    const auto sampled = detail::BuildSampledCustomers(rl, scan_limit, rng);
+    const auto sampled = detail::BuildSampledCustomers(rl, scan_limit, rng, endpoint_bias_depth);
     const auto pos_of = detail::BuildPositionIndex(rl);
     for (int a_city : sampled) {
         const int ra = rl.RouteOf(a_city);
@@ -264,13 +338,21 @@ inline bool TryGranularSwapOnce(RouteList& rl,
     return true;
 }
 
+// Granular 2-opt*: for each sampled customer, enumerate cross-route edge
+// exchanges around its k-NN candidates. A 2-opt* picks one edge in route A
+// and one in route B, then splices the tails — concatenating prefix(A) with
+// suffix(B) and prefix(B) with suffix(A). Pure depot-edge swaps (which have
+// zero MINSUM delta) are filtered implicitly by the cut window. Returns true
+// iff a strictly-improving exchange was applied. Skipped when the accept
+// policy is MINMAX (route-pair 2-opt* there is handled by route_pair_reopt).
 template <typename AcceptPolicy>
 inline bool TryGranularTwoOptStarOnce(RouteList& rl,
                                       AcceptPolicy& accept,
                                       DistanceOracle& d,
                                       const CandidateSets& candidates,
                                       int scan_limit,
-                                      std::mt19937& rng) {
+                                      std::mt19937& rng,
+                                      int endpoint_bias_depth = 0) {
     if (accept.IsMinMax()) return false;
 
     struct Move {
@@ -283,7 +365,7 @@ inline bool TryGranularTwoOptStarOnce(RouteList& rl,
 
     Move best;
     double best_delta = 0.0;
-    const auto sampled = detail::BuildSampledCustomers(rl, scan_limit, rng);
+    const auto sampled = detail::BuildSampledCustomers(rl, scan_limit, rng, endpoint_bias_depth);
     const auto pos_of = detail::BuildPositionIndex(rl);
 
     for (int city : sampled) {
@@ -357,6 +439,10 @@ inline bool TryGranularTwoOptStarOnce(RouteList& rl,
     return true;
 }
 
+// Runs TryGranularTwoOptStarOnce up to `max_moves` times or until the
+// time-budget signals "stop". Returns the number of accepted moves; stats,
+// if provided, is incremented per accepted move so the pipeline can attribute
+// MINSUM/MINMAX progress to the 2-opt* operator specifically.
 template <typename AcceptPolicy>
 inline int TryGranularTwoOptStarPass(RouteList& rl,
                                      AcceptPolicy& accept,
@@ -366,16 +452,25 @@ inline int TryGranularTwoOptStarPass(RouteList& rl,
                                      std::mt19937& rng,
                                      int max_moves,
                                      int scan_limit,
-                                     GranularMoveStats* stats = nullptr) {
+                                     GranularMoveStats* stats = nullptr,
+                                     int endpoint_bias_depth = 0) {
     int accepted = 0;
     for (int step = 0; step < max_moves && !budget.ForceCheck(); ++step) {
-        if (!TryGranularTwoOptStarOnce(rl, accept, d, candidates, scan_limit, rng)) break;
+        if (!TryGranularTwoOptStarOnce(rl, accept, d, candidates, scan_limit,
+                                       rng, endpoint_bias_depth)) break;
         ++accepted;
         if (stats) ++stats->two_optstar_accepts;
     }
     return accepted;
 }
 
+// Granular cross-route Or-opt: relocate a short contiguous block of 2..4
+// customers from one route into another (optionally reversed). `max_seg_len`
+// is clamped to [2, 4] — longer blocks are handled by route_pair_reopt.
+// `route_cap` (if > 0) prevents inserting into routes that would exceed the
+// per-route customer cap. Both forward and reversed insertions are
+// evaluated; the best strictly-improving move (under the AcceptPolicy) is
+// applied. Returns true iff a move was applied.
 template <typename AcceptPolicy>
 inline bool TryGranularOrOptOnce(RouteList& rl,
                                  AcceptPolicy& accept,
@@ -384,7 +479,8 @@ inline bool TryGranularOrOptOnce(RouteList& rl,
                                  int scan_limit,
                                  int route_cap,
                                  int max_seg_len,
-                                 std::mt19937& rng) {
+                                 std::mt19937& rng,
+                                 int endpoint_bias_depth = 0) {
     struct Move {
         int from = -1;
         int to = -1;
@@ -398,7 +494,7 @@ inline bool TryGranularOrOptOnce(RouteList& rl,
     Move best;
     double best_delta = 0.0;
     const int max_len = std::clamp(max_seg_len, 2, 4);
-    const auto sampled = detail::BuildSampledCustomers(rl, scan_limit, rng);
+    const auto sampled = detail::BuildSampledCustomers(rl, scan_limit, rng, endpoint_bias_depth);
     const auto pos_of = detail::BuildPositionIndex(rl);
 
     for (int city : sampled) {
@@ -481,6 +577,9 @@ inline bool TryGranularOrOptOnce(RouteList& rl,
     return true;
 }
 
+// Runs TryGranularOrOptOnce up to `max_moves` times or until the budget
+// signals stop. Returns the count of accepted moves. Pass `stats` to track
+// per-operator acceptance attribution.
 template <typename AcceptPolicy>
 inline int TryGranularOrOptPass(RouteList& rl,
                                 AcceptPolicy& accept,
@@ -492,17 +591,23 @@ inline int TryGranularOrOptPass(RouteList& rl,
                                 int scan_limit,
                                 int route_cap,
                                 int max_seg_len,
-                                GranularMoveStats* stats = nullptr) {
+                                GranularMoveStats* stats = nullptr,
+                                int endpoint_bias_depth = 0) {
     int accepted = 0;
     for (int step = 0; step < max_moves && !budget.ForceCheck(); ++step) {
         if (!TryGranularOrOptOnce(rl, accept, d, candidates, scan_limit,
-                                  route_cap, max_seg_len, rng)) break;
+                                  route_cap, max_seg_len, rng, endpoint_bias_depth)) break;
         ++accepted;
         if (stats) ++stats->oropt_accepts;
     }
     return accepted;
 }
 
+// Composite cross-route improvement pass: at each step tries relocate first,
+// then swap, and stops on the first iteration where neither finds an
+// improving move. Up to `max_moves` accepted moves total; each accepted move
+// is attributed to its operator via `stats`. Returns the total number of
+// accepted moves.
 template <typename AcceptPolicy>
 inline int TryGranularInterRoutePass(RouteList& rl,
                                      AcceptPolicy& accept,
@@ -513,15 +618,18 @@ inline int TryGranularInterRoutePass(RouteList& rl,
                                      int max_moves,
                                      int scan_limit,
                                      int route_cap,
-                                     GranularMoveStats* stats = nullptr) {
+                                     GranularMoveStats* stats = nullptr,
+                                     int endpoint_bias_depth = 0) {
     int accepted = 0;
     for (int step = 0; step < max_moves && !budget.ForceCheck(); ++step) {
-        if (TryGranularRelocateOnce(rl, accept, d, candidates, scan_limit, route_cap, rng)) {
+        if (TryGranularRelocateOnce(rl, accept, d, candidates, scan_limit,
+                                    route_cap, rng, endpoint_bias_depth)) {
             ++accepted;
             if (stats) ++stats->relocate_accepts;
             continue;
         }
-        if (TryGranularSwapOnce(rl, accept, d, candidates, scan_limit, rng)) {
+        if (TryGranularSwapOnce(rl, accept, d, candidates, scan_limit,
+                                rng, endpoint_bias_depth)) {
             ++accepted;
             if (stats) ++stats->swap_accepts;
             continue;
@@ -531,6 +639,15 @@ inline int TryGranularInterRoutePass(RouteList& rl,
     return accepted;
 }
 
+// Indexed cheapest-insertion repair: reinserts every customer in `removed`
+// at the cheapest position among its k-NN candidates that live in the same
+// route. The position index is refreshed every `rebuild_period` insertions
+// so it stays consistent as the routes grow. For MINMAX (ctx.balance_aware)
+// the per-position cost is augmented by a soft penalty proportional to how
+// much the insertion would push that route past the current global maximum.
+// If no candidate-restricted slot is feasible (route_cap full everywhere),
+// falls back to the shortest reachable route — same emergency policy as the
+// repair operators in 14_repair_ops.hpp.
 inline void RepairCheapestInsertionIndexed(RouteList& rl,
                                            std::vector<int>& removed,
                                            std::mt19937& rng,
@@ -627,6 +744,22 @@ inline void RepairCheapestInsertionIndexed(RouteList& rl,
     }
 }
 
+// Region reopt (DualOpt-style spatial window optimisation).
+//
+// 1) Picks a spatially expensive seed customer.
+// 2) Selects its `K_region` k-NN neighbours from the KD-tree to form a
+//    geographic window (independent of route membership).
+// 3) Removes those customers from their routes, plus an extra boundary-
+//    loosening band so the spatial window can also redraw the connections
+//    back to the unchanged route skeletons.
+// 4) Repairs via regret-2 (small windows, <=300 cust.) or cheapest-insertion
+//    (larger windows) restricted to k-NN candidates.
+// 5) Polishes touched routes with NeighborList2Opt (+ Exhaustive2Opt for
+//    short routes) under a sub-budget cut from the parent budget.
+//
+// Up to three attempts with progressively different `K_try` are made before
+// rolling back to the snapshot. Returns true iff any attempt produced a
+// strictly cheaper scalar cost under the AcceptPolicy.
 template <typename AcceptPolicy>
 inline bool TryDualOptRegionReopt(RouteList& rl,
                                   AcceptPolicy& accept,
@@ -749,6 +882,227 @@ inline bool TryDualOptRegionReopt(RouteList& rl,
     }
     rl.LoadFrom(base_snap, d);
     return false;
+}
+
+// ============================================================================
+// Endpoint-focused route-pair 2-opt* pass.
+//
+// The global k-NN candidate graph and uniformly-sampled granular operators
+// rarely visit route head/tail customers (BuildSampledCustomers spreads
+// samples evenly across each route, and endpoint_bias_depth=0 in the stable
+// preset). Yet routes with long depot-out / depot-in edges are exactly the
+// places where MINSUM still leaves easy improvement on the table after the
+// main ALNS phase converges.
+//
+// This pass:
+//   1. Builds a small route-pair shortlist from the current RouteList using
+//      head/tail endpoint Euclidean proximity (no global candidate graph
+//      changes — the graph stays kNN-only).
+//   2. For each shortlisted (r1, r2), enumerates 2-opt* cuts inside an
+//      endpoint window on both routes (heads and tails) and accepts the best
+//      strictly-improving move. Pure depot-edge swaps that have zero MINSUM
+//      delta are skipped explicitly so the shortlist time goes to real
+//      moves.
+// ============================================================================
+
+// A shortlist of route pairs to feed into TryRoutePair2OptStarPass. Pairs are
+// stored canonically with `first < second` and de-duplicated. `built_for_routes`
+// records the RouteCount at build time so callers can detect stale shortlists
+// after a structural change.
+struct RoutePairShortlist {
+    std::vector<std::pair<int, int>> pairs;  // (r1, r2) with r1 < r2
+    int built_for_routes = 0;
+};
+
+// k_per_route is the per-route nearest-route fanout; the resulting global
+// pair count is at most k_per_route * m / 2 after de-dup. max_pairs caps the
+// final shortlist size (0 = unlimited).
+inline RoutePairShortlist BuildRoutePairShortlist(const RouteList& rl,
+                                                  DistanceOracle& d,
+                                                  int k_per_route,
+                                                  int max_pairs = 0) {
+    RoutePairShortlist out;
+    const int m = rl.RouteCount();
+    out.built_for_routes = m;
+    if (m < 2 || k_per_route <= 0) return out;
+
+    struct Endpoint {
+        int route;
+        int city;
+    };
+    std::vector<Endpoint> endpoints;
+    endpoints.reserve(static_cast<size_t>(2 * m));
+    for (int r = 0; r < m; ++r) {
+        const auto& route = rl.Route(r);
+        if (route.size() <= 2) continue;
+        endpoints.push_back({r, route[1]});
+        const int tail = route[route.size() - 2];
+        if (tail != route[1]) endpoints.push_back({r, tail});
+    }
+    if (endpoints.size() < 2) return out;
+
+    // For each route, accumulate (min endpoint-distance, other_route).
+    // O((2m)^2) — at m<=1000 this is 4e6 pair-evaluations, all from the
+    // depot-distance / coord cache, so the build stays in microseconds.
+    std::vector<std::vector<std::pair<double, int>>> per_route(static_cast<size_t>(m));
+    for (size_t i = 0; i < endpoints.size(); ++i) {
+        for (size_t j = i + 1; j < endpoints.size(); ++j) {
+            const int ri = endpoints[i].route;
+            const int rj = endpoints[j].route;
+            if (ri == rj) continue;
+            const double dij = d(endpoints[i].city, endpoints[j].city);
+            per_route[static_cast<size_t>(ri)].emplace_back(dij, rj);
+            per_route[static_cast<size_t>(rj)].emplace_back(dij, ri);
+        }
+    }
+
+    // m*m bitmap is fine for m<=1000 (1MB worst case). For typical m (<=100)
+    // it is 10kB.
+    std::vector<unsigned char> pair_added(static_cast<size_t>(m) * static_cast<size_t>(m), 0);
+    auto try_add_pair = [&](int a, int b) -> bool {
+        if (a == b) return false;
+        const int x = std::min(a, b);
+        const int y = std::max(a, b);
+        const size_t key = static_cast<size_t>(x) * static_cast<size_t>(m) + static_cast<size_t>(y);
+        if (pair_added[key]) return false;
+        pair_added[key] = 1;
+        out.pairs.emplace_back(x, y);
+        return true;
+    };
+
+    std::vector<unsigned char> route_seen(static_cast<size_t>(m), 0);
+    for (int r = 0; r < m; ++r) {
+        auto& v = per_route[static_cast<size_t>(r)];
+        if (v.empty()) continue;
+        std::sort(v.begin(), v.end());
+        std::fill(route_seen.begin(), route_seen.end(), 0);
+        int written = 0;
+        for (const auto& kv : v) {
+            const int other = kv.second;
+            if (other < 0 || other >= m) continue;
+            if (route_seen[static_cast<size_t>(other)]) continue;
+            route_seen[static_cast<size_t>(other)] = 1;
+            try_add_pair(r, other);
+            ++written;
+            if (written >= k_per_route) break;
+            if (max_pairs > 0 && static_cast<int>(out.pairs.size()) >= max_pairs) return out;
+        }
+        if (max_pairs > 0 && static_cast<int>(out.pairs.size()) >= max_pairs) return out;
+    }
+    return out;
+}
+
+template <typename AcceptPolicy>
+inline int TryRoutePair2OptStarPass(RouteList& rl,
+                                    AcceptPolicy& accept,
+                                    DistanceOracle& d,
+                                    const RoutePairShortlist& shortlist,
+                                    SearchBudget& budget,
+                                    int max_moves,
+                                    int endpoint_window,
+                                    GranularMoveStats* stats = nullptr) {
+    if (accept.IsMinMax()) return 0;
+    if (max_moves <= 0 || endpoint_window <= 0) return 0;
+    if (shortlist.pairs.empty()) return 0;
+    const int win = endpoint_window;
+    int accepted = 0;
+
+    std::vector<int> cuts_a;
+    std::vector<int> cuts_b;
+    cuts_a.reserve(static_cast<size_t>(2 * win + 4));
+    cuts_b.reserve(static_cast<size_t>(2 * win + 4));
+
+    for (const auto& pair : shortlist.pairs) {
+        if (accepted >= max_moves || budget.ForceCheck()) break;
+        const int ra = pair.first;
+        const int rb = pair.second;
+        if (ra < 0 || rb < 0 || ra >= rl.RouteCount() || rb >= rl.RouteCount()) continue;
+        const auto& route_a = rl.Route(ra);
+        const auto& route_b = rl.Route(rb);
+        const int sa = static_cast<int>(route_a.size());
+        const int sb = static_cast<int>(route_b.size());
+        if (sa < 4 || sb < 4) continue;
+
+        cuts_a.clear();
+        for (int i = 0; i < std::min(win, sa - 1); ++i) cuts_a.push_back(i);
+        for (int i = std::max(0, sa - 2 - win + 1); i <= sa - 2; ++i) cuts_a.push_back(i);
+        std::sort(cuts_a.begin(), cuts_a.end());
+        cuts_a.erase(std::unique(cuts_a.begin(), cuts_a.end()), cuts_a.end());
+
+        cuts_b.clear();
+        for (int i = 0; i < std::min(win, sb - 1); ++i) cuts_b.push_back(i);
+        for (int i = std::max(0, sb - 2 - win + 1); i <= sb - 2; ++i) cuts_b.push_back(i);
+        std::sort(cuts_b.begin(), cuts_b.end());
+        cuts_b.erase(std::unique(cuts_b.begin(), cuts_b.end()), cuts_b.end());
+
+        int best_cut_a = -1;
+        int best_cut_b = -1;
+        double best_delta = -kEps;
+        for (int ca : cuts_a) {
+            const int A = route_a[static_cast<size_t>(ca)];
+            const int B = route_a[static_cast<size_t>(ca + 1)];
+            for (int cb : cuts_b) {
+                // (0,0) and (sa-2,sb-2) are pure depot-edge swaps with 0 delta.
+                if (ca == 0 && cb == 0) continue;
+                if (ca == sa - 2 && cb == sb - 2) continue;
+                const int C = route_b[static_cast<size_t>(cb)];
+                const int E = route_b[static_cast<size_t>(cb + 1)];
+                const double delta = d(A, E) + d(C, B) - d(A, B) - d(C, E);
+                if (delta < best_delta) {
+                    best_delta = delta;
+                    best_cut_a = ca;
+                    best_cut_b = cb;
+                }
+            }
+        }
+
+        if (best_cut_a < 0 || !accept.StrictAccept(best_delta)) continue;
+
+        std::vector<int> new_a;
+        std::vector<int> new_b;
+        new_a.reserve(route_a.size() + route_b.size());
+        new_b.reserve(route_a.size() + route_b.size());
+        new_a.insert(new_a.end(), route_a.begin(), route_a.begin() + best_cut_a + 1);
+        new_a.insert(new_a.end(), route_b.begin() + best_cut_b + 1, route_b.end());
+        new_b.insert(new_b.end(), route_b.begin(), route_b.begin() + best_cut_b + 1);
+        new_b.insert(new_b.end(), route_a.begin() + best_cut_a + 1, route_a.end());
+
+        if (new_a.empty() || new_a.front() != 0) new_a.insert(new_a.begin(), 0);
+        if (new_a.size() < 2 || new_a.back() != 0) new_a.push_back(0);
+        if (new_b.empty() || new_b.front() != 0) new_b.insert(new_b.begin(), 0);
+        if (new_b.size() < 2 || new_b.back() != 0) new_b.push_back(0);
+
+        rl.ReplaceRoute(ra, std::move(new_a), d);
+        rl.ReplaceRoute(rb, std::move(new_b), d);
+        ++accepted;
+        if (stats) ++stats->route_pair_2optstar_accepts;
+    }
+    return accepted;
+}
+
+// Convenience wrapper: build the shortlist on the current RouteList and run
+// one route-pair 2-opt* pass against it. Stats counters are updated even when
+// no move is accepted, so callers can see whether the pass fired.
+template <typename AcceptPolicy>
+inline int BuildAndRunRoutePair2OptStar(RouteList& rl,
+                                        AcceptPolicy& accept,
+                                        DistanceOracle& d,
+                                        SearchBudget& budget,
+                                        int k_per_route,
+                                        int max_pairs,
+                                        int max_moves,
+                                        int endpoint_window,
+                                        GranularMoveStats* stats = nullptr) {
+    if (accept.IsMinMax()) return 0;
+    if (max_moves <= 0 || endpoint_window <= 0 || k_per_route <= 0) return 0;
+    if (rl.RouteCount() < 2 || budget.ForceCheck()) return 0;
+    if (stats) {
+        ++stats->route_pair_calls;
+    }
+    RoutePairShortlist shortlist = BuildRoutePairShortlist(rl, d, k_per_route, max_pairs);
+    if (stats) stats->route_pair_pairs += static_cast<int>(shortlist.pairs.size());
+    return TryRoutePair2OptStarPass(rl, accept, d, shortlist, budget, max_moves,
+                                    endpoint_window, stats);
 }
 
 }  // namespace mtsp::v21

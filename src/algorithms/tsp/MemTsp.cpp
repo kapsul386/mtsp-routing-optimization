@@ -8,9 +8,13 @@
 
 namespace tsp {
 
+// Memetic algorithm for the classical TSP — a hybrid of GA with local search.
+// Registered as "memetic". Each offspring (with probability localProb)
+// is additionally improved by a short local search pass (localIterPerChild).
+// This gives better convergence at a smaller populationSize than a pure GA.
 class Memetic : public Solver {
 public:
-    // ===== Tuned defaults for n ~ 3000 =====
+    // ===== Parameters tuned for n ~ 3000 =====
     int start = 0;
 
     int populationSize = 220;

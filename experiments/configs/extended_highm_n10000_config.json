@@ -1,0 +1,17 @@
+{
+  "instance_dir": "data/mtsp/generated_multifamily",
+  "instance_glob": "*.txt",
+  "allowed_node_counts": [10000],
+  "allowed_salesman_counts": [10, 30, 50, 80, 100],
+  "instance_families": ["high-m-stress"],
+  "results_csv": "data/results/extended_highm_n10000_results.csv",
+  "summary_csv": "data/results/extended_highm_n10000_summary.csv",
+  "report_md": "data/results/extended_highm_n10000_report.md",
+  "solvers": [
+    {"name": "2opt+greed", "args": ["--step", "2opt+greed"]},
+    {"name": "lkh-wrapper-v21", "args": ["--step", "lkh-wrapper-v21", "--seed", "42", "--time-budget-ms", "70000"]},
+    {"name": "lkh_v21_minsum", "args": ["--step", "lkh_v21_minsum", "--time-budget-ms", "70000"]},
+    {"name": "lkh_v21_minsum_cap", "args": ["--step", "lkh_v21_minsum_cap", "--time-budget-ms", "70000"]},
+    {"name": "lkh_v21_minsum_depot2m_plus", "args": ["--step", "lkh_v21_minsum_depot2m_plus", "--time-budget-ms", "70000"]}
+  ]
+}

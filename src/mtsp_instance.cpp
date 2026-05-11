@@ -13,15 +13,21 @@ namespace mtsp {
 
 namespace {
 
+// Global mTSP instance singleton. Replaced via LoadFromFile/Reset.
 std::unique_ptr<Instance> g_instance;
+// Threshold n^2 ~ 4M (corresponds to n <= ~2000); above this, distances are computed on demand.
 constexpr long long kMaxPrecomputedDistances = 4'000'000LL;
 
+// Reads stdin to EOF into a string. Used to receive JSON payloads via pipe.
 std::string ReadAllStdin() {
     std::ostringstream ss;
     ss << std::cin.rdbuf();
     return ss.str();
 }
 
+// Parses the JSON payload for an mTSP instance.
+// Expected fields: "n" (node count), "m" (salesman count), "coords" (n coordinate pairs).
+// Returns (n, m, coords).
 std::tuple<int, int, std::vector<std::pair<double, double>>> ParseJsonPayload(const std::string& payload) {
     const auto input = nlohmann::json::parse(payload);
 
@@ -49,6 +55,8 @@ std::tuple<int, int, std::vector<std::pair<double, double>>> ParseJsonPayload(co
     return {node_count, salesman_count, std::move(coords)};
 }
 
+// Parses the text format of an mTSP instance: first line "n m", then n coordinate pairs "x y".
+// Used in the main experiment grid of the thesis (files from data/mtsp/).
 std::tuple<int, int, std::vector<std::pair<double, double>>> ParseTextInstance(std::istream& stream,
                                                                                 const std::string& source) {
     int node_count = 0;
@@ -79,6 +87,7 @@ std::tuple<int, int, std::vector<std::pair<double, double>>> ParseTextInstance(s
 
 } // namespace
 
+// Global access to the singleton instance. On first call, creates the instance from stdin (JSON).
 Instance& Instance::GetInstance() {
     if (!g_instance) {
         g_instance = std::unique_ptr<Instance>(new Instance());
@@ -86,10 +95,12 @@ Instance& Instance::GetInstance() {
     return *g_instance;
 }
 
+// Reset the singleton — needed for repeated runs within one process.
 void Instance::Reset() {
     g_instance.reset();
 }
 
+// Load an instance from a text file. Replaces the global singleton.
 void Instance::LoadFromFile(const std::string& path) {
     std::ifstream stream(path);
     if (!stream.is_open()) {
@@ -99,6 +110,7 @@ void Instance::LoadFromFile(const std::string& path) {
     g_instance = std::unique_ptr<Instance>(new Instance(node_count, salesman_count, std::move(coords)));
 }
 
+// Load an instance from a pre-built JSON string. Used in tests.
 void Instance::LoadFromJsonString(const std::string& payload) {
     auto [node_count, salesman_count, coords] = ParseJsonPayload(payload);
     g_instance = std::unique_ptr<Instance>(new Instance(node_count, salesman_count, std::move(coords)));
@@ -117,6 +129,8 @@ Instance::Instance(int node_count, int salesman_count, std::vector<std::pair<dou
     BuildDistanceStorage();
 }
 
+// Distance storage strategy: dense matrix for small n (n^2 <= 4M, ~n <= 2000),
+// otherwise on-demand computation from coordinates. For n=100K the matrix would take 80 GB.
 void Instance::BuildDistanceStorage() {
     const long long pair_count = static_cast<long long>(n_) * static_cast<long long>(n_);
     if (pair_count > kMaxPrecomputedDistances) {
@@ -135,14 +149,18 @@ void Instance::BuildDistanceStorage() {
     }
 }
 
+// Number of vertices in the instance (including the depot, which has index 0).
 int Instance::GetNodeCount() const {
     return n_;
 }
 
+// Number of salesmen (m).
 int Instance::GetSalesmanCount() const {
     return m_;
 }
 
+// Euclidean distance between two vertices. For small instances, looked up from the dense matrix;
+// for large instances, computed on the fly from coordinates.
 double Instance::Distance(int i, int j) const {
     if (!dist_.empty()) {
         return dist_[static_cast<size_t>(i)][static_cast<size_t>(j)];
@@ -152,6 +170,7 @@ double Instance::Distance(int i, int j) const {
     return std::sqrt(dx * dx + dy * dy);
 }
 
+// Access to the raw coordinate array (used by solvers to build KD-trees, KNN structures, etc.).
 const std::vector<std::pair<double, double>>& Instance::GetCoords() const {
     return coords_;
 }

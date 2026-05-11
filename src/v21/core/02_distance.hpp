@@ -19,8 +19,14 @@
 
 namespace mtsp::v21 {
 
+// Lazy distance oracle. For small instances it delegates to the dense matrix in Instance;
+// for large instances it uses an unordered_map cache keyed on actually requested pairs.
+// Per-vertex distances to the depot are precomputed eagerly (hot path in the seed phase).
 class DistanceOracle {
 public:
+    // Constructor: automatically selects cache vs raw mode based on instance size.
+    // Pre-computes the per-vertex depot-distance vector — the hot path in seed strategies
+    // and rebalance operators.
     explicit DistanceOracle(const mtsp::Instance& inst)
         : inst_(inst),
           coords_(inst.GetCoords()),
@@ -51,13 +57,17 @@ public:
     // Cache-free distance: bit-identical to Instance::Distance, safe across threads.
     double Raw(int a, int b) const { return inst_.Distance(a, b); }
 
+    // Squared Euclidean distance — avoids sqrt where only relative distances are compared
+    // (e.g., during nearest-neighbor search).
     double SquaredDistance(int a, int b) const {
         const double dx = coords_[static_cast<size_t>(a)].first - coords_[static_cast<size_t>(b)].first;
         const double dy = coords_[static_cast<size_t>(a)].second - coords_[static_cast<size_t>(b)].second;
         return dx * dx + dy * dy;
     }
 
+    // Pre-computed distance to the depot. O(1) with no cache lookup.
     double DepotDistance(int node) const { return depot_dist_[static_cast<size_t>(node)]; }
+    // Raw-data accessors: coordinates, node count, and the underlying Instance.
     const std::vector<Coord>& GetCoords() const { return coords_; }
     int NodeCount() const { return n_; }
     const mtsp::Instance& GetInstance() const { return inst_; }
@@ -71,7 +81,8 @@ private:
     std::vector<double> depot_dist_;
 };
 
-// Sum of edge lengths along a route (caller-supplied distance functor).
+// Total edge length of a route. The distance functor is a template parameter so that
+// both DistanceOracle (with caching) and raw distance variants can be used.
 template <typename DistanceFn>
 double RouteLengthGeneric(const std::vector<int>& route, DistanceFn& d) {
     double total = 0.0;

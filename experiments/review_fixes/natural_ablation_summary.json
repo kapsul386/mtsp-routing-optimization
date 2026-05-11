@@ -1,0 +1,67 @@
+[
+  {
+    "solver": "2opt+greed",
+    "description": "no ALNS / no SA / no POPMUSIC / no GLS / no candidates",
+    "n_pairs": 10,
+    "mean_sum_diff_pct": 3.6831972287414483,
+    "median_sum_diff_pct": 3.714855836087083,
+    "mean_gini_solver": 0.01911816521731496,
+    "mean_gini_ref": 0.016916102608671293,
+    "mean_makespan_solver": 934630.0980486309,
+    "mean_makespan_ref": 897535.4148118893,
+    "mean_time_solver": 123.6599188,
+    "mean_time_ref": 258.6344924
+  },
+  {
+    "solver": "lkh-wrapper-v21",
+    "description": "single-file ALNS, simpler pipeline (no PT/autotune)",
+    "n_pairs": 10,
+    "mean_sum_diff_pct": 2.960850511944184,
+    "median_sum_diff_pct": 3.0017323017136897,
+    "mean_gini_solver": 0.018524061250245378,
+    "mean_gini_ref": 0.016916102608671293,
+    "mean_makespan_solver": 924203.1604680578,
+    "mean_makespan_ref": 897535.4148118893,
+    "mean_time_solver": 321.8337831,
+    "mean_time_ref": 258.6344924
+  },
+  {
+    "solver": "lkh_v21_minsum",
+    "description": "full modular architecture (baseline reference)",
+    "n_pairs": 10,
+    "mean_sum_diff_pct": 0.0,
+    "median_sum_diff_pct": 0.0,
+    "mean_gini_solver": 0.016916102608671293,
+    "mean_gini_ref": 0.016916102608671293,
+    "mean_makespan_solver": 897535.4148118893,
+    "mean_makespan_ref": 897535.4148118893,
+    "mean_time_solver": 258.6344924,
+    "mean_time_ref": 258.6344924
+  },
+  {
+    "solver": "lkh_v21_minsum_cap",
+    "description": "full + capacity-aware repair (FILO2-inspired)",
+    "n_pairs": 10,
+    "mean_sum_diff_pct": 0.046248735240098815,
+    "median_sum_diff_pct": 0.12374952421489793,
+    "mean_gini_solver": 0.01644668724177605,
+    "mean_gini_ref": 0.016916102608671293,
+    "mean_makespan_solver": 899035.8822971195,
+    "mean_makespan_ref": 897535.4148118893,
+    "mean_time_solver": 255.5407644,
+    "mean_time_ref": 258.6344924
+  },
+  {
+    "solver": "lkh_v21_minsum_depot2m_plus",
+    "description": "full + depot-2m seeding + post-rebalance",
+    "n_pairs": 10,
+    "mean_sum_diff_pct": -4.999341488943638,
+    "median_sum_diff_pct": -6.035329425444398,
+    "mean_gini_solver": 0.6596651748924753,
+    "mean_gini_ref": 0.016916102608671293,
+    "mean_makespan_solver": 3826125.6001189896,
+    "mean_makespan_ref": 897535.4148118893,
+    "mean_time_solver": 346.2119078,
+    "mean_time_ref": 258.6344924
+  }
+]

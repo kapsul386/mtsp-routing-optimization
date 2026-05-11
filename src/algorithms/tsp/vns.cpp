@@ -7,11 +7,14 @@
 
 namespace tsp {
 
+// Variable Neighborhood Search for the classical TSP. Registered as "vns".
+// Alternates between perturbation types (swap, 2-opt, 3-opt) in order of increasing strength.
 class VNS : public Solver {
 public:
     int start = 0;
-    int max_it = 10000;
+    int max_it = 10000;  // maximum number of iterations
 
+    // CLI parameters: start (starting vertex), it (number of iterations).
     void Configure(const std::unordered_map<std::string, std::string> &opts) override {
         if (opts.count("start")) {
             start = std::stoi(opts.at("start"));
@@ -21,6 +24,7 @@ public:
         }
     }
 
+    // Main VNS loop: alternate neighborhood structures until convergence or max_it.
     void Solve(std::vector<int> &out) override {
         const Instance &inst = Instance::GetInstance();
         int n = inst.GetN();

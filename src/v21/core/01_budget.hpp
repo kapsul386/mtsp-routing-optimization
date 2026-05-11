@@ -48,6 +48,8 @@ public:
         return stop_requested_;
     }
 
+    // Wall-clock milliseconds remaining before the deadline. Returns INT_MAX
+    // when the budget is disabled (unlimited). Returns 0 when expired.
     int RemainingMs() const {
         if (!enabled_) return std::numeric_limits<int>::max();
         const auto now = std::chrono::steady_clock::now();
@@ -55,12 +57,15 @@ public:
         return static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(deadline_ - now).count());
     }
 
+    // Wall-clock milliseconds elapsed since this budget was constructed.
+    // Returns 0 when the budget is disabled.
     int ElapsedMs() const {
         if (!enabled_) return 0;
         const auto now = std::chrono::steady_clock::now();
         return static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(now - start_).count());
     }
 
+    // Returns true if a finite deadline is being tracked.
     bool Enabled() const { return enabled_; }
 
     // Returns a child budget whose deadline is min(parent_deadline, now + max_ms).

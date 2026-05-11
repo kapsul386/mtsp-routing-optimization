@@ -1,0 +1,42 @@
+{
+  "instance_dir": "data/mtsp/stratum1_small",
+  "instance_glob": "*.txt",
+  "allowed_node_counts": [100, 200],
+  "results_csv": "data/results/stratum1_small_n100_200_results.csv",
+  "summary_csv": "data/results/stratum1_small_n100_200_summary.csv",
+  "report_md": "data/results/stratum1_small_n100_200_report.md",
+  "solvers": [
+    {
+      "name": "rand+nn",
+      "args": ["--step", "rand+nn", "--seed", "42"]
+    },
+    {
+      "name": "2opt+greed",
+      "args": ["--step", "2opt+greed"]
+    },
+    {
+      "name": "lkh3-baseline",
+      "args": [
+        "--step", "lkh3-baseline",
+        "--objective", "minsum",
+        "--time-budget-ms", "10000"
+      ]
+    },
+    {
+      "name": "lkh-wrapper-v20",
+      "args": [
+        "--step", "lkh-wrapper-v20",
+        "--seed", "42",
+        "--time-budget-ms", "10000"
+      ]
+    },
+    {
+      "name": "lkh-wrapper-v21",
+      "args": [
+        "--step", "lkh-wrapper-v21",
+        "--seed", "42",
+        "--time-budget-ms", "10000"
+      ]
+    }
+  ]
+}
